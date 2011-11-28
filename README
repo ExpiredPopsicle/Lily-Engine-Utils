@@ -1,0 +1,67 @@
+----------------------------------------------------------------------
+
+  Lily Engine alpha (and libraries)
+
+  Copyright (c) 2010 Clifford Jolly
+    http://expiredpopsicle.com
+    expiredpopsicle@gmail.com
+
+----------------------------------------------------------------------
+
+  Copyright (c) 2011 Clifford Jolly
+
+  This software is provided 'as-is', without any express or implied
+  warranty. In no event will the authors be held liable for any
+  damages arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any
+  purpose, including commercial applications, and to alter it and
+  redistribute it freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must
+     not claim that you wrote the original software. If you use this
+     software in a product, an acknowledgment in the product
+     documentation would be appreciated but is not required.
+
+  2. Altered source versions must be plainly marked as such, and must
+     not be misrepresented as being the original software.
+
+  3. This notice may not be removed or altered from any source
+     distribution.
+
+----------------------------------------------------------------------
+
+
+
+I'm going to put something useful in this README later, I
+promise. -ExpiredPopsicle
+
+----------------------------------------------------------------------
+  How to use this library (for now).
+----------------------------------------------------------------------
+
+libs/utils contains the basic utility library that shouldn't depend on
+anything besides system libs. It can be easily dropped into existing
+projects and everything is in the namespace "ExPop". To use it in a
+project you can either include everything.cpp into your project, or
+individually include each file that everything.cpp #includes.
+
+Don't include any test.cpp or _test.cpp file. They're for internal
+testing right now. While they may be rewritten or converted into a
+test suite later, at the moment some of them don't even compile. They
+are still there as examples of how stuff should work.
+
+The include file "utils.h" will include everything else
+automatically. You can also just include headers for individual
+features, but those header names may change.
+
+There may be an actual build system later.
+
+----------------------------------------------------------------------
+  Documentation
+----------------------------------------------------------------------
+
+A Doxyfile is included in case you would like to have Doxygen generate
+documentation for you. Additionally, the headers should be mostly
+legible and I just end up using them most of the time anyway.
+
