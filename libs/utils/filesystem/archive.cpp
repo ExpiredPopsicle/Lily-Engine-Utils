@@ -267,9 +267,7 @@ namespace ExPop {
             return data;
         }
 
-        char *Archive::loadFileHead(const std::string &fileName, int headerLength) {
-
-            // Same as above, but only reads the first headerLength bytes.
+        char *Archive::loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart) {
 
             if(failed) return NULL;
             assert(!writeMode);
@@ -287,6 +285,7 @@ namespace ExPop {
             }
 
             offset = iter->second;
+            offset += offsetFromStart;
 
             // Go to the offset in the archive and read in the header.
             FileHeader header;
@@ -300,17 +299,17 @@ namespace ExPop {
 #endif
 
             // Make a place to put the data.
-            char *data = new char[headerLength];
+            char *data = new char[lengthToRead];
             if(!data) return NULL; // Too big?
 
-            memset(data, 0, headerLength);
+            memset(data, 0, lengthToRead);
 
             // Read in the data.
 
 #ifdef OS_ANDROID
-            AAsset_read(archiveFileAsset, data, (int)header.length < headerLength ? header.length : headerLength);
+            AAsset_read(archiveFileAsset, data, (int)header.length < lengthToRead ? header.length : lengthToRead);
 #else
-            archiveFile.read(data, (int)header.length < headerLength ? header.length : headerLength);
+            archiveFile.read(data, (int)header.length < lengthToRead ? header.length : lengthToRead);
 #endif
 
             closeArchiveFile();

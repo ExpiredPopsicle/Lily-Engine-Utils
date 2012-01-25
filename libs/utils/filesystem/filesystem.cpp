@@ -203,6 +203,17 @@ namespace ExPop {
             return false;
         }
 
+        unsigned int fileChangedTimeStamp(const std::string &fileName) {
+
+            struct stat fileStat;
+            if(stat(fileName.c_str(), &fileStat) == -1) {
+                // out("error") << "Could not stat " << fileName << endl;
+                return 0;
+            }
+
+            return fileStat.st_mtime;
+        }
+
         bool isSymLink(const std::string &fileName) {
 
 #ifdef WIN32
@@ -481,19 +492,20 @@ namespace ExPop {
 
         }
 
-        char *loadFileHead(const std::string &fileName, int headerLength) {
+        char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart) {
 
             int realLength = getFileSize(fileName);
             if(realLength <= 0) {
                 return NULL;
             }
 
-            char *buf = new char[headerLength];
-            memset(buf, 0, headerLength);
+            char *buf = new char[lengthToRead];
+            memset(buf, 0, lengthToRead);
 
             // Read from filesystem first.
             ifstream in(fileName.c_str(), ios::in | ios::binary);
-            in.read(buf, realLength < headerLength ? realLength : headerLength);
+            in.seekg(offsetFromStart, ios_base::beg);
+            in.read(buf, realLength < lengthToRead ? realLength : lengthToRead);
             in.close();
 
             if(in.fail()) {
@@ -505,7 +517,7 @@ namespace ExPop {
                 // Couldn't load from filesystem. Try archives.
                 for(unsigned int i = 0; i < searchArchives.size(); i++) {
                     if(searchArchives[i]->getFileExists(fileName)) {
-                        char *ret = searchArchives[i]->loadFileHead(fileName, headerLength);
+                        char *ret = searchArchives[i]->loadFilePart(fileName, lengthToRead, offsetFromStart);
                         archivesMutex.unlock();
                         return ret;
                     }

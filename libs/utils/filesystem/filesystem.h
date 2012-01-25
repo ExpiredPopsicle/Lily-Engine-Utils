@@ -68,6 +68,11 @@ namespace ExPop {
          * */
         bool fileExists(const std::string &fileName, bool skipArchives = false);
 
+        /// Get a file timestamp as the number of seconds since the
+        /// Unix epoch. Doesn't work with stuff stored in archives
+        /// because timestamps aren't stored in archives.
+        unsigned int fileChangedTimeStamp(const std::string &fileName);
+
         /** @brief Determine if a file is a directory.
          * @param fileName The name of the file to check.
          * @return true if it is a directory.
@@ -159,8 +164,11 @@ namespace ExPop {
         /// length will be changed to reflect the size of the returned data.
         char *loadFile(const std::string &fileName, int *length, bool addNullTerminator = false);
 
-        /// Load the first headerLength bytes of a file into a new buffer.
-        char *loadFileHead(const std::string &fileName, int headerLength);
+        /// Load a part of a file into a new buffer. Only do this if
+        /// you already know the length you're dealing with. If it
+        /// hits a file in an archive it may start reading into the
+        /// next file's header and the next file.
+        char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart = 0);
 
         /// Saves a buffer to a file. Returns -1 on failure or 0 on
         /// success.

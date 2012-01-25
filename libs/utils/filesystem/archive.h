@@ -78,9 +78,8 @@ namespace ExPop {
             /// delete[].
             virtual char *loadFile(const std::string &fileName, int *length, bool addNullTerminator = false);
 
-            /// Reads the first headerLength bytes from a file instead
-            /// of the whole thing.
-            virtual char *loadFileHead(const std::string &fileName, int headerLength);
+            /// Reads a piece of a file instead of the whole thing.
+            virtual char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart = 0);
 
             /// Get a list of all files in the archive with full path
             /// names.
