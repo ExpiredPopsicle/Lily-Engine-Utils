@@ -44,8 +44,8 @@
 #include "parser/parser.cpp"
 #include "assert/malassert.cpp"
 #include "compress/compress.cpp"
-#include "math/vector3d.cpp"
-#include "math/vector2d.cpp"
 #include "math/matrix.cpp"
 #include "refsystem/refsystem.cpp"
+#include "assetloader/assetloader.cpp"
+#include "preprocess/preprocess.cpp"
 
