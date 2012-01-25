@@ -40,10 +40,10 @@
 #include "thread/thread.h"
 #include "refsystem/refsystem.h"
 #include "math/matrix.h"
-#include "math/vector3d.h"
-#include "math/vector2d.h"
 #include "parser/lilyparser.h"
 #include "hashtable/hashtable.h"
+#include "assetloader/assetloader.h"
+#include "preprocess/preprocess.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)
