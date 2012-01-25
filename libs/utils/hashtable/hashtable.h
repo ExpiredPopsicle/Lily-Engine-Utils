@@ -39,6 +39,27 @@ namespace ExPop {
 
     typedef unsigned int HashValue;
 
+    // Some simple hash functions. These will be plugged into the hash
+    // table as a default parameter if the default constructor is used
+    // on the hash table. Note that these hash functions are NOT
+    // cryptographically secure in any way. They're just there to
+    // split up data in the hash table.
+
+    /// String hash.
+    inline HashValue genericHashFunc(const std::string &str) {
+        HashValue hash = 0;
+        for(unsigned int i = 0; i < str.size(); i++) {
+            hash = str[i] + (hash << 6) + (hash << 16) - hash;
+        }
+        return hash;
+    }
+
+    /// Given that HashValues are really just unsigned ints, this just
+    /// returns the unsigned int.
+    inline HashValue genericHashFunc(const unsigned int &i) {
+        return i;
+    }
+
     /// A hash table implementation with template stuff. Note that
     /// there's one big issue (or a few) with this implementation in
     /// that it keeps instances of the ValueType even for empty
@@ -76,9 +97,9 @@ namespace ExPop {
         /// class as there are slots, and it will initialize them to
         /// their default constructor!
         HashTable(
-            unsigned int slots,
-            unsigned int buckets,
-            HashFunction hashFunc);
+            unsigned int slots = 256,
+            unsigned int buckets = 16,
+            HashFunction hashFunc = genericHashFunc);
 
         /// Initialize by copying from from another hash table.
         HashTable(const HashTable &otherTable);
@@ -134,6 +155,9 @@ namespace ExPop {
         /// See if a key is present without actually modifying
         /// anything.
         unsigned int count(const KeyType &key) const;
+
+        /// Clear out anything in the hash table.
+        void clear(void);
 
     private:
 
@@ -222,17 +246,6 @@ namespace ExPop {
             HashTableSlot **finalOutputSlot = NULL);
 
     };
-
-    // Some simple hash functions
-
-    /// String hash.
-    inline HashValue stringHashGetHash(const std::string &str) {
-        HashValue hash = 0;
-        for(unsigned int i = 0; i < str.size(); i++) {
-            hash = str[i] + (hash << 6) + (hash << 16) - hash;
-        }
-        return hash;
-    }
 
     // ----------------------------------------------------------------------
     //   HashTable implementation
@@ -693,6 +706,17 @@ namespace ExPop {
 
         return true;
     }
+
+    template<class KeyType, class ValueType>
+    void HashTable<KeyType, ValueType>::clear(void) {
+
+        // This is probably cheating, but whatever.
+        deinit();
+        init(numSlots,
+             numBuckets,
+             hashFunc);
+    }
+
 
 };
 
