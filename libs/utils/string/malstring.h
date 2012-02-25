@@ -33,6 +33,7 @@
 
 #pragma once
 
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -95,6 +96,22 @@ namespace ExPop {
     void strUTF8ToUTF32(
         const std::string &utf8Str,
         std::vector<unsigned int> &utf32Out);
+
+    /// Pass in arrays of this to strToConst or constToStr. Last one
+    /// is a default entry with a zero-length string.
+    struct StringToConstMapping {
+        const char *str;
+        int val;
+    };
+
+    /// Look up a string in a table of string to constant conversions.
+    int strToConst(
+        const std::string &str,
+        const StringToConstMapping *table,
+        const std::string &fieldName = "unknown",
+        std::ostream *errorOut = &(std::cout));
+
+    // TODO: Make a constToStr
 
     /// Simple buffer that we can dynamically expand or iterate through.
     class SimpleBuffer {

@@ -465,6 +465,43 @@ namespace ExPop {
 
     }
 
+    int strToConst(
+        const std::string &str,
+        const StringToConstMapping *table,
+        const std::string &fieldName,
+        std::ostream *errorOut) {
+
+        // Try to find whatever value in the table.
+
+        int i;
+        for(i = 0; strlen(table[i].str); i++) {
+            if(str == table[i].str) {
+                return table[i].val;
+            }
+        }
+
+        if(str.size() && errorOut) {
+
+            // Tried to have a value, but didn't find a match. Show an
+            // error. If the user didn't specify a value we'd just go
+            // with the default without complaining.
+
+            (*errorOut) << "Unknown value (" << str << ") for field " << fieldName << endl;
+            (*errorOut) << "Possible values are..." << endl;
+
+            for(int j = 0; strlen(table[j].str); j++) {
+                (*errorOut) << "  " << table[j].str << endl;
+            }
+        }
+
+        // TODO: Possibly fill up a table of autocomplete
+        // possibilities for whatever we got as input.
+
+        // i is still at the final, default value, so just go ahead
+        // and return that.
+        return table[i].val;
+
+    }
 
     // ----------------------------------------------------------------------
     //   SimpleBuffer stuff after this point.

@@ -397,7 +397,7 @@ namespace ExPop {
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
             for(unsigned int row = 0; row < ROWS; row++) {
-                out.data[index] = get(col, row);
+                out.data[index] = getConst(col, row);
                 index++;
             }
         }
