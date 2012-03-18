@@ -100,7 +100,7 @@ namespace ExPop {
     //   ParserNode implementation
     // ------------------------------------------------------------------------
 
-    std::string ParserNode::getName(void) {
+    std::string ParserNode::getName(void) const {
         return name;
     }
 
@@ -115,7 +115,7 @@ namespace ExPop {
         return children[index];
     }
 
-    int ParserNode::getNumChildren(void) {
+    int ParserNode::getNumChildren(void) const {
         return (int)children.size();
     }
 
@@ -200,6 +200,117 @@ namespace ExPop {
         }
     }
 
+    static std::string escapeCDATA(const std::string &str) {
+
+        ostringstream outStr;
+
+        unsigned int pos = 0;
+
+        while(pos < str.size()) {
+
+            if(pos + 3 < str.size() &&
+               str[pos] == ']' &&
+               str[pos+1] == ']' &&
+               str[pos+2] == '>') {
+
+                outStr << "]]]><![CDATA[]>";
+                pos += 3;
+
+            } else {
+
+                outStr << str[pos];
+                pos++;
+            }
+
+        }
+
+        return outStr.str();
+
+    }
+
+    void ParserNode::outputXml(std::ostream &out, int indentLevel) const {
+
+        indentOutput(out, indentLevel);
+
+        bool headerOnly = false;
+        if(getName() == "_root") {
+            headerOnly = true;
+            out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
+
+            // This will actually wrap around to 0xFFFFFFFF or
+            // somesuch, but whatever.
+            indentLevel--;
+        }
+
+        if(getName() == "_text") {
+
+            string outStr;
+
+            // Check for leading or trailing whitespace so we know if
+            // we need CDATA.
+            bool useCDATA = false;
+            string textStr = getStringValueDirty("text");
+            if(textStr.size() && (isWhiteSpace(textStr[0]) || isWhiteSpace(textStr[textStr.size() - 1]))) {
+                useCDATA = true;
+            }
+
+            if(useCDATA) {
+                out << "<![CDATA[" << escapeCDATA(textStr) << "]]>" << endl;
+            } else {
+                out << stringXmlEscape(textStr) << endl;
+            }
+
+        } else {
+
+            bool hadAttributes = false;
+
+            if(!headerOnly) {
+
+                out << "<" << getName();
+
+                // Output attributes.
+                bool firstAttrib = false;
+                for(map<string, string>::const_iterator i = values.begin(); i != values.end(); i++) {
+
+                    if(firstAttrib) {
+                        firstAttrib = false;
+                    } else {
+                        out << " ";
+                    }
+
+                    out << i->first << "=\"" << stringXmlEscape(i->second) << "\"";
+                    hadAttributes = true;
+                }
+            }
+
+            // Output children.
+            if(getNumChildren()) {
+
+                // Finish the starting tag.
+                if(!headerOnly) {
+                    out << ">" << endl;
+                }
+
+                for(int i = 0; i < getNumChildren(); i++) {
+                    children[i]->outputXml(out, indentLevel + 1);
+                }
+
+                indentOutput(out, indentLevel);
+
+                // End tag.
+                if(!headerOnly) {
+                    out << "</" << getName() << ">" << endl;
+                }
+
+            } else {
+
+                if(!headerOnly) {
+                    out << (hadAttributes ? " " : "") << "/>" << endl;
+                }
+            }
+        }
+    }
+
     ParserNode::~ParserNode(void) {
         for(unsigned int cn = 0; cn < children.size(); cn++) {
             delete children[cn];
@@ -213,11 +324,11 @@ namespace ExPop {
     }
 
 
-    bool ParserNode::getBooleanValue(const std::string &name, bool *value) {
+    bool ParserNode::getBooleanValue(const std::string &name, bool *value) const {
 
         if(values.count(name)) {
 
-            string val = values[name];
+            string val = values.find(name)->second;
 
             if(val == "false" || val == "0" || val == "") {
                 *value = false;
@@ -231,11 +342,11 @@ namespace ExPop {
         return false;
     }
 
-    bool ParserNode::getStringValue(const std::string &name, std::string *value) {
+    bool ParserNode::getStringValue(const std::string &name, std::string *value) const {
 
         if(values.count(name)) {
 
-            string val = values[name];
+            string val = values.find(name)->second;
             *value = val;
             return true;
         }
@@ -243,17 +354,17 @@ namespace ExPop {
         return false;
     }
 
-    std::string ParserNode::getStringValueDirty(const std::string &name) {
+    std::string ParserNode::getStringValueDirty(const std::string &name) const {
         string str = "";
         getStringValue(name, &str);
         return str;
     }
 
-    bool ParserNode::getFloatValue(const std::string &name, float *value) {
+    bool ParserNode::getFloatValue(const std::string &name, float *value) const {
 
         if(values.count(name)) {
 
-            string val = values[name];
+            string val = values.find(name)->second;
             *value = atof(val.c_str());
             return true;
         }
@@ -261,11 +372,11 @@ namespace ExPop {
         return false;
     }
 
-    bool ParserNode::getIntValue(const std::string &name, int *value) {
+    bool ParserNode::getIntValue(const std::string &name, int *value) const {
 
         if(values.count(name)) {
 
-            string val = values[name];
+            string val = values.find(name)->second;
             *value = atoi(val.c_str());
             return true;
         }
@@ -273,11 +384,11 @@ namespace ExPop {
         return false;
     }
 
-    bool ParserNode::getBinaryValue(const std::string &name, char **buf, int *length) {
+    bool ParserNode::getBinaryValue(const std::string &name, char **buf, int *length) const {
 
         if(values.count(name)) {
 
-            *buf = strDecodeHex(values[name], length);
+            *buf = strDecodeHex(values.find(name)->second, length);
 
             // // TEMPORARY
             // int j = 0;

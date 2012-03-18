@@ -56,7 +56,7 @@ namespace ExPop {
     ///   #defines to stick at the top of the processed output.
 
     /// errorStream is an output stream to send errors to. If it is
-    ///   left as NULL, it will use cout.
+    ///   left as NULL, it won't output errors.
 
     void simplePreprocess(
         std::vector<std::string> &allFileNames,
@@ -65,7 +65,8 @@ namespace ExPop {
         std::vector<std::string> &output,
         const std::vector<std::string> *inputConstants = NULL,
         std::ostream *errorStream = NULL,
-        int recursionLevel = 0);
+        int recursionLevel = 0,
+        const std::vector<std::string> *includePaths = NULL);
 
 }
 

@@ -34,6 +34,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
 using namespace std;
 
 #include "../string/malstring.h"
@@ -42,35 +43,35 @@ using namespace std;
 
 namespace ExPop {
 
-    // static unsigned int getFileNamePosition(
-    //     vector<string> &allFileNames,
-    //     const string &name) {
+    static unsigned int getFileNamePosition(
+        vector<string> &allFileNames,
+        const string &name) {
 
-    //     for(unsigned int i = 0; i < allFileNames.size(); i++) {
-    //         if(allFileNames[i] == name) {
-    //             return i;
-    //         }
-    //     }
+        for(unsigned int i = 0; i < allFileNames.size(); i++) {
+            if(allFileNames[i] == name) {
+                return i;
+            }
+        }
 
-    //     allFileNames.push_back(name);
-    //     return allFileNames.size() - 1;
-    // }
+        allFileNames.push_back(name);
+        return allFileNames.size() - 1;
+    }
 
     static string getFileLineNumber(
         vector<string> &allFileNames,
         const string &name,
         unsigned int lineNumber) {
 
+        ostringstream str;
+        str <<
+            "//#line " << lineNumber <<
+            " " << getFileNamePosition(allFileNames, name) <<
+            " // " << name;
+
         // This is disabled because it's borked on Intel shader
         // compiles.
 
-        // ostringstream str;
-        // str <<
-        //     "//#line " << lineNumber <<
-        //     " " << getFileNamePosition(allFileNames, name) <<
-        //     " // " << name;
         // return str.str();
-
         return "";
     }
 
@@ -81,12 +82,27 @@ namespace ExPop {
         vector<string> &output,
         const vector<string> *inputConstants,
         ostream *errorStream,
-        int recursionLevel) {
+        int recursionLevel,
+        const vector<string> *includePaths) {
 
-        if(!errorStream) errorStream = &cout;
+        vector<string> currentFileOutput;
+
+        // Figure out if we've included this file already before we
+        // run into a pragma once.
+        bool alreadyIncludedThis = false;
+        for(unsigned int i = 0; i < allFileNames.size(); i++) {
+            if(allFileNames[i] == fileName) {
+                alreadyIncludedThis = true;
+                break;
+            }
+        }
+
+        getFileNamePosition(allFileNames, fileName);
 
         if(recursionLevel > 20) {
-            (*errorStream) << "Too many levels of #include recursion in shader: " << fileName << endl;
+            if(errorStream) {
+                (*errorStream) << "Too many levels of #include recursion in shader: " << fileName << endl;
+            }
             return;
         }
 
@@ -95,12 +111,13 @@ namespace ExPop {
         // Add header
         if(inputConstants) {
             for(unsigned int i = 0; i < (*inputConstants).size(); i++) {
-                output.push_back(string("#define ") + (*inputConstants)[i]);
+                currentFileOutput.push_back(string("#define ") + (*inputConstants)[i]);
             }
         }
 
         // Correct the line number.
-        output.push_back(
+        currentFileOutput.push_back(
+
             getFileLineNumber(
                 allFileNames, fileName, 0));
 
@@ -149,10 +166,41 @@ namespace ExPop {
                                 // screw everything up later.
                             }
 
+                            // Make sure we work with
+                            // directory-relative stuff.
+                            string dirName = FileSystem::getParentName(fileName);
+                            string fullIncludeFilePath = includeFileName;
+                            if(dirName.size()) {
+                                fullIncludeFilePath = dirName + "/" + fullIncludeFilePath;
+                            }
+
                             // Load the included file.
                             char *code = NULL;
                             int codeLength = 0;
-                            code = FileSystem::loadFile(includeFileName, &codeLength, true);
+
+                            // Try to load from the current directory
+                            // first.
+                            code = FileSystem::loadFile(fullIncludeFilePath, &codeLength, true);
+
+                            // If that failed, start going through the
+                            // include paths.
+                            if(!code && includePaths) {
+                                for(unsigned int i = 0; i < includePaths->size(); i++) {
+
+                                    // Correct any trailing forward
+                                    // slash on the path so we can add
+                                    // it back in. (Derp.)
+                                    string path = (*includePaths)[i];
+                                    if(path.size() && path[path.size() - 1] == '/') {
+                                        path.substr(0, path.size() - 1);
+                                    }
+
+                                    // Try to load the file and break
+                                    // out of the loop if we succeed.
+                                    code = FileSystem::loadFile(path + "/" + includeFileName, &codeLength, true);
+                                    if(code) break;
+                                }
+                            }
 
                             if(code) {
 
@@ -164,9 +212,10 @@ namespace ExPop {
                                     allFileNames,
                                     includeFileName,
                                     inputLines,
-                                    output, NULL,
+                                    currentFileOutput, NULL,
                                     errorStream,
-                                    recursionLevel + 1);
+                                    recursionLevel + 1,
+                                    includePaths);
 
                                 // Get back to the correct line
                                 // number.
@@ -177,28 +226,57 @@ namespace ExPop {
                                 // // test ATI.
                                 // ostringstream str;
                                 // str << "#line " << lineNumber;
-                                // output.push_back(str.str());
+                                // currentFileOutput.push_back(str.str());
 
-                                output.push_back(
+                                currentFileOutput.push_back(
                                     getFileLineNumber(
                                         allFileNames, fileName, lineNumber));
 
-                            } else {
-                                // Error: Bad #include
-                                (*errorStream) << "Couldn't open " << includeFileName.c_str() << "." << endl;
-                            }
+                                delete[] code;
 
-                            delete[] code;
+                            } else {
+
+                                // Error: Bad #include
+                                if(errorStream) {
+                                    (*errorStream) << "Couldn't open " << includeFileName.c_str() << "." << endl;
+                                }
+                            }
 
                         } else {
                             // Error: Bad #include
+                        }
+
+                    } else if(preProcTokens[0] == "pragma") {
+
+                        bool pragmaHandled = false;
+
+                        if(preProcTokens.size() > 1) {
+
+                            if(preProcTokens[1] == "once") {
+
+                                // pragma once means bail out before
+                                // we end up adding the current output
+                                // buffer to the main output buffer if
+                                // we've already included this file.
+                                if(alreadyIncludedThis) {
+                                    return;
+                                }
+                                pragmaHandled = true;
+                            }
+
+                        }
+
+                        if(!pragmaHandled) {
+                            // Whatever the next preprocessor is might
+                            // recognize this.
+                            currentFileOutput.push_back(input[lineNumber]);
                         }
 
                     } else {
                         // If it's a directive we don't recognize
                         // here, it's probably something that GLSL
                         // already handles, so just pass it through.
-                        output.push_back(input[lineNumber]);
+                        currentFileOutput.push_back(input[lineNumber]);
                     }
 
                 } else {
@@ -208,12 +286,16 @@ namespace ExPop {
             } else {
 
                 // Normal line of code.
-                output.push_back(input[lineNumber]);
+                currentFileOutput.push_back(input[lineNumber]);
 
             }
 
             lineNumber++;
         }
+
+        // Add this file's stuff onto the current output.
+        output.insert(output.end(), currentFileOutput.begin(), currentFileOutput.end());
+
     }
 
 }

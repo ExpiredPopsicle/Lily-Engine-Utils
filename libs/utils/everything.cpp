@@ -42,6 +42,7 @@
 #include "filesystem/filesystem.cpp"
 #include "console/console.cpp"
 #include "parser/parser.cpp"
+#include "parser/parserxml.cpp"
 #include "assert/malassert.cpp"
 #include "compress/compress.cpp"
 #include "math/matrix.cpp"

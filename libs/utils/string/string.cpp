@@ -35,6 +35,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <cstdlib>
 using namespace std;
 
 #include <cassert>
@@ -116,6 +117,10 @@ namespace ExPop {
                     outStr << newLineReplace;
                     break;
 
+                case '\r':
+                    outStr << "\\r";
+                    break;
+
                 default:
                     outStr << str[i];
                     break;
@@ -137,6 +142,8 @@ namespace ExPop {
 
                 i++;
 
+                if(i >= str.size()) break;
+
                 switch(str[i]) {
 
                     case '\\':
@@ -149,6 +156,10 @@ namespace ExPop {
 
                     case 'n':
                         outStr << "\n";
+                        break;
+
+                    case 'r':
+                        outStr << "\r";
                         break;
 
                     default:
@@ -166,6 +177,122 @@ namespace ExPop {
         }
 
         return outStr.str();
+    }
+
+    std::string stringXmlEscape(const std::string &str) {
+
+        ostringstream outStr;
+
+        for(unsigned int i = 0; i < str.size(); i++) {
+
+            // TODO: Add a case for completely bizarre Unicode
+            // stuff. (Inverse of #xNUMBER;)
+
+            switch(str[i]) {
+
+                case '"':
+                    outStr << "&quot;";
+                    break;
+
+                case '<':
+                    outStr << "&lt;";
+                    break;
+
+                case '>':
+                    outStr << "&gt;";
+                    break;
+
+                case '&':
+                    outStr << "&amp;";
+                    break;
+
+                default:
+                    outStr << str[i];
+                    break;
+            }
+
+        }
+
+        return outStr.str();
+
+    }
+
+    std::string stringXmlUnescape(const std::string &str) {
+
+        ostringstream outStr;
+
+        for(unsigned int i = 0; i < str.size(); i++) {
+
+            if(str[i] == '&') {
+
+                i++;
+
+                if(i >= str.size()) break;
+
+                if(strStartsWith("amp;", str.c_str() + i)) {
+
+                    i += 3;
+                    outStr << '&';
+
+                } else if(strStartsWith("quot;", str.c_str() + i)) {
+
+                    i += 4;
+                    outStr << '"';
+
+                } else if(strStartsWith("lt;", str.c_str() + i)) {
+
+                    i += 2;
+                    outStr << '<';
+
+                } else if(strStartsWith("gt;", str.c_str() + i)) {
+
+                    i += 2;
+                    outStr << '>';
+
+                } else if(str[i] == '#') {
+
+                    i++;
+
+                    bool hexMode = false;
+
+                    if(i >= str.size()) break;
+                    if(str[i] == 'x') {
+                        hexMode = true;
+                        i++;
+                    }
+
+                    // Read in a hex value until we hit ';'
+                    ostringstream hexStr;
+                    while(i < str.size() && str[i] != ';' && (
+                          (str[i] >= '0' && str[i] <= '9') ||
+                          (str[i] >= 'a' && str[i] <= 'f') ||
+                          (str[i] >= 'A' && str[i] <= 'F'))) {
+
+                        hexStr << str[i];
+                        i++;
+
+                    }
+
+                    unsigned int hexVal =
+                        strtol(hexStr.str().c_str(), NULL, hexMode ? 16 : 10);
+
+                    // TODO: Handle unicode and extended stuff better
+                    // than just ignoring it if it's out of range!
+                    if(hexVal <= 255) {
+                        outStr << ((char)hexVal);
+                    }
+                }
+
+
+            } else {
+
+                outStr << str[i];
+
+            }
+        }
+
+        return outStr.str();
+
     }
 
     static inline int getNextNonWhiteSpace(const std::string &str, int start) {
@@ -501,6 +628,37 @@ namespace ExPop {
         // and return that.
         return table[i].val;
 
+    }
+
+    std::string strTrim(const std::string &str) {
+
+        if(!str.size()) return "";
+
+        unsigned int start = 0;
+
+        // Find the start.
+        while(start < str.size() && isWhiteSpace(str[start])) {
+            start++;
+        }
+
+        // All whitespace? Return now. Otherwise we'll end up with
+        // some serious issues when the end is the start and the start
+        // is the end.
+        if(start == str.size()) return "";
+
+        // Find the end.
+        unsigned int end = str.size() - 1;
+        while(1) {
+
+            if(!isWhiteSpace(str[end])) {
+                break;
+            }
+
+            if(end == 0) break;
+            end--;
+        }
+
+        return str.substr(start, end - start + 1);
     }
 
     // ----------------------------------------------------------------------

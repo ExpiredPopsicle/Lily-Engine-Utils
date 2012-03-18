@@ -65,6 +65,15 @@ namespace ExPop {
     /// Unescape a string.
     std::string stringUnescape(const std::string &str);
 
+    /// Escape a string by adding some XML entities. Only a few of
+    /// them.
+    std::string stringXmlEscape(const std::string &str);
+
+    /// Not-really-compliant XML string unescape. Handles XML/HTML
+    /// special entities. But only a few of them, and ASCII-range
+    /// numerical special values.
+    std::string stringXmlUnescape(const std::string &str);
+
     /// Encode a binary buffer as a string of hex values..
     void strEncodeHex(const void *buf, int length, std::string &str, int columns = 80);
 
@@ -112,6 +121,10 @@ namespace ExPop {
         std::ostream *errorOut = &(std::cout));
 
     // TODO: Make a constToStr
+
+    /// Return a string with all the trailing and leading whitespace
+    /// removed.
+    std::string strTrim(const std::string &str);
 
     /// Simple buffer that we can dynamically expand or iterate through.
     class SimpleBuffer {
