@@ -99,7 +99,7 @@ namespace ExPop {
         if(c >= 'a' && c <= 'z') return true;
         if(c >= 'A' && c <= 'Z') return true;
         if(c >= '0' && c <= '9') return true;
-        if(c == '_' || c == '-' || (c & 0x10000000)) return true;
+        if(c == ':' || c == '_' || c == '-' || (c & 0x10000000)) return true;
         return false;
     }
 

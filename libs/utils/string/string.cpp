@@ -592,6 +592,138 @@ namespace ExPop {
 
     }
 
+    static int findHighestBit(unsigned int bits) {
+        for(int i = sizeof(bits) * 8 - 1; i >= 0; i--) {
+            if(bits & (1 << i)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    static std::string makeBitsString(unsigned int bits, int maxBits = -1) {
+
+        ostringstream str;
+
+        if(maxBits == -1) maxBits = sizeof(bits) * 8;
+
+        for(int i = maxBits - 1; i >= 0; i--) {
+            if(bits & (1 << i)) {
+                str << "1";
+            } else {
+                str << "0";
+            }
+        }
+        return str.str();
+    }
+
+    static std::string makeHexString(unsigned int bits, int maxBytes = -1) {
+
+        ostringstream str;
+
+        if(maxBytes == -1) maxBytes = sizeof(bits);
+
+        for(int i = 0; i < maxBytes; i++) {
+            str << nibbleToHex((bits >> (i * 8 + 4)) & 0x0F);
+            str << nibbleToHex((bits >> (i * 8)) & 0x0F);
+        }
+        return str.str();
+    }
+
+    void strUTF32ToUTF8(
+        const std::vector<unsigned int> &utf32Str,
+        std::string &utf8Out) {
+
+        ostringstream outStr;
+        char tmpOutChunk[16];
+
+        for(unsigned int i = 0; i < utf32Str.size(); i++) {
+
+            // cout << findHighestBit(utf32Str[i]) << endl;
+
+            int highestBit = findHighestBit(utf32Str[i]);
+
+            // Figure out how many bytes we're going to need. Six bits
+            // per byte except for the first byte, which can hold a
+            // variable number depending on how many other bytes are
+            // being used. The 'f' variable is the space available in
+            // the first byte for data. Starts at 5, then goes down
+            // for every extra byte.
+            int numBytesNeeded = 1;
+            if(highestBit > 6) {
+                int f = 5;
+                int c = highestBit;
+                while(c >= 0) {
+                    c -= 6 + f;
+                    f--;
+                    numBytesNeeded++;
+                }
+            }
+
+            if(numBytesNeeded > 1) {
+
+                // This is a multi-byte character of some sort.
+
+                // First, copy the uniformly sized chunks over. Each
+                // of these bytes are data for the low six bits and
+                // just 10 for the two highest bits. Note that it
+                // copies starting from the end of the array and
+                // moving towards the front.
+                int numFullBytes = numBytesNeeded - 1;
+                unsigned int outByte = 0;
+                for(int fb = numFullBytes; fb > 0; fb--) {
+
+                    outByte = 0x80 | (utf32Str[i] >> (6 * (numFullBytes - fb))) & (b00111111);
+
+                    // cout << makeBitsString(outByte, 8) << " ";
+                    // cout << makeHexString(outByte, 1) << " ";
+
+                    tmpOutChunk[fb] = char(outByte);
+
+                }
+                // cout << endl;
+
+                // Now the first byte in the array is going to be
+                // different. The first few bits of it are 1 for each
+                // byte that was needed including the first.
+                unsigned int currentBitNum = 0;
+                outByte = 0;
+                for(currentBitNum = 0; currentBitNum < numBytesNeeded; currentBitNum++) {
+                    outByte |= (0x80 >> currentBitNum);
+                }
+
+                unsigned int finalDataBitMask = (0x80 >> currentBitNum) - 1;
+
+                // cout <<  "**" << makeBitsString(finalDataBitMask, 8) << "** ";
+
+                outByte |= (utf32Str[i] >> (6 * numFullBytes)) & finalDataBitMask;
+
+                // cout << makeBitsString(outByte, 8) << " ";
+                // cout << makeHexString(outByte, 1) << " ";
+                // cout << endl;
+
+                assert(numBytesNeeded < 15);
+                tmpOutChunk[0] = outByte;
+                tmpOutChunk[numBytesNeeded] = 0;
+                outStr << tmpOutChunk;
+
+            } else {
+
+                // ASCII character. Just copy it in.
+                // tmpOutChunk[0] = char(utf32Str[i]);
+                outStr << char(utf32Str[i]);
+            }
+
+
+            // cout << numBytesNeeded << endl;
+
+            // outStr << char(utf32Str[i]);
+
+        }
+
+        utf8Out = outStr.str();
+    }
+
     int strToConst(
         const std::string &str,
         const StringToConstMapping *table,

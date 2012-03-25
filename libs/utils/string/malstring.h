@@ -101,10 +101,16 @@ namespace ExPop {
         std::string &outFragment);
 
     /// Convert a UTF-8 string to a UTF-32 string (represented as an
-    /// std::vector fo unsigned integers).
+    /// std::vector of unsigned integers).
     void strUTF8ToUTF32(
         const std::string &utf8Str,
         std::vector<unsigned int> &utf32Out);
+
+    /// Convert a UTF-32 string (as an std::vector of unsigned
+    /// integers) to a UTF-8 string.
+    void strUTF32ToUTF8(
+        const std::vector<unsigned int> &utf32Str,
+        std::string &utf8Out);
 
     /// Pass in arrays of this to strToConst or constToStr. Last one
     /// is a default entry with a zero-length string.
