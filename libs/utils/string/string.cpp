@@ -601,45 +601,46 @@ namespace ExPop {
         return -1;
     }
 
-    static std::string makeBitsString(unsigned int bits, int maxBits = -1) {
+    // // These are utility functions that we'll need if we ever want
+    // // to debug the strUTF8ToUTF32 or strUTF32ToUTF8 functions.
 
-        ostringstream str;
+    // static std::string makeBitsString(unsigned int bits, int maxBits = -1) {
+    //     ostringstream str;
+    //     if(maxBits == -1) maxBits = sizeof(bits) * 8;
+    //     for(int i = maxBits - 1; i >= 0; i--) {
+    //         if(bits & (1 << i)) {
+    //             str << "1";
+    //         } else {
+    //             str << "0";
+    //         }
+    //     }
+    //     return str.str();
+    // }
 
-        if(maxBits == -1) maxBits = sizeof(bits) * 8;
-
-        for(int i = maxBits - 1; i >= 0; i--) {
-            if(bits & (1 << i)) {
-                str << "1";
-            } else {
-                str << "0";
-            }
-        }
-        return str.str();
-    }
-
-    static std::string makeHexString(unsigned int bits, int maxBytes = -1) {
-
-        ostringstream str;
-
-        if(maxBytes == -1) maxBytes = sizeof(bits);
-
-        for(int i = 0; i < maxBytes; i++) {
-            str << nibbleToHex((bits >> (i * 8 + 4)) & 0x0F);
-            str << nibbleToHex((bits >> (i * 8)) & 0x0F);
-        }
-        return str.str();
-    }
+    // static std::string makeHexString(unsigned int bits, int maxBytes = -1) {
+    //     ostringstream str;
+    //     if(maxBytes == -1) maxBytes = sizeof(bits);
+    //     for(int i = 0; i < maxBytes; i++) {
+    //         str << nibbleToHex((bits >> (i * 8 + 4)) & 0x0F);
+    //         str << nibbleToHex((bits >> (i * 8)) & 0x0F);
+    //     }
+    //     return str.str();
+    // }
 
     void strUTF32ToUTF8(
         const std::vector<unsigned int> &utf32Str,
         std::string &utf8Out) {
 
         ostringstream outStr;
+
+        // This will store a chunk that we'll drop into outStr all at
+        // once. Beware that it can't store null terminators in it
+        // because it'll chop off the remaining data if we try.  It's
+        // only used in the multi-byte character output, and all of
+        // those have a 1 in the high bit, so it'll never be zero.
         char tmpOutChunk[16];
 
         for(unsigned int i = 0; i < utf32Str.size(); i++) {
-
-            // cout << findHighestBit(utf32Str[i]) << endl;
 
             int highestBit = findHighestBit(utf32Str[i]);
 
@@ -675,13 +676,9 @@ namespace ExPop {
 
                     outByte = 0x80 | (utf32Str[i] >> (6 * (numFullBytes - fb))) & (b00111111);
 
-                    // cout << makeBitsString(outByte, 8) << " ";
-                    // cout << makeHexString(outByte, 1) << " ";
-
                     tmpOutChunk[fb] = char(outByte);
 
                 }
-                // cout << endl;
 
                 // Now the first byte in the array is going to be
                 // different. The first few bits of it are 1 for each
@@ -694,33 +691,24 @@ namespace ExPop {
 
                 unsigned int finalDataBitMask = (0x80 >> currentBitNum) - 1;
 
-                // cout <<  "**" << makeBitsString(finalDataBitMask, 8) << "** ";
-
                 outByte |= (utf32Str[i] >> (6 * numFullBytes)) & finalDataBitMask;
 
-                // cout << makeBitsString(outByte, 8) << " ";
-                // cout << makeHexString(outByte, 1) << " ";
-                // cout << endl;
-
-                assert(numBytesNeeded < 15);
                 tmpOutChunk[0] = outByte;
+
+                // Add the real null terminator.
+                assert(numBytesNeeded < 15);
                 tmpOutChunk[numBytesNeeded] = 0;
+
                 outStr << tmpOutChunk;
 
             } else {
 
                 // ASCII character. Just copy it in.
-                // tmpOutChunk[0] = char(utf32Str[i]);
                 outStr << char(utf32Str[i]);
             }
-
-
-            // cout << numBytesNeeded << endl;
-
-            // outStr << char(utf32Str[i]);
-
         }
 
+        // Done. Now just copy out the string.
         utf8Out = outStr.str();
     }
 
