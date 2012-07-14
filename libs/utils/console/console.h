@@ -2,13 +2,11 @@
 //
 //   Lily Engine alpha
 //
-//   Copyright (c) 2010 Clifford Jolly
+//   Copyright (c) 2012 Clifford Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
 // ---------------------------------------------------------------------------
-//
-//   Copyright (c) 2011 Clifford Jolly
 //
 //   This software is provided 'as-is', without any express or implied
 //   warranty. In no event will the authors be held liable for any

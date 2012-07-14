@@ -2,13 +2,11 @@
 //
 //   Lily Engine alpha
 //
-//   Copyright (c) 2010 Clifford Jolly
+//   Copyright (c) 2012 Clifford Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
 // ---------------------------------------------------------------------------
-//
-//   Copyright (c) 2011 Clifford Jolly
 //
 //   This software is provided 'as-is', without any express or implied
 //   warranty. In no event will the authors be held liable for any
@@ -482,7 +480,7 @@ namespace ExPop {
             // Fix up bucket start pointers.
             for(unsigned int i = 0; i < numBuckets; i++) {
                 if(allBuckets[i].slots) {
-                    ptrdiff_t slotNum = allBuckets[i].slots - oldSlots;
+                    std::ptrdiff_t slotNum = allBuckets[i].slots - oldSlots;
                     allBuckets[i].slots = allSlots + slotNum;
                 }
             }

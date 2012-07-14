@@ -2,13 +2,11 @@
 //
 //   Lily Engine alpha
 //
-//   Copyright (c) 2010 Clifford Jolly
+//   Copyright (c) 2012 Clifford Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
 // ---------------------------------------------------------------------------
-//
-//   Copyright (c) 2011 Clifford Jolly
 //
 //   This software is provided 'as-is', without any express or implied
 //   warranty. In no event will the authors be held liable for any
@@ -61,17 +59,17 @@ namespace ExPop {
 
         struct Mutex::MutexPrivate {
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows mutexes.
             HANDLE winMutex;
 
-#else
+          #else
 
             // Linux/Mac mutexes.
             pthread_mutex_t mutex;
 
-#endif
+          #endif
 
         };
 
@@ -84,50 +82,50 @@ namespace ExPop {
 
             mutexPrivate = new MutexPrivate();
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows
             mutexPrivate->winMutex = CreateMutex(0, FALSE, 0);
 
-#else
+          #else
 
             // Linux/Mac
             pthread_mutex_init(&mutexPrivate->mutex, NULL);
 
-#endif
+          #endif
 
         }
 
         Mutex::~Mutex(void) {
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows
             CloseHandle(mutexPrivate->winMutex);
 
-#else
+          #else
 
             // Linux/Mac
             pthread_mutex_destroy(&mutexPrivate->mutex);
 
-#endif
+          #endif
 
             delete mutexPrivate;
         }
 
         void Mutex::lock(void) {
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows
             WaitForSingleObject(mutexPrivate->winMutex, INFINITE);
 
-#else
+          #else
 
             // Linux/Mac
             pthread_mutex_lock(&mutexPrivate->mutex);
 
-#endif
+          #endif
 
             lockingThread = getMyId();
 
@@ -135,17 +133,17 @@ namespace ExPop {
 
         void Mutex::unlock(void) {
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows
             ReleaseMutex(mutexPrivate->winMutex);
 
-#else
+          #else
 
             // Linux/Mac
             pthread_mutex_unlock(&mutexPrivate->mutex);
 
-#endif
+          #endif
 
         }
 
@@ -161,7 +159,7 @@ namespace ExPop {
         };
 
 
-#ifdef WIN32
+      #ifdef WIN32
 
         // Entry point for threads in Win32.
         unsigned int __stdcall threadStarter(void *data) {
@@ -180,7 +178,7 @@ namespace ExPop {
             return 0;
         }
 
-#else
+      #else
 
         // Entry point for threads in everywhere besides Win32.
         void *threadStarter(void *data) {
@@ -199,7 +197,7 @@ namespace ExPop {
             return NULL;
         }
 
-#endif
+      #endif
 
         Thread::Thread(void) {
             threadPrivate = NULL;
@@ -228,19 +226,19 @@ namespace ExPop {
 
             done = false;
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows
             systemThread = (HANDLE)_beginthreadex(0, 0, threadStarter, threadPrivate, CREATE_SUSPENDED, NULL);
             ResumeThread(systemThread);
 
-#else
+          #else
 
             // Linux/Mac
             pthread_create(&(systemThread), NULL,
                            threadStarter, threadPrivate);
 
-#endif
+          #endif
 
         }
 
@@ -254,7 +252,7 @@ namespace ExPop {
 
             if(!done) {
 
-#ifdef WIN32
+              #ifdef WIN32
 
                 // Windows
 
@@ -284,12 +282,12 @@ namespace ExPop {
                 // thread, calling this multiple times will be bad.
                 CloseHandle(systemThread);
 
-#else
+              #else
 
                 // Linux/Mac/Android
                 pthread_join(systemThread, NULL);
 
-#endif
+              #endif
                 done = true;
 
             } else {
@@ -303,17 +301,17 @@ namespace ExPop {
 
             if(threadPrivate) {
 
-#ifdef WIN32
+              #ifdef WIN32
 
                 // Windows
                 return systemThread;
 
-#else
+              #else
 
                 // Linux/Mac
                 return systemThread;
 
-#endif
+              #endif
             }
 
             return 0;
@@ -322,17 +320,17 @@ namespace ExPop {
 
         ThreadId getMyId(void) {
 
-#ifdef WIN32
+          #ifdef WIN32
 
             // Windows
             return GetCurrentThread();
 
-#else
+          #else
 
             // Linux/Mac
             return pthread_self();
 
-#endif
+          #endif
         }
 
     }

@@ -2,13 +2,11 @@
 //
 //   Lily Engine alpha
 //
-//   Copyright (c) 2010 Clifford Jolly
+//   Copyright (c) 2012 Clifford Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
 // ---------------------------------------------------------------------------
-//
-//   Copyright (c) 2011 Clifford Jolly
 //
 //   This software is provided 'as-is', without any express or implied
 //   warranty. In no event will the authors be held liable for any
@@ -546,9 +544,15 @@ namespace ExPop {
 #define b01000000 64
 #define b00111111 63
 
+    // TODO: Handle byte order marker.
     void strUTF8ToUTF32(
         const std::string &utf8Str,
         std::vector<unsigned int> &utf32Out) {
+
+        utf32Out.clear();
+
+        // TODO: Recognize and discard the UTF-8 byte order mark. (The
+        // only byte order mark that even means anything in UTF-8.)
 
         for(unsigned int i = 0; i < utf8Str.size(); i++) {
 
@@ -633,6 +637,9 @@ namespace ExPop {
 
         ostringstream outStr;
 
+        // TODO: Recognize and use the byte order marks if they're
+        // present.
+
         // This will store a chunk that we'll drop into outStr all at
         // once. Beware that it can't store null terminators in it
         // because it'll chop off the remaining data if we try.  It's
@@ -674,7 +681,7 @@ namespace ExPop {
                 unsigned int outByte = 0;
                 for(int fb = numFullBytes; fb > 0; fb--) {
 
-                    outByte = 0x80 | (utf32Str[i] >> (6 * (numFullBytes - fb))) & (b00111111);
+                    outByte = 0x80 | ((utf32Str[i] >> (6 * (numFullBytes - fb))) & (b00111111));
 
                     tmpOutChunk[fb] = char(outByte);
 
@@ -685,7 +692,7 @@ namespace ExPop {
                 // byte that was needed including the first.
                 unsigned int currentBitNum = 0;
                 outByte = 0;
-                for(currentBitNum = 0; currentBitNum < numBytesNeeded; currentBitNum++) {
+                for(currentBitNum = 0; currentBitNum < (unsigned int)numBytesNeeded; currentBitNum++) {
                     outByte |= (0x80 >> currentBitNum);
                 }
 

@@ -2,13 +2,11 @@
 //
 //   Lily Engine alpha
 //
-//   Copyright (c) 2010 Clifford Jolly
+//   Copyright (c) 2012 Clifford Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
 // ---------------------------------------------------------------------------
-//
-//   Copyright (c) 2011 Clifford Jolly
 //
 //   This software is provided 'as-is', without any express or implied
 //   warranty. In no event will the authors be held liable for any
@@ -38,6 +36,9 @@
 #include <vector>
 
 namespace ExPop {
+
+    // TODO: Make a consistent prefix for this stuff (str vs
+    // string). Possibly toss it into a namespace under ExPop.
 
     /// Return true if the character is whitespace. False otherwise.
     bool isWhiteSpace(char c);
