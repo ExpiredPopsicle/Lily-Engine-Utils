@@ -29,8 +29,6 @@
 
 ----------------------------------------------------------------------
 
-
-
 I'm going to put something useful in this README later, I
 promise. -ExpiredPopsicle
 
@@ -39,10 +37,14 @@ promise. -ExpiredPopsicle
 ----------------------------------------------------------------------
 
 libs/utils contains the basic utility library that shouldn't depend on
-anything besides system libs. It can be easily dropped into existing
-projects and everything is in the namespace "ExPop". To use it in a
-project you can either include everything.cpp into your project, or
-individually include each file that everything.cpp #includes.
+anything besides system libs (pthreads on *nix, the usual Windowsy
+junk on Windows). It can be easily dropped into existing projects and
+everything is in the namespace "ExPop".
+
+To use it in a project you can either include everything.cpp into your
+project, or individually include each file that everything.cpp
+#includes. There's also a waf build script that makes just builds the
+library using gcc.
 
 Don't include any test.cpp or _test.cpp file. They're for internal
 testing right now. While they may be rewritten or converted into a
@@ -52,8 +54,6 @@ are still there as examples of how stuff should work.
 The include file "utils.h" will include everything else
 automatically. You can also just include headers for individual
 features, but those header names may change.
-
-There may be an actual build system later.
 
 ----------------------------------------------------------------------
   Documentation
