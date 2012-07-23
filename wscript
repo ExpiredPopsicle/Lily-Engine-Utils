@@ -60,18 +60,42 @@ def makeSourceList(ctx):
 def configure(ctx):
     print("Configuring main thing.");
 
-    makeSourceList(ctx);
+    # makeSourceList(ctx);
 
-    for p in ctx.env.buildPlatforms:
-        print("  Platform: " + p);
+    # for p in ctx.env.buildPlatforms:
+    #     print("  Platform: " + p);
 
-    if(not ("extraLibs") in ctx.env):
-        ctx.env.extraLibs = [];
+    if(not ("expopLibs") in ctx.env):
+        ctx.env.expopLibs = [];
 
-    ctx.env.extraLibs.append(ctx.path.relpath() + "/" + outLibName);
+    ctx.env.expopLibs.append(ctx.path.relpath() + "/" + outLibName);
 
     # print("-----" + ctx.path.relpath());
 
+    # print("  Blah: " + ctx.env['CC'][0]);
+    # print("  Blah: " + ctx.env['DEST_PLATFORM']);
+
+    if(not ctx.env["CC"]):
+        ctx.env["CC"] = "gcc";
+    if(not ctx.env["AR"]):
+        ctx.env["AR"] = "ar";
+    if(not ctx.env["CXX"]):
+        ctx.env["CXX"] = "g++";
+    if(not ctx.env["LD"]):
+        ctx.env["LD"] = "ld";
+
+    if(not ctx.env["NATIVE_CC"]):
+        ctx.env["NATIVE_CC"] = "gcc";
+    if(not ctx.env["NATIVE_AR"]):
+        ctx.env["NATIVE_AR"] = "ar";
+    if(not ctx.env["NATIVE_CXX"]):
+        ctx.env["NATIVE_CXX"] = "g++";
+    if(not ctx.env["NATIVE_LD"]):
+        ctx.env["NATIVE_LD"] = "ld";
+
+    # TODO: Make this specific to Linux, Mac, and Android builds.
+    ctx.env['LIBS'] = "-lpthread";
+    print("ASDGFASDFASDFASDF");
 
 def addBuildFile(ctx, srcFileName):
     global obFileNames;
