@@ -50,52 +50,8 @@ def makeSourceList(ctx):
     os.path.walk("src", buildSourceList, "");
     os.chdir(oldDir);
 
-# for fname in sourceFileList:
-#     print fname;
-
-# def recurseSubModules(ctx):
-#     for sm in submoduleList:
-#         ctx.recurse(sm);
-
 def configure(ctx):
-    print("Configuring main thing.");
-
-    # makeSourceList(ctx);
-
-    # for p in ctx.env.buildPlatforms:
-    #     print("  Platform: " + p);
-
-    if(not ("expopLibs") in ctx.env):
-        ctx.env.expopLibs = [];
-
-    ctx.env.expopLibs.append(ctx.path.relpath() + "/" + outLibName);
-
-    # print("-----" + ctx.path.relpath());
-
-    # print("  Blah: " + ctx.env['CC'][0]);
-    # print("  Blah: " + ctx.env['DEST_PLATFORM']);
-
-    if(not ctx.env["CC"]):
-        ctx.env["CC"] = "gcc";
-    if(not ctx.env["AR"]):
-        ctx.env["AR"] = "ar";
-    if(not ctx.env["CXX"]):
-        ctx.env["CXX"] = "g++";
-    if(not ctx.env["LD"]):
-        ctx.env["LD"] = "ld";
-
-    if(not ctx.env["NATIVE_CC"]):
-        ctx.env["NATIVE_CC"] = "gcc";
-    if(not ctx.env["NATIVE_AR"]):
-        ctx.env["NATIVE_AR"] = "ar";
-    if(not ctx.env["NATIVE_CXX"]):
-        ctx.env["NATIVE_CXX"] = "g++";
-    if(not ctx.env["NATIVE_LD"]):
-        ctx.env["NATIVE_LD"] = "ld";
-
-    # TODO: Make this specific to Linux, Mac, and Android builds.
-    ctx.env['LIBS'] = "-lpthread";
-    print("ASDGFASDFASDFASDF");
+    pass;
 
 def addBuildFile(ctx, srcFileName):
     global obFileNames;
@@ -116,7 +72,8 @@ def build(ctx):
     makeSourceList(ctx);
 
     outLibNode = ctx.path.find_or_declare(outLibName);
-    print("*** " + outLibNode.abspath());
+
+    # Path to lib file is in outLibNode.abspath()
 
     for fname in sourceFileList:
         if(fname.endswith(".cpp") or fname.endswith(".c")):
