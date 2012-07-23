@@ -81,5 +81,3 @@ def build(ctx):
 
     addBuildLibTarget(ctx, outLibName);
 
-    # ctx(rule="g++ -c ${SRC} -o ${TGT}", target="out.o", source="src/everything.cpp");
-
