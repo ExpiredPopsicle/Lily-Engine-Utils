@@ -29,8 +29,17 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// TODO: Replace WIN32 with something more generic for 64-bit Windows
+// builds to work.
+
 // TODO: Check this:
 // http://www.reddit.com/r/gamedev/comments/s7y83/saving_configuration_files_savegame_data_etc_on/
+
+// TODO: Get path to binary.
+//   windows: GetModuleFileName
+//   unix: ???
+
+// TODO: Maybe a thing to get the data directory, as it's been configured.
 
 #pragma once
 
@@ -194,5 +203,11 @@ namespace ExPop {
         /// to outputList. extension is a comma or space separated list of
         /// extensions to include. Don't include the '.' in the extensions.
         void filterFileListByType(const std::string &extension, const std::vector<std::string> &inputList, std::vector<std::string> &outputList);
+
+        /// Get the current working directory. Note that this will NOT
+        /// add a leading slash at the end unless it is the root
+        /// directory on a Unix filesystem or the root directory on
+        /// some Windows drive.
+        std::string getCwd(void);
     }
 }

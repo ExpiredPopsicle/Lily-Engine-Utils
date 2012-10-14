@@ -745,6 +745,30 @@ namespace ExPop {
             }
         }
 
+        std::string getCwd(void) {
+
+            char dirBuf[2048];
+
+          #ifdef WIN32
+
+            GetCurrentDirectory(2048, dirBuf);
+
+            // Convert backslashes to forward slashes for consistency.
+            size_t len = strlen(dirBuf);
+            for(size_t i = 0; i < len; i++) {
+                if(dirBuf[i] == '\\') {
+                    dirBuf[i] = '/';
+                }
+            }
+
+          #else
+
+            getcwd(dirBuf, 2048);
+
+          #endif
+
+            return string(dirBuf);
+        }
     }
 
 }

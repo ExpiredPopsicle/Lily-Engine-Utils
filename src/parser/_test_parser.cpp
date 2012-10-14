@@ -39,8 +39,8 @@
 #include <cstdlib>
 using namespace std;
 
-#include <malstring.h>
-#include "parser.h"
+#include "../string/malstring.h"
+#include "lilyparser.h"
 using namespace ExPop;
 
 int main(int argc, char *argv[]) {

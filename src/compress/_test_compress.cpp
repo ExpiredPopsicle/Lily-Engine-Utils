@@ -37,6 +37,7 @@ using namespace std;
 
 #include "../filesystem/filesystem.h"
 #include "compress.h"
+using namespace ExPop;
 
 void dumpMem(const char *mem, unsigned int length) {
 
