@@ -1,7 +1,10 @@
 
-noinst_LIBRARIES = liblilyengine_utils.a
+# noinst_LIBRARIES = liblilyengine_utils.a
+lib_LIBRARIES = liblilyengine_utils.a
 
-noinst_HEADERS =
+liblilyengine_utils_a_includedir = $(includedir)/lilyengine
+
+liblilyengine_utils_a_include_HEADERS = \
 	src/thread/thread.h \
 	src/assetloader/assetloader.h \
 	src/math/matrix.h \
@@ -17,7 +20,12 @@ noinst_HEADERS =
 	src/refsystem/refsystem.h \
 	src/compress/compress.h \
 	src/filesystem/filesystem.h \
-	src/filesystem/archive.h
+	src/filesystem/archive.h \
+	src/derpscript/pub/derpconfig.h \
+	src/derpscript/pub/derperror.h \
+	src/derpscript/pub/derpvm.h \
+	src/derpscript/pub/derpobject.h \
+	src/derpscript/pub/derpcontext.h
 
 liblilyengine_utils_a_SOURCES = \
 	src/thread/thread.cpp \
@@ -25,6 +33,7 @@ liblilyengine_utils_a_SOURCES = \
 	src/math/matrix.cpp \
 	src/assert/malassert.cpp \
 	src/string/string.cpp \
+	src/string/pooledstring.cpp \
 	src/preprocess/preprocess.cpp \
 	src/console/console.cpp \
 	src/parser/parserxml.cpp \
@@ -32,13 +41,46 @@ liblilyengine_utils_a_SOURCES = \
 	src/refsystem/refsystem.cpp \
 	src/compress/compress.cpp \
 	src/filesystem/filesystem.cpp \
-	src/filesystem/archive.cpp
+	src/filesystem/archive.cpp \
+	src/derpscript/derpcontext.cpp \
+	src/derpscript/derperror.cpp \
+	src/derpscript/derpexecnode_binarymath.cpp \
+	src/derpscript/derpexecnode.cpp \
+	src/derpscript/derpexecnode_function.cpp \
+	src/derpscript/derpexecnode_loop.cpp \
+	src/derpscript/derpexecnode_unarymath.cpp \
+	src/derpscript/derplexer.cpp \
+	src/derpscript/derpobject.cpp \
+	src/derpscript/derpparser_block.cpp \
+	src/derpscript/derpparser.cpp \
+	src/derpscript/derpparser_debug.cpp \
+	src/derpscript/derpparser_expression.cpp \
+	src/derpscript/derpparser_functioncall.cpp \
+	src/derpscript/derpparser_function.cpp \
+	src/derpscript/derpparser_ifelse.cpp \
+	src/derpscript/derpparser_index.cpp \
+	src/derpscript/derpparser_loops.cpp \
+	src/derpscript/derpparser_statement.cpp \
+	src/derpscript/derpparser_value.cpp \
+	src/derpscript/derpparser_variabledec.cpp \
+	src/derpscript/derpvm_builtinfunctions.cpp \
+	src/derpscript/derpvm.cpp
+
+noinst_HEADERS = \
+	src/derpscript/derpexecnode.h \
+	src/derpscript/derpexecnode_internal.h \
+	src/derpscript/derperror_internal.h \
+	src/derpscript/derplexer.h \
+	src/derpscript/derpparser.h \
+	src/derpscript/derpparser_internal.h \
+	src/derpscript/derpvm_builtinfunctions.h
 
 noinst_PROGRAMS = \
 	test_filesystem \
 	test_compress \
 	test_parser \
-	test_thread
+	test_thread \
+	test_derpscript
 
 test_filesystem_SOURCES = src/filesystem/_test_filesystem.cpp
 test_filesystem_LDADD = liblilyengine_utils.a
@@ -52,4 +94,9 @@ test_parser_LDADD = liblilyengine_utils.a
 test_thread_SOURCES = src/thread/_test_thread.cpp
 test_thread_LDADD = liblilyengine_utils.a
 
+test_derpscript_SOURCES = src/derpscript/_test.cpp
+test_derpscript_LDADD = liblilyengine_utils.a
 
+AM_CPPFLAGS = \
+	-I$(srcdir)/src/derpscript/pub \
+	-I$(srcdir)/src/string
