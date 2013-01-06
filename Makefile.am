@@ -25,7 +25,8 @@ liblilyengine_utils_a_include_HEADERS = \
 	src/derpscript/pub/derperror.h \
 	src/derpscript/pub/derpvm.h \
 	src/derpscript/pub/derpobject.h \
-	src/derpscript/pub/derpcontext.h
+	src/derpscript/pub/derpcontext.h \
+	src/sockets/expopsockets.h
 
 liblilyengine_utils_a_SOURCES = \
 	src/thread/thread.cpp \
@@ -64,7 +65,8 @@ liblilyengine_utils_a_SOURCES = \
 	src/derpscript/derpparser_value.cpp \
 	src/derpscript/derpparser_variabledec.cpp \
 	src/derpscript/derpvm_builtinfunctions.cpp \
-	src/derpscript/derpvm.cpp
+	src/derpscript/derpvm.cpp \
+	src/sockets/sockets.cpp
 
 noinst_HEADERS = \
 	src/derpscript/derpexecnode.h \
@@ -80,7 +82,8 @@ noinst_PROGRAMS = \
 	test_compress \
 	test_parser \
 	test_thread \
-	test_derpscript
+	test_derpscript \
+	test_sockets
 
 test_filesystem_SOURCES = src/filesystem/_test_filesystem.cpp
 test_filesystem_LDADD = liblilyengine_utils.a
@@ -94,8 +97,12 @@ test_parser_LDADD = liblilyengine_utils.a
 test_thread_SOURCES = src/thread/_test_thread.cpp
 test_thread_LDADD = liblilyengine_utils.a
 
-test_derpscript_SOURCES = src/derpscript/_test.cpp
+test_derpscript_SOURCES = src/derpscript/_test_derpscript.cpp
 test_derpscript_LDADD = liblilyengine_utils.a
+
+test_sockets_SOURCES = src/sockets/_test_sockets.cpp
+# test_sockets_LDADD = liblilyengine_utils.a @EXTRA_LDADD@
+test_sockets_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/src/derpscript/pub \
