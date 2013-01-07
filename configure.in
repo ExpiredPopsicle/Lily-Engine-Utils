@@ -9,13 +9,11 @@ AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 
 case "$host" in
     *mingw*)
-        LDFLAGS="$LDFLAGS -lwsock32"
+        AM_LDFLAGS="$AM_LDFLAGS -lwsock32"
         EXTRA_LDADD="-lwsock32"
-        CXXFLAGS="$CXXFLAGS"
         ;;
     *)
-        LDFLAGS="$LDFLAGS -pthread"
-        CXXFLAGS="$CXXFLAGS"
+        AM_LDFLAGS="$AM_LDFLAGS -pthread"
         ;;
 esac
 
@@ -25,8 +23,7 @@ LDFLAGS="$LDFLAGS"
 dnl AC_DEFINE_UNQUOTED([FOOBAR], ["$FOOBAR"], [Some junk for the build.])
 dnl AC_DEFINE_UNQUOTED([DATADIR], [$datadir], [Data directory.])
 
-AC_SUBST(LDFLAGS)
-AC_SUBST(CXXFLAGS)
+AC_SUBST(AM_LDFLAGS)
 AC_SUBST(EXTRA_LDADD)
 
 AC_PROG_CXX

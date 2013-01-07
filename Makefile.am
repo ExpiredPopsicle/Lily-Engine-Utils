@@ -86,22 +86,21 @@ noinst_PROGRAMS = \
 	test_sockets
 
 test_filesystem_SOURCES = src/filesystem/_test_filesystem.cpp
-test_filesystem_LDADD = liblilyengine_utils.a
+test_filesystem_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 test_compress_SOURCES = src/compress/_test_compress.cpp
-test_compress_LDADD = liblilyengine_utils.a
+test_compress_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 test_parser_SOURCES = src/parser/_test_parser.cpp
-test_parser_LDADD = liblilyengine_utils.a
+test_parser_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 test_thread_SOURCES = src/thread/_test_thread.cpp
-test_thread_LDADD = liblilyengine_utils.a
+test_thread_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 test_derpscript_SOURCES = src/derpscript/_test_derpscript.cpp
-test_derpscript_LDADD = liblilyengine_utils.a
+test_derpscript_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 test_sockets_SOURCES = src/sockets/_test_sockets.cpp
-# test_sockets_LDADD = liblilyengine_utils.a @EXTRA_LDADD@
 test_sockets_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 AM_CPPFLAGS = \

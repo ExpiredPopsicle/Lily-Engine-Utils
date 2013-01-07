@@ -38,6 +38,7 @@ namespace ExPop {
       #ifdef WIN32
         WSADATA wsaData = {0};
         int startupResult = WSAStartup(MAKEWORD(2, 0), &wsaData);
+        assert(!startupResult);
       #endif
         socketsDoneInit = true;
     }

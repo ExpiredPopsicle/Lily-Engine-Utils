@@ -131,6 +131,8 @@ namespace ExPop {
         va_list argList;
         va_start(argList, count);
 
+        // FIXME: MinGW build complains about unsigned/signed
+        // comparison here.
         while(count && tokens[start]->type == va_arg(argList, unsigned int)) {
             start++;
             count--;
