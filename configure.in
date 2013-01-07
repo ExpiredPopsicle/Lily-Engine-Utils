@@ -17,12 +17,15 @@ case "$host" in
         ;;
 esac
 
-CXXFLAGS="$CXXFLAGS -Wall"
-LDFLAGS="$LDFLAGS"
+dnl CXXFLAGS="$CXXFLAGS -Wall"
+dnl LDFLAGS="$LDFLAGS"
 
 dnl AC_DEFINE_UNQUOTED([FOOBAR], ["$FOOBAR"], [Some junk for the build.])
 dnl AC_DEFINE_UNQUOTED([DATADIR], [$datadir], [Data directory.])
 
+AM_CXXFLAGS="-Wall"
+
+AC_SUBST(AM_CXXFLAGS)
 AC_SUBST(AM_LDFLAGS)
 AC_SUBST(EXTRA_LDADD)
 
