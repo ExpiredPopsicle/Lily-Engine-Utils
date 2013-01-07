@@ -21,11 +21,11 @@ liblilyengine_utils_a_include_HEADERS = \
 	src/compress/compress.h \
 	src/filesystem/filesystem.h \
 	src/filesystem/archive.h \
-	src/derpscript/pub/derpconfig.h \
-	src/derpscript/pub/derperror.h \
-	src/derpscript/pub/derpvm.h \
-	src/derpscript/pub/derpobject.h \
-	src/derpscript/pub/derpcontext.h \
+	include/derpconfig.h \
+	include/derperror.h \
+	include/derpvm.h \
+	include/derpobject.h \
+	include/derpcontext.h \
 	src/sockets/expopsockets.h
 
 liblilyengine_utils_a_SOURCES = \
@@ -105,5 +105,5 @@ test_sockets_SOURCES = src/sockets/_test_sockets.cpp
 test_sockets_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 
 AM_CPPFLAGS = \
-	-I$(srcdir)/src/derpscript/pub \
-	-I$(srcdir)/src/string
+	-I$(srcdir)/src/string \
+	-I$(srcdir)/include
