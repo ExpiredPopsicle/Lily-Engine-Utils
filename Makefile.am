@@ -5,28 +5,28 @@ lib_LIBRARIES = liblilyengine_utils.a
 liblilyengine_utils_a_includedir = $(includedir)/lilyengine
 
 liblilyengine_utils_a_include_HEADERS = \
-	src/thread/thread.h \
-	src/assetloader/assetloader.h \
-	src/math/matrix.h \
-	src/math/mathdefs.h \
-	src/assert/malassert.h \
-	src/hashtable/hashtable.h \
-	src/string/malstring.h \
-	src/utils.h \
-	src/preprocess/preprocess.h \
-	src/console/console.h \
-	src/parser/lilyparser.h \
-	src/common/winhacks.h \
-	src/refsystem/refsystem.h \
-	src/compress/compress.h \
-	src/filesystem/filesystem.h \
-	src/filesystem/archive.h \
+	include/thread.h \
+	include/assetloader.h \
+	include/matrix.h \
+	include/mathdefs.h \
+	include/malassert.h \
+	include/hashtable.h \
+	include/malstring.h \
+	include/preprocess.h \
+	include/console.h \
+	include/lilyparser.h \
+	include/winhacks.h \
+	include/refsystem.h \
+	include/compress.h \
+	include/filesystem.h \
+	include/archive.h \
 	include/derpconfig.h \
 	include/derperror.h \
 	include/derpvm.h \
 	include/derpobject.h \
 	include/derpcontext.h \
-	src/sockets/expopsockets.h
+	include/expopsockets.h \
+	include/utils.h
 
 liblilyengine_utils_a_SOURCES = \
 	src/thread/thread.cpp \

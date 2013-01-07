@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 
-#include "../hashtable/hashtable.h"
+#include "hashtable.h"
 
 namespace ExPop {
 

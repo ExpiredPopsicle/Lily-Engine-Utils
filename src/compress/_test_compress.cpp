@@ -35,7 +35,7 @@ using namespace std;
 
 #include <string.h>
 
-#include "../filesystem/filesystem.h"
+#include "filesystem.h"
 #include "compress.h"
 using namespace ExPop;
 

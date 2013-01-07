@@ -34,10 +34,10 @@
 #include <string>
 using namespace std;
 
-#include "../common/winhacks.h"
-#include "../filesystem/filesystem.h"
-#include "../console/console.h"
-#include "../thread/thread.h"
+#include "winhacks.h"
+#include "filesystem.h"
+#include "console.h"
+#include "thread.h"
 #include "assetloader.h"
 using namespace ExPop::Console;
 

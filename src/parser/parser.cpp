@@ -39,8 +39,8 @@
 #include <cstdlib>
 using namespace std;
 
-#include "../string/malstring.h"
-#include "../filesystem/filesystem.h"
+#include "malstring.h"
+#include "filesystem.h"
 #include "lilyparser.h"
 
 namespace ExPop {

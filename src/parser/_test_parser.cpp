@@ -39,7 +39,7 @@
 #include <cstdlib>
 using namespace std;
 
-#include "../string/malstring.h"
+#include "malstring.h"
 #include "lilyparser.h"
 using namespace ExPop;
 

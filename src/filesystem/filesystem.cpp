@@ -48,14 +48,13 @@ using namespace std;
 #include <direct.h>
 #endif
 
-#include "../console/console.h"
+#include "console.h"
 using namespace ExPop::Console;
 
 #include "filesystem.h"
 #include "archive.h"
-
-#include "../string/malstring.h"
-#include "../thread/thread.h"
+#include "malstring.h"
+#include "thread.h"
 
 namespace ExPop {
 

@@ -38,9 +38,9 @@
 #include <cassert>
 using namespace std;
 
-#include "../common/winhacks.h"
-#include "../thread/thread.h"
-#include "../assert/malassert.h"
+#include "winhacks.h"
+#include "thread.h"
+#include "malassert.h"
 #include "console.h"
 
 #ifndef WIN32

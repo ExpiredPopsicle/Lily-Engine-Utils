@@ -35,8 +35,8 @@
 #include <sstream>
 using namespace std;
 
-#include "../string/malstring.h"
-#include "../filesystem/filesystem.h"
+#include "malstring.h"
+#include "filesystem.h"
 #include "preprocess.h"
 
 namespace ExPop {

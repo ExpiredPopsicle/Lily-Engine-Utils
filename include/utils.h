@@ -31,17 +31,17 @@
 
 #pragma once
 
-#include "common/winhacks.h"
-#include "console/console.h"
-#include "string/malstring.h"
-#include "filesystem/filesystem.h"
-#include "thread/thread.h"
-#include "refsystem/refsystem.h"
-#include "math/matrix.h"
-#include "parser/lilyparser.h"
-#include "hashtable/hashtable.h"
-#include "assetloader/assetloader.h"
-#include "preprocess/preprocess.h"
+#include "winhacks.h"
+#include "console.h"
+#include "malstring.h"
+#include "filesystem.h"
+#include "thread.h"
+#include "refsystem.h"
+#include "matrix.h"
+#include "lilyparser.h"
+#include "hashtable.h"
+#include "assetloader.h"
+#include "preprocess.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)

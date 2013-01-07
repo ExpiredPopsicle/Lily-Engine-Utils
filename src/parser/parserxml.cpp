@@ -34,7 +34,7 @@
 #include <cstdarg>
 using namespace std;
 
-#include "../string/malstring.h"
+#include "malstring.h"
 #include "lilyparser.h"
 
 namespace ExPop {
