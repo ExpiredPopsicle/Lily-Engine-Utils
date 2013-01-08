@@ -26,7 +26,8 @@ liblilyengine_utils_a_include_HEADERS = \
 	include/derpobject.h \
 	include/derpcontext.h \
 	include/expopsockets.h \
-	include/utils.h
+	include/utils.h \
+	include/pooledstring.h
 
 liblilyengine_utils_a_SOURCES = \
 	src/thread/thread.cpp \
@@ -106,3 +107,6 @@ test_sockets_LDADD = liblilyengine_utils.a $(EXTRA_LDADD)
 AM_CPPFLAGS = \
 	-I$(srcdir)/src/string \
 	-I$(srcdir)/include
+
+EXTRA_DIST = Doxyfile
+
