@@ -1,9 +1,6 @@
 AC_INIT(LilyEngineUtils, 1.2)
 
-dnl AC_PROG_LIBTOOL
 AC_PROG_RANLIB
-dnl AC_CONFIG_HEADER([config.h])
-dnl AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 
@@ -17,12 +14,6 @@ case "$host" in
         ;;
 esac
 
-dnl CXXFLAGS="$CXXFLAGS -Wall"
-dnl LDFLAGS="$LDFLAGS"
-
-dnl AC_DEFINE_UNQUOTED([FOOBAR], ["$FOOBAR"], [Some junk for the build.])
-dnl AC_DEFINE_UNQUOTED([DATADIR], [$datadir], [Data directory.])
-
 AM_CXXFLAGS="-Wall"
 
 AC_SUBST(AM_CXXFLAGS)
@@ -31,5 +22,5 @@ AC_SUBST(EXTRA_LDADD)
 
 AC_PROG_CXX
 
-AC_OUTPUT(
-    Makefile)
+AC_OUTPUT(Makefile)
+
