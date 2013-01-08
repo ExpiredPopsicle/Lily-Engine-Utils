@@ -36,20 +36,10 @@ promise. -ExpiredPopsicle
   How to use this library (for now).
 ----------------------------------------------------------------------
 
-libs/utils contains the basic utility library that shouldn't depend on
-anything besides system libs (pthreads on *nix, the usual Windowsy
-junk on Windows). It can be easily dropped into existing projects and
-everything is in the namespace "ExPop".
-
-To use it in a project you can either include everything.cpp into your
-project, or individually include each file that everything.cpp
-#includes. There's also a waf build script that makes just builds the
-library using gcc.
-
-Don't include any test.cpp or _test.cpp file. They're for internal
-testing right now. While they may be rewritten or converted into a
-test suite later, at the moment some of them don't even compile. They
-are still there as examples of how stuff should work.
+This library contains the basic utility library that shouldn't depend
+on anything besides system libs (pthreads on *nix, the usual Windowsy
+junk on Windows, sockets on both). It can be easily dropped into
+existing projects and everything is in the namespace "ExPop".
 
 The include file "utils.h" will include everything else
 automatically. You can also just include headers for individual
@@ -60,6 +50,6 @@ features, but those header names may change.
 ----------------------------------------------------------------------
 
 A Doxyfile is included in case you would like to have Doxygen generate
-documentation for you. Additionally, the headers should be mostly
-legible and I just end up using them most of the time anyway.
+documentation for you. Additionally, the headers should be a mostly
+legible form of reference on their own.
 
