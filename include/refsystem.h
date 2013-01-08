@@ -35,7 +35,7 @@
 #include <cassert>
 #include <map>
 #include <iostream>
-#include "../console/console.h"
+#include "console.h"
 
 namespace ExPop {
 
