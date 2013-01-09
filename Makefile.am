@@ -27,7 +27,8 @@ liblilyengine_utils_a_include_HEADERS = \
 	include/derpcontext.h \
 	include/expopsockets.h \
 	include/utils.h \
-	include/pooledstring.h
+	include/pooledstring.h \
+	include/image.h
 
 liblilyengine_utils_a_SOURCES = \
 	src/thread/thread.cpp \
@@ -67,7 +68,8 @@ liblilyengine_utils_a_SOURCES = \
 	src/derpscript/derpparser_variabledec.cpp \
 	src/derpscript/derpvm_builtinfunctions.cpp \
 	src/derpscript/derpvm.cpp \
-	src/sockets/sockets.cpp
+	src/sockets/sockets.cpp \
+	src/image/image.cpp
 
 noinst_HEADERS = \
 	src/derpscript/derpexecnode.h \

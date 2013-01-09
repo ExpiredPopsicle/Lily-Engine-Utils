@@ -762,7 +762,9 @@ namespace ExPop {
 
           #else
 
-            getcwd(dirBuf, 2048);
+            if(!getcwd(dirBuf, 2048)) {
+                return "";
+            }
 
           #endif
 

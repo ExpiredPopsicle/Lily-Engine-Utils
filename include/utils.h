@@ -42,6 +42,7 @@
 #include "hashtable.h"
 #include "assetloader.h"
 #include "preprocess.h"
+#include "image.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)
