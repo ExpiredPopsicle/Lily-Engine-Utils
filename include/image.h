@@ -44,22 +44,6 @@ namespace ExPop {
 
     namespace Gfx {
 
-        /// Output from the creation of an OpenGL texture.
-        struct ImageTexture {
-
-            /// The OpenGL texture number.
-            unsigned int glTexNum;
-
-            /// The width and height if the image needed to be resized
-            /// to match a power of two size.
-            unsigned int pow2Width;
-            unsigned int pow2Height;
-
-            /// The original width and height.
-            unsigned int origWidth;
-            unsigned int origHeight;
-        };
-
         /// A union representing a 32 Bit RGBA pixel.
         union Pixel {
             uint32_t value;
@@ -156,11 +140,6 @@ namespace ExPop {
             /// Save as a TGA to a new buffer. Only output format is
             /// 32-bit RGBA, uncompressed.
             unsigned char *saveTGA(int *length) const;
-
-            enum Format {
-                FORMAT_RGBA_32,
-                FORMAT_GREY_8,
-            };
 
             /// Decompress a DXT image. This image must already be the
             /// right size.
