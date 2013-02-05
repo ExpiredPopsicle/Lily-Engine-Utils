@@ -828,7 +828,7 @@ namespace ExPop {
         if(inBuf) {
             node = parseBuffer(inBuf, length, errorStr);
             delete[] inBuf;
-        } else {
+        } else if(errorStr) {
             *errorStr = "Failed to open file";
         }
 
