@@ -40,9 +40,6 @@ using namespace std;
 using namespace ExPop::Console;
 using namespace ExPop;
 
-#include "../config.h"
-#include "../common/common.h"
-#include "../malgraphics.h"
 #include "image.h"
 
 namespace ExPop {
