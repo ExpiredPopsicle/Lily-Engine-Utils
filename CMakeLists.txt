@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(Lily-Engine-Utils)
 
-include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}/include/lilyengine")
 
 add_library(Lily-Engine-Utils
   src/thread/thread.cpp
