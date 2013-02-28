@@ -10,6 +10,7 @@ using namespace std;
 #include <sys/types.h>
 #include <netdb.h>
 #else
+#include <windows.h>
 #include <winsock.h>
 #endif
 
@@ -117,8 +118,6 @@ namespace ExPop {
         state = SOCKETSTATE_CONNECTING;
         int connectStatus = connect(fd, (sockaddr*)&addr, sizeof(addr));
         state = connectStatus ? SOCKETSTATE_DISCONNECTED : SOCKETSTATE_CONNECTED;
-
-        cout << "connectStatus: " << connectStatus << endl;
 
         if(state == SOCKETSTATE_DISCONNECTED) {
             return false;

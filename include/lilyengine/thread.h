@@ -110,7 +110,7 @@ namespace ExPop {
 
             // Entry point for threads.
 #ifdef WIN32
-            friend unsigned int __stdcall threadStarter(void *data);
+            friend DWORD __stdcall threadStarter(void *data);
 #else
             friend void *threadStarter(void *data);
 #endif

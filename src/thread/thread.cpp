@@ -162,7 +162,7 @@ namespace ExPop {
       #ifdef WIN32
 
         // Entry point for threads in Win32.
-        unsigned int __stdcall threadStarter(void *data) {
+        DWORD __stdcall threadStarter(void *data) {
             Thread::ThreadPrivate *threadPrivate = (Thread::ThreadPrivate*)data;
 
             if(threadPrivate) {
@@ -229,7 +229,12 @@ namespace ExPop {
           #ifdef WIN32
 
             // Windows
-            systemThread = (HANDLE)_beginthreadex(0, 0, threadStarter, threadPrivate, CREATE_SUSPENDED, NULL);
+
+            // FIXME: Which version should I use?
+
+            //systemThread = (HANDLE)_beginthreadex(0, 0, threadStarter, threadPrivate, CREATE_SUSPENDED, NULL);
+            systemThread = (HANDLE)CreateThread(NULL, 0, threadStarter, threadPrivate, CREATE_SUSPENDED, NULL);
+
             ResumeThread(systemThread);
 
           #else
