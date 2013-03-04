@@ -180,6 +180,28 @@ namespace ExPop {
                 }
                 break;
 
+                // And
+            case DERPEXEC_AND:
+                switch(obL->type) {
+                    case DERPTYPE_INT:   newOb->setInt(obL->intVal && obR->intVal); break;
+                    // case DERPTYPE_FLOAT: newOb->setInt(obL->floatVal && obR->floatVal); break;
+                    default:
+                        TYPE_NOT_SUPPORTED("\"and\"");
+                        return NULL;
+                }
+                break;
+
+                // Or
+            case DERPEXEC_OR:
+                switch(obL->type) {
+                    case DERPTYPE_INT:   newOb->setInt(obL->intVal || obR->intVal); break;
+                    // case DERPTYPE_FLOAT: newOb->setInt(obL->floatVal || obR->floatVal); break;
+                    default:
+                        TYPE_NOT_SUPPORTED("\"or\"");
+                        return NULL;
+                }
+                break;
+
             default:
                 FLAG_ERROR("FIXME: Unsupported opcode.");
                 return NULL;

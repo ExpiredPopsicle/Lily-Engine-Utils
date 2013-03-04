@@ -164,6 +164,13 @@ namespace ExPop {
     static DerpObject::Ref makeTable(DerpObject::ExternalFuncData &data) {
         DerpObject::Ref ob = data.vm->makeObject();
         ob->setTable();
+
+        for(unsigned int i = 0; i < data.parameters.size(); i++) {
+            DerpObject::Ref key = data.vm->makeObject();
+            key->setInt(i);
+            ob->setInTable(key, data.parameters[i]);
+        }
+
         return ob;
     }
 

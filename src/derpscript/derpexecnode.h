@@ -55,6 +55,9 @@ namespace ExPop {
         DERPEXEC_ASSIGNMENT,
         DERPEXEC_REFASSIGNMENT,
 
+        DERPEXEC_AND,
+        DERPEXEC_OR,
+
         DERPEXEC_GT,
         DERPEXEC_LT,
         DERPEXEC_GE,

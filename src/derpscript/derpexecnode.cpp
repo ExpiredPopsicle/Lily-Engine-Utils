@@ -92,6 +92,8 @@ namespace ExPop {
             case DERPEXEC_SUBTRACT:
             case DERPEXEC_MULTIPLY:
             case DERPEXEC_DIVIDE:
+            case DERPEXEC_AND:
+            case DERPEXEC_OR:
             case DERPEXEC_GT:
             case DERPEXEC_LT:
             case DERPEXEC_GE:

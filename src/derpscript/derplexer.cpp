@@ -360,6 +360,9 @@ namespace ExPop {
                     };
 
                     if(string(":=") == twoCharOp ||
+                       string("&&") == twoCharOp ||
+                       string("||") == twoCharOp ||
+                       string("!=") == twoCharOp ||
                        string("==") == twoCharOp ||
                        string("++") == twoCharOp ||
                        string("--") == twoCharOp ||
@@ -457,7 +460,7 @@ namespace ExPop {
                                 lineNumber);
 
                             errorState.addError(
-                                derpSprintf("Bad token: \"%s\"", str[i]));
+                                derpSprintf("Bad token: \"%c\"", str[i]));
 
                             return false;
                     }

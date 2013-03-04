@@ -72,6 +72,10 @@ namespace ExPop {
 
                 if(tokens[i]->str == ":=") {
                     ret->setType(DERPEXEC_REFASSIGNMENT);
+                } else if(tokens[i]->str == "||") {
+                    ret->setType(DERPEXEC_OR);
+                } else if(tokens[i]->str == "&&") {
+                    ret->setType(DERPEXEC_AND);
                 } else if(tokens[i]->str == "==") {
                     ret->setType(DERPEXEC_EQ);
                 } else if(tokens[i]->str == "!=") {
@@ -130,6 +134,21 @@ namespace ExPop {
             case DERPEXEC_ASSIGNMENT:
                 return 2;
 
+            case DERPEXEC_OR:
+            case DERPEXEC_AND:
+                return 3;
+
+            case DERPEXEC_EQ:
+            case DERPEXEC_NEQ:
+                return 4;
+
+                // TODO: GE, LE
+            case DERPEXEC_GE:
+            case DERPEXEC_LE:
+            case DERPEXEC_GT:
+            case DERPEXEC_LT:
+                return 10;
+
             case DERPEXEC_ADD:
             case DERPEXEC_SUBTRACT:
                 return 5;
@@ -141,12 +160,6 @@ namespace ExPop {
             case DERPEXEC_NOT:
             case DERPEXEC_BINARYNOT:
                 return 9;
-
-            case DERPEXEC_GT:
-            case DERPEXEC_LT:
-            case DERPEXEC_EQ:
-            case DERPEXEC_NEQ:
-                return 10;
 
             default:
                 // TODO: Maybe make this less fatal.
