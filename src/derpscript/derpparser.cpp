@@ -96,7 +96,14 @@ namespace ExPop {
         vector<DerpToken*> tokens;
 
         if(!derpGetTokens(str, tokens, errorState, fileName)) {
+
             // Failed at tokenization stage.
+
+            // Cleanup whatever we had.
+            for(unsigned int i = 0; i < tokens.size(); i++) {
+                delete tokens[i];
+            }
+
             return NULL;
         }
 
