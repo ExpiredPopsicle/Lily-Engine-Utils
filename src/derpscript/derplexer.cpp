@@ -445,6 +445,7 @@ namespace ExPop {
                         case '=':
                         case '<':
                         case '>':
+                        case '.':
 
                             // Found math operator.
                             outTokens.push_back(new DerpToken(strFromChar(str[i]), DERPTOKEN_MATHOP, fileName, lineNumber));

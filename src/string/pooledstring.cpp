@@ -1,5 +1,6 @@
 #include <map>
 #include <cassert>
+#include <iostream>
 
 #include "pooledstring.h"
 using namespace std;
@@ -89,6 +90,11 @@ namespace ExPop {
     // ----------------------------------------------------------------------
 
     StringPool::~StringPool(void) {
+
+        for(std::map<std::string, PooledString *>::iterator i = stringMap.begin(); i != stringMap.end(); i++) {
+            cerr << "StringMap deletion with string referenced: " << (*i).first << endl;
+        }
+
         assert(!stringMap.size());
     }
 

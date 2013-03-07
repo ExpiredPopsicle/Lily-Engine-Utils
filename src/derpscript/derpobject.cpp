@@ -556,7 +556,8 @@ namespace ExPop {
         }
 
         // Make a new context for this call.
-        DerpContext newContext(ctx);
+        // DerpContext newContext(ctx); // Dynamic scoping if we use this line instead of the next.
+        DerpContext newContext(vm->globalContext);
 
         if(!dontPushContext) {
             ctx = &newContext;

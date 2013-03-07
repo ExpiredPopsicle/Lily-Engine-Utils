@@ -63,6 +63,44 @@ namespace ExPop {
                     case '=': ret->setType(DERPEXEC_ASSIGNMENT); break;
                     case '>': ret->setType(DERPEXEC_GT); break;
                     case '<': ret->setType(DERPEXEC_LT); break;
+
+                        // Special case (syntactic sugar) for '.'
+                        // "operator". TODO: Move this into its own
+                        // function for cleanliness.
+                    case '.': {
+                        i++; // Skip '.'.
+
+                        ret->setType(DERPEXEC_INDEX);
+
+                        DerpExecNode *lookupNameNode = new DerpExecNode(
+                            vm,
+                            derpSafeLineNumber(tokens, i),
+                            derpSafeFileName(tokens, i));
+                        DerpObject::Ref lookupNameOb = vm->makeObject();
+
+                        lookupNameOb->setConst(true);
+                        lookupNameNode->setType(DERPEXEC_LITERAL);
+                        lookupNameNode->setData(lookupNameOb.getPtr());
+
+                        ret->children.push_back(NULL);
+                        ret->children.push_back(lookupNameNode);
+
+                        if(TOKENS_LEFT() && TOKEN_TYPE(i) == DERPTOKEN_SYMBOL) {
+                            lookupNameOb->setString(tokens[i]->str);
+                        } else {
+                            // This will fail, but I want to leave it
+                            // in a nice state for error cleanup
+                            // anyway.
+                            lookupNameOb->setString("<error>");
+                            errorState.setFileAndLineDirect(
+                                derpSafeFileName(tokens, i),
+                                derpSafeLineNumber(tokens, i));
+                            errorState.addError(
+                                derpSprintf("Expected a symbol after \'.\'."));
+                        }
+
+                    } break;
+
                     default:
                         // TODO: Implement the rest of the math ops.
                         assert(!"Unimplemented math op.");
@@ -218,9 +256,18 @@ namespace ExPop {
         opStack.erase(opStack.end() - 1);
 
         if(opIsUnary(reducedNode)) {
-            reducedNode->children.push_back(valStack[valStack.size() - 1]);
+
+            assert(valStack.size() >= 1);
+
+            if(reducedNode->children.size() < 1)
+                reducedNode->children.push_back(NULL);
+            reducedNode->children[0] = valStack[valStack.size() - 1];
             valStack.erase(valStack.end() - 1);
+
         } else {
+
+            assert(valStack.size() >= 2);
+
             reducedNode->children.push_back(valStack[valStack.size() - 2]);
             reducedNode->children.push_back(valStack[valStack.size() - 1]);
             valStack.erase(valStack.end() - 1);
@@ -432,22 +479,46 @@ namespace ExPop {
                     derpSafeLineNumber(tokens, i));
 
                 errorState.addError(
-                    "Ran out of tokens in the middle of an exprssion.");
+                    "Ran out of tokens in the middle of an expression.");
 
                 reachedEnd = true;
             }
         }
 
-        // Collapse all remaining operators.
-        while(operatorStack.size()) {
-            reduce(operatorStack, valueStack);
+        if(!errorState.getNumErrors()) {
+
+            // Collapse all remaining operators.
+            while(operatorStack.size()) {
+                reduce(operatorStack, valueStack);
+            }
+
+            if(valueStack.size() > 1) {
+                errorState.setFileAndLineDirect(
+                    derpSafeFileName(tokens, i),
+                    derpSafeLineNumber(tokens, i));
+                errorState.addError(
+                    "Values still on expression parse stack at end of expression parsing.");
+                valueStack.clear();
+                return NULL;
+            }
+
+            // TODO: Make these less fatal?
+            assert(operatorStack.size() == 0);
+
+            return valueStack[0];
         }
 
-        // TODO: Make these less fatal?
-        assert(valueStack.size() == 1);
-        assert(operatorStack.size() == 0);
+        for(unsigned int i = 0; i < operatorStack.size(); i++) {
+            delete operatorStack[i];
+        }
+        operatorStack.clear();
 
-        return valueStack[0];
+        for(unsigned int i = 0; i < valueStack.size(); i++) {
+            delete valueStack[i];
+        }
+        valueStack.clear();
+        return NULL;
+
     }
 }
 
