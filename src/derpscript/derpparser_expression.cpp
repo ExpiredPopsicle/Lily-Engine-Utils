@@ -180,7 +180,6 @@ namespace ExPop {
             case DERPEXEC_NEQ:
                 return 4;
 
-                // TODO: GE, LE
             case DERPEXEC_GE:
             case DERPEXEC_LE:
             case DERPEXEC_GT:

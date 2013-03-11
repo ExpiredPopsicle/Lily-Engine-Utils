@@ -174,6 +174,7 @@ namespace ExPop {
             ~Ref(void);
             DerpObject *getPtr(void) const;
             DerpObject *operator->(void);
+            const DerpObject *operator->(void) const;
             Ref &operator=(const Ref &ref);
 
             void reassign(DerpObject *ob);
@@ -270,6 +271,14 @@ namespace ExPop {
         friend class DerpVM;
         friend class DerpObject::Ref;
         friend class DerpExecNode;
+
+        // This is just a utility function used by debugString(). It
+        // recurses through tables to make sure everything pointed to
+        // by this table is shown.
+        void dumpTable(
+            std::ostream &ostr,
+            std::map<const DerpObject*, bool> &stuffAlreadyDone,
+            bool isRoot) const;
     };
 
     class DerpObjectCompare {

@@ -360,6 +360,46 @@ namespace ExPop {
     // Debugging
     // ----------------------------------------------------------------------
 
+    void DerpObject::dumpTable(
+        std::ostream &ostr,
+        std::map<const DerpObject*, bool> &stuffAlreadyDone,
+        bool isRoot) const {
+
+        assert(type == DERPTYPE_TABLE);
+
+        if(stuffAlreadyDone[this]) return;
+        stuffAlreadyDone[this] = true;
+
+        vector<DerpObject::Ref> otherTablesWeNeed;
+
+        ostr << (isRoot ? "rootTable" : "table") << this << " {" << endl;
+
+        for(std::map<DerpObject::Ref, DerpObject::Ref, DerpObjectCompare>::iterator i = tableData->begin();
+            i != tableData->end(); i++) {
+
+            // Possible infinite recursion here if the spec (heh) ever
+            // changes so that tables can be keys.
+            ostr << "    " << (*i).first->debugString();
+
+            ostr << " = ";
+
+            if((*i).second->getType() == DERPTYPE_TABLE) {
+                ostr << "table" << (*i).second.getPtr();
+                otherTablesWeNeed.push_back((*i).second);
+            } else {
+                ostr << (*i).second->debugString();
+            }
+            ostr << endl;
+        }
+
+        ostr << "}" << endl;
+
+        for(unsigned int i = 0; i < otherTablesWeNeed.size(); i++) {
+            otherTablesWeNeed[i]->dumpTable(ostr, stuffAlreadyDone, false);
+        }
+
+    }
+
     std::string DerpObject::debugString(void) const {
 
         ostringstream outStr;
@@ -382,9 +422,10 @@ namespace ExPop {
                 outStr << "NULL";
                 break;
 
-            case DERPTYPE_TABLE:
-                outStr << "<table>";
-                break;
+            case DERPTYPE_TABLE: {
+                std::map<const DerpObject *, bool> visitedStuff;
+                dumpTable(outStr, visitedStuff, true);
+            } break;
 
             case DERPTYPE_FUNCTION:
                 outStr << "<function>";
@@ -394,9 +435,15 @@ namespace ExPop {
                 }
                 break;
 
-                // TODO: Tables.
-                // TODO: User data.
+            case DERPTYPE_CUSTOMDATA:
+                outStr << "<customData:" << customData << ">" << endl;
+                break;
+
+                // TODO: Modify user data class for serialization junk
+                // and call that here.
+
                 // TODO: Functions.
+
                 // TODO: External functions.
 
             default:
@@ -484,6 +531,10 @@ namespace ExPop {
     }
 
     DerpObject *DerpObject::Ref::operator->(void) {
+        return ob;
+    }
+
+    const DerpObject *DerpObject::Ref::operator->(void) const {
         return ob;
     }
 
