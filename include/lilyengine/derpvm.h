@@ -120,5 +120,9 @@ namespace ExPop {
         // the filename attached to every single execution node
         // without using tons of memory.
         StringPool filenamePool;
+
+        // Debugging feature. Just keeps track of the highest object
+        // count we've had.
+        unsigned int maxVmObs;
     };
 }

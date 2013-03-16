@@ -4,6 +4,7 @@ project(Lily-Engine-Utils)
 
 include_directories("${PROJECT_SOURCE_DIR}/include/lilyengine")
 
+set(CMAKE_CXX_FLAGS "-O3 -ggdb -g -Wall")
 add_library(Lily-Engine-Utils
   src/thread/thread.cpp
   src/assetloader/assetloader.cpp

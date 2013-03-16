@@ -46,11 +46,15 @@ namespace ExPop {
     //  DerpVM implementation
     // ----------------------------------------------------------------------
 
+  #define GARBAGECOLLECT_MIN_THRESHOLD 2048
+
     DerpVM::DerpVM(void) : globalContext(&internalContext), internalContext() {
         lastGCPass = 0;
-        objectCountGcThreshold = 16;
+        objectCountGcThreshold = GARBAGECOLLECT_MIN_THRESHOLD;
 
         derpVM_registerInternalFunctions(this, &internalContext);
+
+        maxVmObs = 0;
     }
 
     DerpVM::~DerpVM(void) {
@@ -175,6 +179,10 @@ namespace ExPop {
     }
 
     void DerpVM::garbageCollect(void) {
+
+        if(gcObjects.size() > maxVmObs) {
+            maxVmObs = gcObjects.size();
+        }
 
         // Do something about reference counts on tables, otherwise
         // circular references will own us.
@@ -323,8 +331,8 @@ namespace ExPop {
 
             // Readjust the object count threshold.
             objectCountGcThreshold = higherPow2(gcObjects.size());
-            if(objectCountGcThreshold <= 16) {
-                objectCountGcThreshold = 16;
+            if(objectCountGcThreshold <= GARBAGECOLLECT_MIN_THRESHOLD) {
+                objectCountGcThreshold = GARBAGECOLLECT_MIN_THRESHOLD;
             }
         }
     }
