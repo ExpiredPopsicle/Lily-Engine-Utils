@@ -70,6 +70,8 @@ namespace ExPop {
             /// Actual data goes here.
             MatScalar data[ROWS * COLS];
 
+            // TODO: Get rid of this junk... It was a pretty bad idea.
+
             // This is just so we can access x, y, z, and w in a
             // Vector3 and Vector4 directly. It also means that the
             // smallest a Matrix can actually be is 4 elements, but
@@ -172,8 +174,14 @@ namespace ExPop {
         /// Add operator.
         inline MyType operator+(const MyType &other) const;
 
+        /// Addition assignment operator.
+        inline const MyType &operator+=(const MyType &other);
+
         /// Subtract operator.
         inline MyType operator-(const MyType &other) const;
+
+        /// Subtract assignment operator.
+        inline const MyType &operator-=(const MyType &other);
 
         /// Basic multiplication. Only works on matrices with equal
         /// rows and columns. More fancy template version later. But I
@@ -192,11 +200,17 @@ namespace ExPop {
         /// Uniform scaling.
         inline MyType operator*(MatScalar s) const;
 
+        /// Uniform scaling assignment.
+        inline const MyType &operator*=(MatScalar s);
+
         /// Divide by scalar.
         inline MyType operator/(MatScalar s) const;
 
         /// Vector magnitude.
         inline MatScalar magnitude(void) const;
+
+        /// Vector magnitude without the square root.
+        inline MatScalar magnitudeSquared(void) const;
 
         /// Vector normalize.
         inline MyType normalize(void) const;
@@ -540,6 +554,19 @@ namespace ExPop {
         return out;
     }
 
+    // operator+=
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator+=(const MyType &other) {
+        int index = 0;
+        for(unsigned int col = 0; col < COLS; col++) {
+            for(unsigned int row = 0; row < ROWS; row++) {
+                data[index] = data[index] + other.data[index];
+                index++;
+            }
+        }
+        return *this;
+    }
+
     // operator-
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator-(const MyType &other) const {
@@ -552,6 +579,19 @@ namespace ExPop {
             }
         }
         return out;
+    }
+
+    // operator-=
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator-=(const MyType &other) {
+        int index = 0;
+        for(unsigned int col = 0; col < COLS; col++) {
+            for(unsigned int row = 0; row < ROWS; row++) {
+                data[index] = data[index] - other.data[index];
+                index++;
+            }
+        }
+        return *this;
     }
 
     // operator*
@@ -623,6 +663,16 @@ namespace ExPop {
         return v;
     }
 
+    // operator*=(s)
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator*=(MatScalar s) {
+        unsigned int arraySize = ROWS * COLS;
+        for(unsigned int i = 0; i < arraySize; i++) {
+            data[i] = data[i] * s;
+        }
+        return *this;
+    }
+
     // operator/(s)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator/(MatScalar s) const {
@@ -639,6 +689,12 @@ namespace ExPop {
     // magnitude
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline MatScalar Matrix<MatScalar, ROWS, COLS>::magnitude(void) const {
+        return std::sqrt(magnitudeSquared());
+    }
+
+    // magnitudeSquared
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline MatScalar Matrix<MatScalar, ROWS, COLS>::magnitudeSquared(void) const {
 
         unsigned int arraySize = ROWS * COLS;
         MatScalar outVal(0);
@@ -646,7 +702,7 @@ namespace ExPop {
             outVal += data[i] * data[i];
         }
 
-        return std::sqrt(outVal);
+        return outVal;
     }
 
     // normalize
