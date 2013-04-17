@@ -43,6 +43,15 @@
 #include "assetloader.h"
 #include "preprocess.h"
 #include "image.h"
+#include "cellarray.h"
+#include "expopsockets.h"
+
+// DerpScript related stuff.
+#include "derpconfig.h"
+#include "derpcontext.h"
+#include "derperror.h"
+#include "derpobject.h"
+#include "derpvm.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)
