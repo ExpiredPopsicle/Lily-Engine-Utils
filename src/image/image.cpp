@@ -33,8 +33,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cassert>
-#include <setjmp.h>
-#include <stdint.h>
+#include <cstring>
 using namespace std;
 
 #include "utils.h"

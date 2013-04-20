@@ -1,6 +1,10 @@
 #pragma once
 
+#include <cassert>
+
 namespace ExPop {
+
+    #define CAINDEXTYPE int
 
     /// 2D auto-expanding array with integer indices. Supports
     /// negative indicies. Will reallocate as necessary. Things in
@@ -15,46 +19,46 @@ namespace ExPop {
         ~CellArray(void);
 
         /// Set an element. Expands array if necessary.
-        void set(const T &t, int x, int y);
+        void set(const T &t, CAINDEXTYPE x, CAINDEXTYPE y);
 
         /// Get an element. Expands array if necessary.
-        T &get(int x, int y);
+        T &get(CAINDEXTYPE x, CAINDEXTYPE y);
 
         /// Get an element. Returns NULL if it's out of bounds.
         /// Doesn't expand the array.
-        const T *getConst(int x, int y);
+        const T *getConst(CAINDEXTYPE x, CAINDEXTYPE y);
 
         /// Expand the array to hold a given element. Called
         /// internally by get and set. Slots are filled with whatever
         /// comes out of a default constructor for the data type.
-        void expandToFit(int x, int y);
+        void expandToFit(CAINDEXTYPE x, CAINDEXTYPE y);
 
         /// Get the minimum X value.
-        int getMinX(void) const;
+        CAINDEXTYPE getMinX(void) const;
 
         /// Get the maximum X value.
-        int getMaxX(void) const;
+        CAINDEXTYPE getMaxX(void) const;
 
         /// Get the minimum Y value.
-        int getMinY(void) const;
+        CAINDEXTYPE getMinY(void) const;
 
         /// Get the maximum X value.
-        int getMaxY(void) const;
+        CAINDEXTYPE getMaxY(void) const;
 
         /// Get the width. This does not necessarily match the value
         /// returned from getMaxX().
-        unsigned int getWidth(void) const;
+        unsigned CAINDEXTYPE getWidth(void) const;
 
         /// Get the height. This does not necessarily match the value
         /// returned from getMaxY().
-        unsigned int getHeight(void) const;
+        unsigned CAINDEXTYPE getHeight(void) const;
 
     private:
 
-        int width;
-        int height;
-        int offsetx;
-        int offsety;
+        unsigned CAINDEXTYPE width;
+        unsigned CAINDEXTYPE height;
+        CAINDEXTYPE offsetx;
+        CAINDEXTYPE offsety;
         T *cells;
 
     };
@@ -76,7 +80,7 @@ namespace ExPop {
     }
 
     template<typename T>
-    void CellArray<T>::expandToFit(int x, int y) {
+    void CellArray<T>::expandToFit(CAINDEXTYPE x, CAINDEXTYPE y) {
 
         // We don't necessarily need the origin to be in the range of
         // stuff we get, so the first time, just make sure that the
@@ -87,36 +91,52 @@ namespace ExPop {
         }
 
         // First see if we have to expand this thing, and by how much.
-        int expandleft = 0;
-        int expandright = 0;
-        int expandup = 0;
-        int expanddown = 0;
+        CAINDEXTYPE expandleft = 0;
+        CAINDEXTYPE expandright = 0;
+        CAINDEXTYPE expandup = 0;
+        CAINDEXTYPE expanddown = 0;
 
         if(x < offsetx) {
             expandleft = offsetx - x;
         }
-        if(x >= (offsetx + width)) {
-            expandright = (x + 1) - (offsetx + width);
+        if(x >= (CAINDEXTYPE)(offsetx + width)) {
+            expandright = (x + 1) - (CAINDEXTYPE)(offsetx + width);
         }
         if(y < offsety) {
             expandup = offsety - y;
         }
-        if(y >= (offsety + height)) {
-            expanddown = (y + 1) - (offsety + height);
+        if(y >= (CAINDEXTYPE)(offsety + height)) {
+            expanddown = (y + 1) - (CAINDEXTYPE)(offsety + height);
         }
 
         // Expand if necessary.
         if(expanddown || expandup || expandright || expandleft) {
 
-            int newWidth = expandright + expandleft + width;
-            int newHeight = expandup + expanddown + height;
+            unsigned CAINDEXTYPE newWidth = expandright + expandleft + width;
+            unsigned CAINDEXTYPE newHeight = expandup + expanddown + height;
+
+            if(newWidth < width) {
+                newWidth = ~0;
+            }
+            if(newHeight < height) {
+                newHeight = ~0;
+            }
+
+            // This might throw an exception. Thankfully we haven't
+            // modified anything yet.
             T *newCells = new T[newWidth * newHeight]();
 
+            assert(newCells);
+
             // Copy over the old data.
-            for(int x1 = 0; x1 < width; x1++) {
-                for(int y1 = 0; y1 < height; y1++) {
+            for(unsigned CAINDEXTYPE x1 = 0; x1 < width; x1++) {
+                for(unsigned CAINDEXTYPE y1 = 0; y1 < height; y1++) {
+
+                    unsigned CAINDEXTYPE srcx = (x1 + expandleft) % ((unsigned CAINDEXTYPE)~0);
+                    unsigned CAINDEXTYPE srcy = (y1 + expandup) % ((unsigned CAINDEXTYPE)~0);
+
                     newCells[
-                        (x1 + expandleft) + (y1 + expandup) * newWidth].tmp =
+                        srcx + srcy * newWidth].tmp =
                         cells[x1 + y1 * width].tmp;
                 }
             }
@@ -131,61 +151,69 @@ namespace ExPop {
     }
 
     template<typename T>
-    void CellArray<T>::set(const T &t, int x, int y) {
+    void CellArray<T>::set(const T &t, CAINDEXTYPE x, CAINDEXTYPE y) {
+
+        get(x, y) = t;
+
+        // expandToFit(x, y);
+
+        // CAINDEXTYPE realx = x - offsetx;
+        // CAINDEXTYPE realy = y - offsety;
+        // cells[realx + realy * width] = t;
+    }
+
+    template<typename T>
+    T &CellArray<T>::get(CAINDEXTYPE x, CAINDEXTYPE y) {
 
         expandToFit(x, y);
-
-        // Finally, set the thing we were going to set originally.
-        int realx = x - offsetx;
-        int realy = y - offsety;
-        cells[realx + realy * width] = t;
+        unsigned CAINDEXTYPE srcx = (x - offsetx) % ((unsigned CAINDEXTYPE)~0);
+        unsigned CAINDEXTYPE srcy = (y - offsety) % ((unsigned CAINDEXTYPE)~0);
+        return cells[srcx + srcy * width];
     }
 
     template<typename T>
-    T &CellArray<T>::get(int x, int y) {
-        if(x < offsetx || x >= offsetx + width ||
-           y < offsety || y >= offsety + height) {
-            expandToFit(x, y);
-        }
-        return cells[(x-offsetx) + (y-offsety) * width];
-    }
+    const T *CellArray<T>::getConst(CAINDEXTYPE x, CAINDEXTYPE y) {
 
-    template<typename T>
-    const T *CellArray<T>::getConst(int x, int y) {
-        if(x < offsetx || x >= offsetx + width ||
-           y < offsety || y >= offsety + height) {
+        if(x < offsetx ||
+           x >= (CAINDEXTYPE)(offsetx + width) ||
+           y < offsety ||
+           y >= (CAINDEXTYPE)(offsety + height)) {
             return NULL;
         }
-        return &(cells[(x-offsetx) + (y-offsety) * width]);
+
+        unsigned CAINDEXTYPE srcx = (x - offsetx) % ((unsigned CAINDEXTYPE)~0);
+        unsigned CAINDEXTYPE srcy = (y - offsety) % ((unsigned CAINDEXTYPE)~0);
+
+        return cells[srcx + srcy * width];
     }
 
     template<typename T>
-    unsigned int CellArray<T>::getWidth(void) const {
+    unsigned CAINDEXTYPE CellArray<T>::getWidth(void) const {
         return width;
     }
 
     template<typename T>
-    unsigned int CellArray<T>::getHeight(void) const {
+    unsigned CAINDEXTYPE CellArray<T>::getHeight(void) const {
         return height;
     }
 
     template<typename T>
-    int CellArray<T>::getMinX(void) const {
+    CAINDEXTYPE CellArray<T>::getMinX(void) const {
         return offsetx;
     }
 
     template<typename T>
-    int CellArray<T>::getMaxX(void) const {
+    CAINDEXTYPE CellArray<T>::getMaxX(void) const {
         return offsetx + width;
     }
 
     template<typename T>
-    int CellArray<T>::getMinY(void) const {
+    CAINDEXTYPE CellArray<T>::getMinY(void) const {
         return offsety;
     }
 
     template<typename T>
-    int CellArray<T>::getMaxY(void) const {
+    CAINDEXTYPE CellArray<T>::getMaxY(void) const {
         return offsety + height;
     }
 }
