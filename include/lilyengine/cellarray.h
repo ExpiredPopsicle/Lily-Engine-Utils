@@ -4,7 +4,8 @@
 
 namespace ExPop {
 
-    #define CAINDEXTYPE int
+    typedef ptrdiff_t CAINDEXTYPE;
+    typedef size_t CAUNSIGNED;
 
     /// 2D auto-expanding array with integer indices. Supports
     /// negative indicies. Will reallocate as necessary. Things in
@@ -47,16 +48,19 @@ namespace ExPop {
 
         /// Get the width. This does not necessarily match the value
         /// returned from getMaxX().
-        unsigned CAINDEXTYPE getWidth(void) const;
+        CAUNSIGNED getWidth(void) const;
 
         /// Get the height. This does not necessarily match the value
         /// returned from getMaxY().
-        unsigned CAINDEXTYPE getHeight(void) const;
+        CAUNSIGNED getHeight(void) const;
+
+        /// Delete everything and reset to the default state.
+        void clear(void);
 
     private:
 
-        unsigned CAINDEXTYPE width;
-        unsigned CAINDEXTYPE height;
+        CAUNSIGNED width;
+        CAUNSIGNED height;
         CAINDEXTYPE offsetx;
         CAINDEXTYPE offsety;
         T *cells;
@@ -112,9 +116,12 @@ namespace ExPop {
         // Expand if necessary.
         if(expanddown || expandup || expandright || expandleft) {
 
-            unsigned CAINDEXTYPE newWidth = expandright + expandleft + width;
-            unsigned CAINDEXTYPE newHeight = expandup + expanddown + height;
+            CAUNSIGNED newWidth = expandright + expandleft + width;
+            CAUNSIGNED newHeight = expandup + expanddown + height;
 
+            // If we've wrapped around, just clamp width and height.
+            // FIXME: Might be specifying something here that's fewer
+            // bits than the actual address space.
             if(newWidth < width) {
                 newWidth = ~0;
             }
@@ -129,11 +136,11 @@ namespace ExPop {
             assert(newCells);
 
             // Copy over the old data.
-            for(unsigned CAINDEXTYPE x1 = 0; x1 < width; x1++) {
-                for(unsigned CAINDEXTYPE y1 = 0; y1 < height; y1++) {
+            for(CAUNSIGNED x1 = 0; x1 < width; x1++) {
+                for(CAUNSIGNED y1 = 0; y1 < height; y1++) {
 
-                    unsigned CAINDEXTYPE srcx = (x1 + expandleft) % ((unsigned CAINDEXTYPE)~0);
-                    unsigned CAINDEXTYPE srcy = (y1 + expandup) % ((unsigned CAINDEXTYPE)~0);
+                    CAUNSIGNED srcx = (x1 + expandleft) % ((CAUNSIGNED)~0);
+                    CAUNSIGNED srcy = (y1 + expandup) % ((CAUNSIGNED)~0);
 
                     newCells[
                         srcx + srcy * newWidth].tmp =
@@ -155,19 +162,14 @@ namespace ExPop {
 
         get(x, y) = t;
 
-        // expandToFit(x, y);
-
-        // CAINDEXTYPE realx = x - offsetx;
-        // CAINDEXTYPE realy = y - offsety;
-        // cells[realx + realy * width] = t;
     }
 
     template<typename T>
     T &CellArray<T>::get(CAINDEXTYPE x, CAINDEXTYPE y) {
 
         expandToFit(x, y);
-        unsigned CAINDEXTYPE srcx = (x - offsetx) % ((unsigned CAINDEXTYPE)~0);
-        unsigned CAINDEXTYPE srcy = (y - offsety) % ((unsigned CAINDEXTYPE)~0);
+        CAUNSIGNED srcx = (x - offsetx) % ((CAUNSIGNED)~0);
+        CAUNSIGNED srcy = (y - offsety) % ((CAUNSIGNED)~0);
         return cells[srcx + srcy * width];
     }
 
@@ -181,19 +183,19 @@ namespace ExPop {
             return NULL;
         }
 
-        unsigned CAINDEXTYPE srcx = (x - offsetx) % ((unsigned CAINDEXTYPE)~0);
-        unsigned CAINDEXTYPE srcy = (y - offsety) % ((unsigned CAINDEXTYPE)~0);
+        CAUNSIGNED srcx = (x - offsetx) % ((CAUNSIGNED)~0);
+        CAUNSIGNED srcy = (y - offsety) % ((CAUNSIGNED)~0);
 
         return cells[srcx + srcy * width];
     }
 
     template<typename T>
-    unsigned CAINDEXTYPE CellArray<T>::getWidth(void) const {
+    CAUNSIGNED CellArray<T>::getWidth(void) const {
         return width;
     }
 
     template<typename T>
-    unsigned CAINDEXTYPE CellArray<T>::getHeight(void) const {
+    CAUNSIGNED CellArray<T>::getHeight(void) const {
         return height;
     }
 
@@ -216,6 +218,17 @@ namespace ExPop {
     CAINDEXTYPE CellArray<T>::getMaxY(void) const {
         return offsety + height;
     }
+
+    template<typename T>
+    void CellArray<T>::clear(void) {
+        delete cells;
+        cells = NULL;
+        width = 0;
+        height = 0;
+        offsetx = 0;
+        offsety = 0;
+    }
+
 }
 
 
