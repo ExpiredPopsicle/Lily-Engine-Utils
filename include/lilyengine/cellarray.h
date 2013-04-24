@@ -1,11 +1,12 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 
 namespace ExPop {
 
-    typedef ptrdiff_t CAINDEXTYPE;
-    typedef size_t CAUNSIGNED;
+    typedef std::ptrdiff_t CAINDEXTYPE;
+    typedef std::size_t CAUNSIGNED;
 
     /// 2D auto-expanding array with integer indices. Supports
     /// negative indicies. Will reallocate as necessary. Things in
@@ -142,9 +143,8 @@ namespace ExPop {
                     CAUNSIGNED srcx = (x1 + expandleft) % ((CAUNSIGNED)~0);
                     CAUNSIGNED srcy = (y1 + expandup) % ((CAUNSIGNED)~0);
 
-                    newCells[
-                        srcx + srcy * newWidth].tmp =
-                        cells[x1 + y1 * width].tmp;
+                    newCells[srcx + srcy * newWidth] =
+                        cells[x1 + y1 * width];
                 }
             }
 
@@ -161,7 +161,6 @@ namespace ExPop {
     void CellArray<T>::set(const T &t, CAINDEXTYPE x, CAINDEXTYPE y) {
 
         get(x, y) = t;
-
     }
 
     template<typename T>
@@ -186,7 +185,7 @@ namespace ExPop {
         CAUNSIGNED srcx = (x - offsetx) % ((CAUNSIGNED)~0);
         CAUNSIGNED srcy = (y - offsety) % ((CAUNSIGNED)~0);
 
-        return cells[srcx + srcy * width];
+        return &cells[srcx + srcy * width];
     }
 
     template<typename T>
