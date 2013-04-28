@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <map>
 using namespace std;
 
 #include "malstring.h"
@@ -40,6 +41,351 @@ using namespace std;
 #include "preprocess.h"
 
 namespace ExPop {
+
+  #define RECURSION_LIMIT 64
+  #define MAX_SYMBOL_LOOKUPS_FOR_IF 64
+
+    PreprocessorState::PreprocessorState(void) {
+        recursionCount = 0;
+        hadError = false;
+        annotateIncludes = false;
+    }
+
+    static std::string convertQuotedPath(const std::string &in) {
+        if(in.size() < 2) return "";
+
+        string workStr;
+
+        if((in[0] == '"' && in[in.size()-1] == '"') ||
+           (in[0] == '<' && in[in.size()-1] == '>')) {
+            workStr = stringUnescape(in.substr(1, in.size() - 2));
+        } else {
+            workStr = in;
+        }
+
+        return workStr;
+    }
+
+    static std::string cppItoa(int i) {
+        ostringstream ostr;
+        ostr << i;
+        return ostr.str();
+    }
+
+  #define CHECK_OR_ERROR(y, x) {                                        \
+        if(!(y)) {                                                      \
+            inState.hadError = true;                                    \
+            inState.errorText = inState.errorText + fileName + ":" + cppItoa(i) + " " + (x) + "\n"; \
+            return "";                                                  \
+        }                                                               \
+    }
+
+    /// This function is explicitly NOT safe to run untrusted code with
+    /// because there are no limits to the paths used on #include
+    /// directives.
+    std::string preprocess(
+        const std::string &fileName,
+        const std::string &inStr,
+        PreprocessorState &inState) {
+
+        // Set this file in the list of files we've already been to, but
+        // keep a record of whether or not it was already in the list so
+        // that we can bail out if we see a #pragma once.
+        string fixedName = FileSystem::fixFileName(fileName);
+        bool wasAlreadyInList = inState.fileList.count(fixedName) ? inState.fileList[fixedName] : false;
+        inState.fileList[fixedName] = true;
+
+        ostringstream ostr;
+
+        vector<string> inLines;
+        stringTokenize(inStr, "\n", inLines, true);
+
+        // Number of #endifs we're expecting after passed tests in #if,
+        // #ifdef, or #ifndef blocks.
+        int nestedPassedIfs = 0;
+
+        // Number of #endifs we need to see before we'll go back to
+        // actually outputting stuff.
+        int nestedFailedIfs = 0;
+
+        // If this is disabled, just pass through everything, in case some
+        // other preprocessor will run on code after this and we shouldn't
+        // handle preprocessor junk bound for that. I'm looking at you,
+        // GLSL.
+        bool ppEnabled = true;
+
+        for(unsigned int i = 0; i < inLines.size(); i++) {
+
+            // Try to quickly find out if this line starts with a #.
+            bool startsWithHash = false;
+            unsigned int skipWhitespace = 0;
+            while(skipWhitespace < inLines[i].size()) {
+                if(isWhiteSpace(inLines[i][skipWhitespace])) {
+                    skipWhitespace++;
+                } else {
+                    if(inLines[i][skipWhitespace] == '#') {
+                        startsWithHash = true;
+                    }
+                    break;
+                }
+            }
+
+            if(startsWithHash) {
+
+                vector<string> tokens;
+                stringTokenize(inLines[i], " \t", tokens, false);
+
+                if(tokens.size()) {
+
+                    if(tokens[0] == "#pragma" && ppEnabled) {
+
+                        CHECK_OR_ERROR(tokens.size() >= 2, "Bad #pragma.");
+
+                        string pragmaType = tokens[1];
+
+                        if(pragmaType == "once") {
+                            if(wasAlreadyInList) {
+                                if(inState.annotateIncludes) {
+                                    return "// --- Skipping " + fixedName + " due to #pragma once.\n";
+                                }
+                                return "";
+                            }
+                        }
+
+                    } else if(tokens[0] == "#define" && ppEnabled) {
+
+                        if(!nestedFailedIfs) {
+
+                            string symbol;
+                            string value;
+
+                            CHECK_OR_ERROR(
+                                tokens.size() == 2 || tokens.size() == 3,
+                                "Bad #define.");
+
+                            symbol = tokens[1];
+                            if(tokens.size() >= 3) {
+                                value = tokens[2];
+                            }
+
+                            CHECK_OR_ERROR(
+                                !inState.definedSymbols.count(symbol),
+                                "#define for something that's already defined: \"" + symbol + "\".");
+
+                            inState.definedSymbols[symbol] = value;
+                        }
+
+                    } else if(tokens[0] == "#undef" && ppEnabled) {
+
+                        if(!nestedFailedIfs) {
+
+                            CHECK_OR_ERROR(
+                                tokens.size() >= 2,
+                                "Bad #undef");
+
+                            string symbol;
+                            symbol = tokens[1];
+
+                            // TODO: Include the symbol in this error.
+                            CHECK_OR_ERROR(
+                                inState.definedSymbols.count(symbol),
+                                "#undef for symbol that doesn't exist: \"" + symbol + "\".");
+
+                            inState.definedSymbols.erase(symbol);
+                        }
+
+                    } else if(tokens[0] == "#include" && ppEnabled) {
+
+                        CHECK_OR_ERROR(tokens.size() == 2, "Bad #include");
+
+                        if(!nestedFailedIfs) {
+
+                            CHECK_OR_ERROR(
+                                inState.recursionCount < RECURSION_LIMIT,
+                                "Too many levels of #include recursion.");
+
+                            string currentFilePath = FileSystem::getParentName(fileName);
+                            if(!currentFilePath.size()) {
+                                currentFilePath = ".";
+                            }
+
+                            string name = convertQuotedPath(tokens[1]);
+                            int bufLen;
+                            char *buf = NULL;
+                            string fullName;
+
+                            // First try loading from the same directory.
+                            fullName = FileSystem::fixFileName(currentFilePath + "/" + name);
+                            buf = FileSystem::loadFile(fullName, &bufLen, true);
+
+                            if(!buf) {
+
+                                // Failed to load from current directory.
+                                // Try include paths.
+                                for(unsigned int i = 0; i < inState.includePaths.size(); i++) {
+                                    fullName = FileSystem::fixFileName(inState.includePaths[i] + "/" + name);
+                                    buf = FileSystem::loadFile(fullName, &bufLen, true);
+                                    if(buf) break;
+                                }
+                            }
+
+                            // TODO: Get the name in there somewhere after
+                            // I change this from just being asserts.
+                            CHECK_OR_ERROR(buf, "Could not open include file");
+
+                            inState.recursionCount++;
+                            string includedBuf = preprocess(fullName, buf, inState);
+                            delete[] buf;
+                            inState.recursionCount--;
+
+                            CHECK_OR_ERROR(
+                                !inState.hadError,
+                                "Error in included file: " + fullName);
+
+                            // TODO: Error handling for recursive call.
+
+                            if(inState.annotateIncludes) {
+                                ostr << "// --- Begin include: " << fullName << endl;
+                            }
+
+                            ostr << includedBuf; // << endl;
+
+                            if(inState.annotateIncludes) {
+                                ostr << "// --- End include: " << fullName << endl;
+                            }
+
+                        }
+
+                    } else if((tokens[0] == "#ifdef" || tokens[0] == "#ifndef" || tokens[0] == "#if") && ppEnabled) {
+
+                        // Use the same code for #ifdef and #ifndef. Just
+                        // flip the action if it's #ifndef instead of
+                        // #ifdef.
+                        bool flipResult = false;
+                        if(tokens[0] == "#ifndef") {
+                            flipResult = true;
+                        }
+
+                        if(nestedFailedIfs) {
+
+                            // If we're already inside a failed if
+                            // block, just increment the number of
+                            // #endifs we need to see in order to get
+                            // out of it.
+                            nestedFailedIfs++;
+
+                        } else {
+
+                            CHECK_OR_ERROR(
+                                tokens.size() == 2,
+                                "Bad #ifdef");
+
+                            string symbol = tokens[1];
+                            bool result;
+
+                            if(tokens[0] == "#if") {
+
+                                string curSymbol = symbol;
+                                int numLookups = 0;
+
+                                // Keep looking up symbols until we find
+                                // something that's not a symbol.
+                                while(inState.definedSymbols.count(curSymbol)) {
+                                    curSymbol = inState.definedSymbols[curSymbol];
+                                    numLookups++;
+                                    CHECK_OR_ERROR(
+                                        numLookups < MAX_SYMBOL_LOOKUPS_FOR_IF,
+                                        "Too many lookups for symbol evaluation: \"" + symbol + "\".");
+                                }
+
+                                // Whatever this last thing is, convert it
+                                // to an int.
+                                int intVal = 0;
+                                if(curSymbol.size()) {
+                                    istringstream inStr(curSymbol);
+                                    inStr >> intVal;
+                                }
+                                result = intVal;
+
+                            } else {
+
+                                result = inState.definedSymbols.count(symbol);
+
+                            }
+
+                            if(flipResult ? !result : result) {
+                                nestedPassedIfs++;
+                            } else {
+                                nestedFailedIfs++;
+                            }
+                        }
+
+                    } else if(tokens[0] == "#else" && ppEnabled) {
+
+                        CHECK_OR_ERROR(
+                            nestedFailedIfs || nestedPassedIfs,
+                            "Cannot use #else outside of a conditional block.");
+
+                        if(nestedFailedIfs == 1) {
+                            nestedFailedIfs--;
+                            nestedPassedIfs++;
+                        } else if(nestedPassedIfs) {
+                            nestedPassedIfs--;
+                            nestedFailedIfs++;
+                        }
+
+                    } else if(tokens[0] == "#endif" && ppEnabled) {
+
+                        CHECK_OR_ERROR(
+                            nestedFailedIfs || nestedPassedIfs,
+                            "Cannot use #endif without a conditional block.");
+
+                        if(nestedFailedIfs) {
+                            nestedFailedIfs--;
+                        } else {
+                            nestedPassedIfs--;
+                        }
+
+                    } else if(tokens[0] == "#ppenable") {
+
+                        // Enable preprocessor.
+                        if(!nestedFailedIfs) {
+                            ppEnabled = true;
+                        }
+
+                    } else if(tokens[0] == "#ppdisable") {
+
+                        // Disable preprocessor.
+                        if(!nestedFailedIfs) {
+                            ppEnabled = false;
+                        }
+
+                    } else {
+                        if(!nestedFailedIfs) {
+                            ostr << inLines[i] << endl;
+                        }
+                    }
+
+                } else {
+                    ostr << endl;
+                }
+
+            } else {
+
+                // Didn't start with a # sign at all.
+                if(!nestedFailedIfs) {
+                    ostr << inLines[i] << endl;
+                }
+            }
+        }
+
+        return ostr.str();
+    }
+
+
+    // ----------------------------------------------------------------------
+    // Old, deprecated junk below.
+    // ----------------------------------------------------------------------
 
     static unsigned int getFileNamePosition(
         vector<string> &allFileNames,
@@ -295,7 +641,5 @@ namespace ExPop {
         output.insert(output.end(), currentFileOutput.begin(), currentFileOutput.end());
 
     }
-
 }
-
 

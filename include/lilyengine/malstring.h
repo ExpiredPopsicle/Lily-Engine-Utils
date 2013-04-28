@@ -55,7 +55,11 @@ namespace ExPop {
 
     /// Generate tokens from a string. Stores saved tokens into the
     /// passed-in tokens parameter.
-    void stringTokenize(const std::string &str, const std::string &delims, std::vector<std::string> &tokens, bool allowEmpty = false);
+    void stringTokenize(
+        const std::string &str,
+        const std::string &delims,
+        std::vector<std::string> &tokens,
+        bool allowEmpty = false);
 
     // TODO: Advanced string tokenization, escape/unescape, etc.
 

@@ -34,8 +34,73 @@
 #include <ostream>
 #include <vector>
 #include <string>
+#include <map>
 
 namespace ExPop {
+
+    /// Input to the preprocessor, and manager of state inside of it.
+    class PreprocessorState {
+    public:
+
+        PreprocessorState(void);
+
+        // ----------------------------------------------------------------------
+        // Settings stuff
+        // ----------------------------------------------------------------------
+
+        /// Fill this with constants before starting. It'll also change as
+        /// things get #defined and #undefed.
+        std::map<std::string, std::string> definedSymbols;
+
+        /// Include search paths.
+        std::vector<std::string> includePaths;
+
+        /// If this is set to true, all #includes will be accompanied with
+        /// annotations as C++ style comments indicating that some file is
+        /// being #included.
+        bool annotateIncludes;
+
+        // TODO: Maybe something to limit the include file options? Like a
+        // whitelist of includable files.
+
+        // ----------------------------------------------------------------------
+        // Error reporting
+        // ----------------------------------------------------------------------
+
+        /// If this is set to true when the preprocessor returns, there
+        /// was some kind of error.
+        bool hadError;
+
+        /// This contains the text of the error or errors.
+        std::string errorText;
+
+        // ----------------------------------------------------------------------
+        // Internal state stuff
+        // ----------------------------------------------------------------------
+
+        /// Internally used to make sure we don't infinitely recurse with
+        /// #include or something.
+        unsigned int recursionCount;
+
+        /// All included files we've hit so far.
+        std::map<std::string, bool> fileList;
+
+    private:
+    };
+
+    /// Run the preprocessor on a given string and return the
+    /// processed string. fileName is for tracking errors and
+    /// includes. Does not actually open the file on its own.
+    std::string preprocess(
+        const std::string &fileName,
+        const std::string &inStr,
+        PreprocessorState &inState);
+
+
+
+
+    /// THIS IS THE OLD VERSION. DON'T USE THIS UNLESS YOU HAVE A GOOD
+    /// REASON TO.
 
     /// Handle some simple (not compliant) C preprocessor style
     /// directives. Currently parses #include directives.
@@ -65,6 +130,7 @@ namespace ExPop {
         std::ostream *errorStream = NULL,
         int recursionLevel = 0,
         const std::vector<std::string> *includePaths = NULL);
+
 
 }
 
