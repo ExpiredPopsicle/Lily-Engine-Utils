@@ -174,6 +174,9 @@ namespace ExPop {
         /// length will be changed to reflect the size of the returned data.
         char *loadFile(const std::string &fileName, int *length, bool addNullTerminator = false);
 
+        /// Load a file and just return it as an std::string.
+        std::string loadFileString(const std::string &fileName);
+
         /// Load a part of a file into a new buffer. Only do this if
         /// you already know the length you're dealing with. If it
         /// hits a file in an archive it may start reading into the
