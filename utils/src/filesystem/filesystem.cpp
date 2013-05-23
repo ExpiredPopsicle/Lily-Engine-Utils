@@ -490,13 +490,12 @@ namespace ExPop {
         }
 
         std::string loadFileString(const std::string &fileName) {
-            string ret;
             int bufLen = 0;
             char *buf = loadFile(fileName, &bufLen, true);
-            if(buf) {
-                ret = buf;
-                delete[] buf;
+            if(!buf) {
+                return "";
             }
+            string ret(buf, bufLen);
             return ret;
         }
 
