@@ -5,7 +5,7 @@ env = Environment();
 # Lily-Engine-Utils SConscript call.
 Import("lilyUtilsAppend");
 if lilyUtilsAppend == None:
-    print "Lily Utils lib needed!"
+    print "Lily Utils lib needed!";
     Exit(1);
 
 includeDir = [Dir("./include")];

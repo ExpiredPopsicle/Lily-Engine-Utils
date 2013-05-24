@@ -1,0 +1,18 @@
+env = Environment();
+
+Import("lilyUtilsAppend");
+if lilyUtilsAppend == None:
+    print "Lily Utils lib needed!";
+    Exit(1);
+
+env.Append(**lilyUtilsAppend);
+
+# If we're not on Windows, assume something POSIXy.
+if(not(env["PLATFORM"] == "win32")):
+    env.Append(LINKFLAGS="-pthread");
+
+env.Program("lilyimgbuffer", "imgbuffer/imgbuffer.cpp");
+env.Program("lilybuffergen", "buffergen/buffergen.cpp");
+env.Program("lilymkglcontextcode", "glcontextcode/mkglcontextcode.cpp");
+env.Program("lilyheaderfixer", "headerfixer/headerfixer.cpp");
+env.Program("lilytodoscan", "todoscan/todoscan.cpp");
