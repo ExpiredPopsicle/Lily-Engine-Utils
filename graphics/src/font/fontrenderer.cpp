@@ -168,8 +168,8 @@ namespace ExPop {
                                     1, false, mat.data);
 
             glc->glUniform4f(colorScaleHandle,
-                             colorScale.x, colorScale.y,
-                             colorScale.z, colorScale.w);
+                             colorScale.data[0], colorScale.data[1],
+                             colorScale.data[2], colorScale.data[3]);
 
             EXPOP_ASSERT_GL();
 

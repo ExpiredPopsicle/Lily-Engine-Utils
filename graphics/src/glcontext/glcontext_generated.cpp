@@ -26,6 +26,7 @@ namespace ExPop {
             checkGetProcResult("glGetProgramiv", (void*)(glGetProgramiv = (void(EXPOP_GL_API *)(GLuint, GLenum, GLint*))getGLProcAddress("glGetProgramiv")));
             checkGetProcResult("glGetUniformLocation", (void*)(glGetUniformLocation = (GLint(EXPOP_GL_API *)(GLuint, const char*))getGLProcAddress("glGetUniformLocation")));
             checkGetProcResult("glGetAttribLocation", (void*)(glGetAttribLocation = (GLint(EXPOP_GL_API *)(GLuint, const char*))getGLProcAddress("glGetAttribLocation")));
+            checkGetProcResult("glBindAttribLocation", (void*)(glBindAttribLocation = (void(EXPOP_GL_API *)(GLuint, GLuint, const char*))getGLProcAddress("glBindAttribLocation")));
             checkGetProcResult("glGetProgramInfoLog", (void*)(glGetProgramInfoLog = (void(EXPOP_GL_API *)(GLuint, GLsizei, GLsizei*, char*))getGLProcAddress("glGetProgramInfoLog")));
             checkGetProcResult("glGetShaderInfoLog", (void*)(glGetShaderInfoLog = (void(EXPOP_GL_API *)(GLuint, GLsizei, GLsizei*, char*))getGLProcAddress("glGetShaderInfoLog")));
             checkGetProcResult("glDeleteProgram", (void*)(glDeleteProgram = (void(EXPOP_GL_API *)(GLuint))getGLProcAddress("glDeleteProgram")));

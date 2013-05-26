@@ -49,7 +49,7 @@ namespace ExPop {
             GLuint fragmentShader,
             std::string &errorOut);
 
-        /// Compile a shader from a screen.
+        /// Compile a shader from a string.
         GLuint compileShader(
             GLContext *glc,
             const std::string &shaderText,

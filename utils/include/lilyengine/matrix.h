@@ -65,36 +65,20 @@ namespace ExPop {
         // Data storage.
         // ----------------------------------------------------------------------
 
+        // This must be the ONLY DATA MEMBER.
         union {
 
             /// Actual data goes here.
             MatScalar data[ROWS * COLS];
-
-            // TODO: Get rid of this junk... It was a pretty bad idea.
-
-            // This is just so we can access x, y, z, and w in a
-            // Vector3 and Vector4 directly. It also means that the
-            // smallest a Matrix can actually be is 4 elements, but
-            // whatever.
-            struct {
-                MatScalar x;
-                MatScalar y;
-                MatScalar z;
-                MatScalar w;
-            };
-
-            // And colors because they don't overlap with other stuff.
-            struct {
-                MatScalar r;
-                MatScalar g;
-                MatScalar b;
-                MatScalar a;
-            };
         };
 
         // ----------------------------------------------------------------------
         // Various get/set stuff to mess with the data buffer.
         // ----------------------------------------------------------------------
+
+        inline MatScalar &x(void);
+        inline MatScalar &y(void);
+        inline MatScalar &z(void);
 
         /// data is a public member, so you don't really have to use
         /// this, but you should because we can turn on error checking
@@ -245,9 +229,29 @@ namespace ExPop {
     typedef Matrix<float, 4, 1> FVec4;
     typedef Matrix<float, 4, 1> FColor4;
 
-
     // Implementation follows...
     // ----------------------------------------------------------------------
+
+    // x()
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::x(void) {
+        assert(ROWS * COLS > 0);
+        return data[0];
+    }
+
+    // y()
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::y(void) {
+        assert(ROWS * COLS > 1);
+        return data[1];
+    }
+
+    // z()
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::z(void) {
+        assert(ROWS * COLS > 2);
+        return data[2];
+    }
 
     // operator[]
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
@@ -376,8 +380,8 @@ namespace ExPop {
     inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y) {
 
         assert(ROWS * COLS == 2);
-        this->x = x;
-        this->y = y;
+        data[0] = x;
+        data[1] = y;
     }
 
     // Matrix(x, y, z)
@@ -385,9 +389,9 @@ namespace ExPop {
     inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y, MatScalar z) {
 
         assert(ROWS * COLS == 3);
-        this->x = x;
-        this->y = y;
-        this->z = z;
+        data[0] = x;
+        data[1] = y;
+        data[2] = z;
     }
 
     // Matrix(x, y, z, w)
@@ -395,10 +399,10 @@ namespace ExPop {
     inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y, MatScalar z, MatScalar w) {
 
         assert(ROWS * COLS == 4);
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->w = w;
+        data[0] = x;
+        data[1] = y;
+        data[2] = z;
+        data[3] = w;
     }
 
     // transpose
@@ -821,9 +825,9 @@ namespace ExPop {
     inline FMatrix4x4 makeTranslationMatrix(const FVec3 &t) {
 
         FMatrix4x4 mat;
-        mat(0, 3) = t.x;
-        mat(1, 3) = t.y;
-        mat(2, 3) = t.z;
+        mat(0, 3) = t.data[0];
+        mat(1, 3) = t.data[1];
+        mat(2, 3) = t.data[2];
         return mat;
     }
 
@@ -836,17 +840,17 @@ namespace ExPop {
 
         FMatrix4x4 mat;
 
-        mat(0, 0) = t*axis.x*axis.x + c;
-        mat(0, 1) = t*axis.x*axis.y + s*axis.z;
-        mat(0, 2) = t*axis.x*axis.z - s*axis.y;
+        mat(0, 0) = t*axis.data[0]*axis.data[0] + c;
+        mat(0, 1) = t*axis.data[0]*axis.data[1] + s*axis.data[2];
+        mat(0, 2) = t*axis.data[0]*axis.data[2] - s*axis.data[1];
 
-        mat(1, 0) = t*axis.y*axis.x - s*axis.z;
-        mat(1, 1) = t*axis.y*axis.y + c;
-        mat(1, 2) = t*axis.y*axis.z + s*axis.x;
+        mat(1, 0) = t*axis.data[1]*axis.data[0] - s*axis.data[2];
+        mat(1, 1) = t*axis.data[1]*axis.data[1] + c;
+        mat(1, 2) = t*axis.data[1]*axis.data[2] + s*axis.data[0];
 
-        mat(2, 0) = t*axis.z*axis.x + s*axis.y;
-        mat(2, 1) = t*axis.z*axis.y - s*axis.x;
-        mat(2, 2) = t*axis.z*axis.z + c;
+        mat(2, 0) = t*axis.data[2]*axis.data[0] + s*axis.data[1];
+        mat(2, 1) = t*axis.data[2]*axis.data[1] - s*axis.data[0];
+        mat(2, 2) = t*axis.data[2]*axis.data[2] + c;
 
         return mat;
     }
@@ -856,9 +860,9 @@ namespace ExPop {
 
         FMatrix4x4 mat;
 
-        mat(0, 0) = scale.x;
-        mat(1, 1) = scale.y;
-        mat(2, 2) = scale.z;
+        mat(0, 0) = scale.data[0];
+        mat(1, 1) = scale.data[1];
+        mat(2, 2) = scale.data[2];
 
         return mat;
     }

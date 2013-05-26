@@ -19,6 +19,7 @@ void,glGetShaderiv,GLuint,GLenum,GLint*
 void,glGetProgramiv,GLuint,GLenum,GLint*
 GLint,glGetUniformLocation,GLuint,const char*
 GLint,glGetAttribLocation,GLuint,const char*
+void,glBindAttribLocation,GLuint,GLuint,const char*
 void,glGetProgramInfoLog,GLuint,GLsizei,GLsizei*,char*
 void,glGetShaderInfoLog,GLuint,GLsizei,GLsizei*,char*
 void,glDeleteProgram,GLuint

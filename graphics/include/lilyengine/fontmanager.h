@@ -89,7 +89,8 @@ namespace ExPop {
                 const std::string &str,
                 const std::string &fontName = "builtIn",
                 float x = 0, float y = 0,
-                float wordWrapWidth = -1);
+                float wordWrapWidth = -1,
+                const FVec4 &color = FVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
         private:
 

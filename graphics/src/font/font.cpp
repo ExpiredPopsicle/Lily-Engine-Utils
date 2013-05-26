@@ -356,7 +356,8 @@ namespace ExPop {
             const std::string &str,
             const std::string &fontName,
             float x, float y,
-            float wordWrapWidth) {
+            float wordWrapWidth,
+            const FVec4 &color) {
 
             Font *font = getFont(fontName);
 
@@ -384,7 +385,7 @@ namespace ExPop {
             Font::StringActionOutput *sto = font->doStringAction(
                 utf32Str, (Font::StringActionBits)bits, &input);
 
-            builtInFontRenderer->render(sto, 0, 0);
+            builtInFontRenderer->render(sto, x, y, color);
 
             // Clean up.
             sto->destroyRenderInfo(glc);
@@ -1089,9 +1090,9 @@ namespace ExPop {
                                 // in the color number corresponds to red,
                                 // green, and blue. (Hurray.)
                                 int colorVal = realAttribVal - 30;
-                                vt100FgColor.x = 0.5f * float(!!(colorVal & 1));
-                                vt100FgColor.y = 0.5f * float(!!(colorVal & 2));
-                                vt100FgColor.z = 0.5f * float(!!(colorVal & 4));
+                                vt100FgColor[0] = 0.5f * float(!!(colorVal & 1));
+                                vt100FgColor[1] = 0.5f * float(!!(colorVal & 2));
+                                vt100FgColor[2] = 0.5f * float(!!(colorVal & 4));
 
                             } else if(realAttribVal == 1) {
 

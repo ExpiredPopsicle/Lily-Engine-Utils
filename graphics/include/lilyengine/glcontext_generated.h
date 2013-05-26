@@ -20,6 +20,7 @@ void (EXPOP_GL_API *glGetShaderiv)(GLuint, GLenum, GLint*);
 void (EXPOP_GL_API *glGetProgramiv)(GLuint, GLenum, GLint*);
 GLint (EXPOP_GL_API *glGetUniformLocation)(GLuint, const char*);
 GLint (EXPOP_GL_API *glGetAttribLocation)(GLuint, const char*);
+void (EXPOP_GL_API *glBindAttribLocation)(GLuint, GLuint, const char*);
 void (EXPOP_GL_API *glGetProgramInfoLog)(GLuint, GLsizei, GLsizei*, char*);
 void (EXPOP_GL_API *glGetShaderInfoLog)(GLuint, GLsizei, GLsizei*, char*);
 void (EXPOP_GL_API *glDeleteProgram)(GLuint);
