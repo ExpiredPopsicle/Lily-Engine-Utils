@@ -38,6 +38,7 @@ using namespace std;
 
 #include "utils.h"
 #include "image.h"
+#include "filesystem.h"
 using namespace ExPop::Console;
 using namespace ExPop;
 
@@ -397,6 +398,18 @@ namespace ExPop {
             }
 
             return img;
+        }
+
+        Image *loadTGAFromfile(const std::string &filename) {
+            char *fileData = NULL;
+            int fileLen = 0;
+            fileData = FileSystem::loadFile(filename, &fileLen);
+            if(fileData) {
+                Image *img = loadTGA(fileData, fileLen);
+                delete[] fileData;
+                return img;
+            }
+            return NULL;
         }
 
         Image *load1BitImageFromBitmap(

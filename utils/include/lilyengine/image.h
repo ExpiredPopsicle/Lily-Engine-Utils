@@ -162,6 +162,10 @@ namespace ExPop {
         /// Load an image from a TGA file in a buffer.
         Image *loadTGA(void *tgaData, int length, bool convertPink = false);
 
+        /// Load a TGA image from a file. Just wraps up all the
+        /// filesystem junk and calls loadTGA().
+        Image *loadTGAFromfile(const std::string &filename);
+
         /// Load an image from a 1-bit-per-pixel buffer.
         Image *load1BitImageFromBitmap(
             char *bitmap,
