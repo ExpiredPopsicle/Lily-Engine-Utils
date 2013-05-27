@@ -84,6 +84,7 @@ namespace ExPop {
         /// this, but you should because we can turn on error checking
         /// for it.
         inline MatScalar &operator[](unsigned int index);
+        inline const MatScalar &operator[](unsigned int index) const;
 
         /// Get a specific cell. Checks ranges if EXPOP_MATRIX_CHECKS.
         inline MatScalar &get(unsigned int row, unsigned int col);
@@ -257,6 +258,15 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline MatScalar &Matrix<MatScalar, ROWS, COLS>::operator[](
         unsigned int index) {
+
+        EXPOP_MATRIX_ASSERT(index < ROWS * COLS);
+        return data[index];
+    }
+
+    // operator[], const version
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline const MatScalar &Matrix<MatScalar, ROWS, COLS>::operator[](
+        unsigned int index) const {
 
         EXPOP_MATRIX_ASSERT(index < ROWS * COLS);
         return data[index];
@@ -761,9 +771,9 @@ namespace ExPop {
         assert(ROWS * COLS == 3);
 
         MyType out;
-        out.x =  y   * v.z - z   *  v.y;
-        out.y = -v.z * x   - v.x * -z;
-        out.z =  x   * v.y - y   *  v.x;
+        out.data[0] =  data[1]   * v.data[2] - data[2]   *  v.data[1];
+        out.data[1] = -v.data[2] * data[0]   - v.data[0] * -data[2];
+        out.data[2] =  data[0]   * v.data[1] - data[1]   *  v.data[0];
 
         return out;
     }
