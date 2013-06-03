@@ -496,6 +496,7 @@ namespace ExPop {
                 return "";
             }
             string ret(buf, bufLen);
+            delete[] buf;
             return ret;
         }
 

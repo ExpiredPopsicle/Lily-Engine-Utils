@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 using namespace std;
 
@@ -19,11 +20,18 @@ namespace ExPop {
             GLuint fragmentShader,
             std::string &errorOut) {
 
+            if(!vertexShader || !fragmentShader) {
+                errorOut += "No vertex shader or no fragment shader passed into linkShaders().\n";
+                return 0;
+            }
+
             if(errorOut.size()) return 0;
 
             GLuint program = glc->glCreateProgram();
+
             glc->glAttachShader(program, vertexShader);
             glc->glAttachShader(program, fragmentShader);
+
             glc->glLinkProgram(program);
 
             GLint linkStatus = 0;
