@@ -123,10 +123,33 @@ namespace ExPop {
             return out;
         }
 
+
+        void Image::sampleNearest(
+            float x, float y,
+            float &r, float &g,
+            float &b, float &a) const {
+
+            x *= float(width);
+            y *= float(height);
+
+            int rx = int(x + 0.5) % width;
+            int ry = int(y + 0.5) % height;
+
+            Pixel *p = &pixels[rx + ry * width];
+
+            assert(p);
+
+            r = float(p->rgba.r) / 255.0f;
+            g = float(p->rgba.g) / 255.0f;
+            b = float(p->rgba.b) / 255.0f;
+            a = float(p->rgba.a) / 255.0f;
+        }
+
+
         void Image::sampleInterpolated(
             float x, float y,
             float &r, float &g,
-            float &b, float &a) {
+            float &b, float &a) const {
 
             x *= float(getWidth());
             y *= float(getHeight());
@@ -150,9 +173,10 @@ namespace ExPop {
                 bool xd = !!(i & 1);
                 bool yd = !!(i & 2);
 
-                p = getPixel(
-                    (x0 + xd) & (getWidth() - 1),
-                    (y0 + yd) & (getHeight() - 1));
+                int rx = (x0 + xd) & (getWidth() - 1);
+                int ry = (y0 + yd) & (getHeight() - 1);
+
+                Pixel *p = &pixels[rx + ry * width];
 
                 float s =
                     (xd ? xs : (1.0 - xs)) *
