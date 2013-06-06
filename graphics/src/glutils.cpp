@@ -4,6 +4,9 @@ using namespace std;
 
 #include <GL/gl.h>
 #include <GL/glext.h>
+#ifndef GL_INFO_LOG_LENGTH
+#define GL_INFO_LOG_LENGTH 0x8B84
+#endif
 
 #include <lilyengine/glutils.h>
 #include <lilyengine/glcontext.h>

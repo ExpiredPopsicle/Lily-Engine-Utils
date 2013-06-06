@@ -64,6 +64,7 @@ namespace ExPop {
             if(funcName == "glEnable") return (void*)glEnable;
             if(funcName == "glDisable") return (void*)glDisable;
             if(funcName == "glBlendFunc") return (void*)glBlendFunc;
+            if(funcName == "glDrawElements") return (void*)glDrawElements;
             return NULL;
         }
 
@@ -113,6 +114,10 @@ namespace ExPop {
             if(!p) consoleId = "error";
 
             // out(consoleId) << p << ": " << funcName << endl;
+
+            if(!p) {
+                cerr << "Failed to find OpenGL function: " << funcName << endl;
+            }
 
             // FIXME: Should this be fatal?
             assert(p);
