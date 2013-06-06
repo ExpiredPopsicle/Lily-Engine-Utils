@@ -1,8 +1,12 @@
+#include <iostream>
 #include <string>
 using namespace std;
 
 #include <GL/gl.h>
 #include <GL/glext.h>
+#ifndef GL_INFO_LOG_LENGTH
+#define GL_INFO_LOG_LENGTH 0x8B84
+#endif
 
 #include <lilyengine/glutils.h>
 #include <lilyengine/glcontext.h>
@@ -19,11 +23,18 @@ namespace ExPop {
             GLuint fragmentShader,
             std::string &errorOut) {
 
+            if(!vertexShader || !fragmentShader) {
+                errorOut += "No vertex shader or no fragment shader passed into linkShaders().\n";
+                return 0;
+            }
+
             if(errorOut.size()) return 0;
 
             GLuint program = glc->glCreateProgram();
+
             glc->glAttachShader(program, vertexShader);
             glc->glAttachShader(program, fragmentShader);
+
             glc->glLinkProgram(program);
 
             GLint linkStatus = 0;

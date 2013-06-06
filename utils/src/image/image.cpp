@@ -424,7 +424,7 @@ namespace ExPop {
             return img;
         }
 
-        Image *loadTGAFromfile(const std::string &filename) {
+        Image *loadTGAFromFile(const std::string &filename) {
             char *fileData = NULL;
             int fileLen = 0;
             fileData = FileSystem::loadFile(filename, &fileLen);

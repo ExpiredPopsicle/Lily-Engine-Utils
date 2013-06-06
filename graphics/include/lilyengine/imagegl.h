@@ -1,9 +1,9 @@
 #pragma once
 
-class Image;
-
 namespace ExPop {
     namespace Gfx {
+
+        class Image;
 
         /// Output from the creation of an OpenGL texture from an
         /// Image object.
