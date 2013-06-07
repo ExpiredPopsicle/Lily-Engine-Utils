@@ -125,7 +125,14 @@ namespace ExPop {
             void sampleInterpolated(
                 float x, float y,
                 float &r, float &g,
-                float &b, float &a);
+                float &b, float &a) const;
+
+            /// Get the nearest pixel on the image to some texture
+            /// coordinate.
+            void sampleNearest(
+                float x, float y,
+                float &r, float &g,
+                float &b, float &a) const;
 
             /// Get the width.
             inline int getWidth(void) const {
