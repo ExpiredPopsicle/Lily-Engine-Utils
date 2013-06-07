@@ -365,6 +365,12 @@ namespace ExPop {
                 }
 #endif
 
+                // Just for safety, add in a NULL terminator to the
+                // last position of the name string, otherwise bad
+                // archives could have us read off the end of the
+                // filename into whatever.
+                header.name[511] = 0;
+
                 tableOfContents[header.name] = currentPos;
 
                 currentPos += header.length + sizeof(FileHeader);

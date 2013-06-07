@@ -16,3 +16,4 @@ env.Program("lilybuffergen", "buffergen/buffergen.cpp");
 env.Program("lilymkglcontextcode", "glcontextcode/mkglcontextcode.cpp");
 env.Program("lilyheaderfixer", "headerfixer/headerfixer.cpp");
 env.Program("lilytodoscan", "todoscan/todoscan.cpp");
+env.Program("lilyarchiver", "archiver/archiver.cpp");
