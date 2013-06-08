@@ -4,9 +4,7 @@ env = Environment();
 # SConscript. This should just be the return value of the
 # Lily-Engine-Utils SConscript call.
 Import("lilyUtilsAppend");
-if lilyUtilsAppend == None:
-    print "Lily Utils lib needed!";
-    Exit(1);
+Import("lilyToolsAppend");
 
 includeDir = [Dir("./include")];
 
@@ -19,16 +17,26 @@ try:
 except:
     pass;
 
+# Preserve the environment as we have it now, because we'll return
+# part of it at the end.
 env2 = env.Clone();
 
 env.Append(**lilyUtilsAppend);
+env.Append(**lilyToolsAppend);
+
+generatedSource = env.File("src/glcontext/glcontext_generated.cpp");
+generatedHeader = env.File("include/lilyengine/glcontext_generated.h");
+env.LilyGLContext(
+    [generatedSource, generatedHeader],
+    "src/glcontext/glfuncs.txt");
+
 lilyGraphicsLib = env.Library(
     "lilyenginegraphics",
     ["src/font/font.cpp",
      "src/font/font_builtin2.cpp",
      "src/font/fontrenderer.cpp",
      "src/imagegl/imagegl.cpp",
-     "src/glcontext/glcontext_generated.cpp",
+     generatedSource,
      "src/glcontext/glcontext.cpp",
      "src/glutils.cpp"]);
 

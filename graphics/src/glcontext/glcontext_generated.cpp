@@ -75,6 +75,21 @@ namespace ExPop {
             checkGetProcResult("glDeleteTextures", (void*)(glDeleteTextures = (void(EXPOP_GL_API *)(GLsizei, const GLuint*))getGLProcAddress("glDeleteTextures")));
             checkGetProcResult("glDeleteBuffers", (void*)(glDeleteBuffers = (void(EXPOP_GL_API *)(GLsizei, const GLuint*))getGLProcAddress("glDeleteBuffers")));
 
+            // FBO stuff
+            checkGetProcResult("glGenFramebuffers", (void*)(glGenFramebuffers = (void(EXPOP_GL_API *)(GLsizei, GLuint*))getGLProcAddress("glGenFramebuffers")));
+            checkGetProcResult("glDeleteFramebuffers", (void*)(glDeleteFramebuffers = (void(EXPOP_GL_API *)(GLsizei, const GLuint*))getGLProcAddress("glDeleteFramebuffers")));
+            checkGetProcResult("glBindFramebuffer", (void*)(glBindFramebuffer = (void(EXPOP_GL_API *)(GLenum, GLuint))getGLProcAddress("glBindFramebuffer")));
+
+            checkGetProcResult("glFramebufferTexture2D", (void*)(glFramebufferTexture2D = (void(EXPOP_GL_API *)(GLenum, GLenum, GLenum, GLuint, GLint))getGLProcAddress("glFramebufferTexture2D")));
+
+
+            // Renderbuffers
+            checkGetProcResult("glGenRenderbuffers", (void*)(glGenRenderbuffers = (void(EXPOP_GL_API *)(GLsizei, GLuint*))getGLProcAddress("glGenRenderbuffers")));
+            checkGetProcResult("glDeleteRenderbuffers", (void*)(glDeleteRenderbuffers = (void(EXPOP_GL_API *)(GLsizei, const GLuint*))getGLProcAddress("glDeleteRenderbuffers")));
+            checkGetProcResult("glBindRenderbuffer", (void*)(glBindRenderbuffer = (void(EXPOP_GL_API *)(GLenum, GLuint))getGLProcAddress("glBindRenderbuffer")));
+            checkGetProcResult("glRenderbufferStorage", (void*)(glRenderbufferStorage = (void(EXPOP_GL_API *)(GLenum, GLenum, GLsizei, GLsizei))getGLProcAddress("glRenderbufferStorage")));
+            checkGetProcResult("glGetRenderbufferParameteriv", (void*)(glGetRenderbufferParameteriv = (void(EXPOP_GL_API *)(GLenum, GLenum, GLint*))getGLProcAddress("glGetRenderbufferParameteriv")));
+
         }
     }
 }

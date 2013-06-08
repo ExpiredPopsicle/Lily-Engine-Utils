@@ -69,6 +69,21 @@ void (EXPOP_GL_API *glActiveTexture)(GLenum);
 void (EXPOP_GL_API *glDeleteTextures)(GLsizei, const GLuint*);
 void (EXPOP_GL_API *glDeleteBuffers)(GLsizei, const GLuint*);
 
+// FBO stuff
+void (EXPOP_GL_API *glGenFramebuffers)(GLsizei, GLuint*);
+void (EXPOP_GL_API *glDeleteFramebuffers)(GLsizei, const GLuint*);
+void (EXPOP_GL_API *glBindFramebuffer)(GLenum, GLuint);
+
+void (EXPOP_GL_API *glFramebufferTexture2D)(GLenum, GLenum, GLenum, GLuint, GLint);
+
+
+// Renderbuffers
+void (EXPOP_GL_API *glGenRenderbuffers)(GLsizei, GLuint*);
+void (EXPOP_GL_API *glDeleteRenderbuffers)(GLsizei, const GLuint*);
+void (EXPOP_GL_API *glBindRenderbuffer)(GLenum, GLuint);
+void (EXPOP_GL_API *glRenderbufferStorage)(GLenum, GLenum, GLsizei, GLsizei);
+void (EXPOP_GL_API *glGetRenderbufferParameteriv)(GLenum, GLenum, GLint*);
+
 #ifndef GL_ARRAY_BUFFER
 #define GL_ARRAY_BUFFER 0x8892
 #endif
@@ -89,4 +104,7 @@ void (EXPOP_GL_API *glDeleteBuffers)(GLsizei, const GLuint*);
 #endif
 #ifndef GL_ELEMENT_ARRAY_BUFFER
 #define GL_ELEMENT_ARRAY_BUFFER 0x8893
+#endif
+#ifndef GL_INFO_LOG_LENGTH
+#define GL_INFO_LOG_LENGTH 0x8B84
 #endif

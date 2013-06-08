@@ -13,7 +13,7 @@ if(not(env["PLATFORM"] == "win32")):
 
 env.Program("lilyimgbuffer", "imgbuffer/imgbuffer.cpp");
 env.Program("lilybuffergen", "buffergen/buffergen.cpp");
-env.Program("lilymkglcontextcode", "glcontextcode/mkglcontextcode.cpp");
+toolGlContextGen = env.Program("lilymkglcontextcode", "glcontextcode/mkglcontextcode.cpp");
 env.Program("lilyheaderfixer", "headerfixer/headerfixer.cpp");
 env.Program("lilytodoscan", "todoscan/todoscan.cpp");
 toolArchiver = env.Program("lilyarchiver", "archiver/archiver.cpp");
@@ -26,9 +26,19 @@ archiverBuilder = Builder(
     emitter=archiverEmitter,
     suffix=".poop");
 
+def glContextGenEmitter(source, target, env):
+    return (target, [toolGlContextGen] + source);
+glContextGenBuilder = Builder(
+    action="${SOURCES[0]} ${SOURCES[1]} $TARGETS",
+    emitter=glContextGenEmitter);
+
 appendValues = {
-    "BUILDERS":{"PoopFile":archiverBuilder}
+    "BUILDERS":{
+        "PoopFile":archiverBuilder,
+        "LilyGLContext":glContextGenBuilder}
 };
+
+
 Return("appendValues");
 
 

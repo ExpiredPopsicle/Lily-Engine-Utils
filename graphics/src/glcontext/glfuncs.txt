@@ -68,6 +68,21 @@ void,glActiveTexture,GLenum
 void,glDeleteTextures,GLsizei,const GLuint*
 void,glDeleteBuffers,GLsizei,const GLuint*
 
+// FBO stuff
+void,glGenFramebuffers,GLsizei,GLuint*
+void,glDeleteFramebuffers,GLsizei,const GLuint*
+void,glBindFramebuffer,GLenum,GLuint
+
+void,glFramebufferTexture2D,GLenum,GLenum,GLenum,GLuint,GLint
+
+
+// Renderbuffers
+void,glGenRenderbuffers,GLsizei,GLuint*
+void,glDeleteRenderbuffers,GLsizei,const GLuint*
+void,glBindRenderbuffer,GLenum,GLuint
+void,glRenderbufferStorage,GLenum,GLenum,GLsizei,GLsizei
+void,glGetRenderbufferParameteriv,GLenum,GLenum,GLint*
+
 DEF,GL_ARRAY_BUFFER,0x8892
 DEF,GL_STATIC_DRAW,0x88E4
 DEF,GL_VERTEX_SHADER,0x8B31
@@ -75,3 +90,4 @@ DEF,GL_FRAGMENT_SHADER,0x8B30
 DEF,GL_COMPILE_STATUS,0x8B81
 DEF,GL_LINK_STATUS,0x8B82
 DEF,GL_ELEMENT_ARRAY_BUFFER,0x8893
+DEF,GL_INFO_LOG_LENGTH,0x8B84
