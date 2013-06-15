@@ -49,7 +49,8 @@ namespace ExPop {
             Image *img,
             ImageTexture *imgTex,
             ImageFormat format,
-            bool compressedTexture) {
+            bool compressedTexture,
+            bool convertPow2) {
 
             GLuint texNum;
             glGenTextures(1, &texNum);
@@ -63,14 +64,23 @@ namespace ExPop {
             unsigned int width = img->getWidth();
             unsigned int height = img->getHeight();
 
-            imgTex->pow2Width = 1;
-            while(imgTex->pow2Width < width) {
-                imgTex->pow2Width <<= 1;
-            }
+            if(convertPow2) {
 
-            imgTex->pow2Height = 1;
-            while(imgTex->pow2Height < height) {
-                imgTex->pow2Height <<= 1;
+                imgTex->pow2Width = 1;
+                while(imgTex->pow2Width < width) {
+                    imgTex->pow2Width <<= 1;
+                }
+
+                imgTex->pow2Height = 1;
+                while(imgTex->pow2Height < height) {
+                    imgTex->pow2Height <<= 1;
+                }
+
+            } else {
+
+                imgTex->pow2Width = width;
+                imgTex->pow2Height = height;
+
             }
 
             imgTex->origWidth = width;
@@ -126,8 +136,11 @@ namespace ExPop {
                             for(unsigned int y = 0; y < imgTex->pow2Height; y++) {
                                 unsigned char *outChar = &(convertedImage[x + imgTex->pow2Width * y]);
 
+                                // We're just doing an average here
+                                // instead of any kind of proper
+                                // luminance conversion.
                                 Pixel *p = adjustedImage->getPixel(x, y);
-                                *outChar = (p->rgba.r + p->rgba.b + p->rgba.b) / 3;
+                                *outChar = (p->rgba.r + p->rgba.g + p->rgba.b) / 3;
                             }
                         }
 
@@ -146,7 +159,7 @@ namespace ExPop {
                         break;
                     case IMAGE_FORMAT_GREY_8:
                         realFormat = GL_LUMINANCE;
-                        realInternal = GL_COMPRESSED_LUMINANCE;
+                        realInternal = compressedTexture ? GL_COMPRESSED_LUMINANCE : GL_LUMINANCE;
                         break;
                     default:
                         break;
@@ -178,6 +191,7 @@ namespace ExPop {
 
             EXPOP_ASSERT_GL();
 
+            // Set up really basic min/mag filters.
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

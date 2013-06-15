@@ -74,7 +74,7 @@ void,glDeleteFramebuffers,GLsizei,const GLuint*
 void,glBindFramebuffer,GLenum,GLuint
 
 void,glFramebufferTexture2D,GLenum,GLenum,GLenum,GLuint,GLint
-
+GLenum,glCheckFramebufferStatus,GLenum
 
 // Renderbuffers
 void,glGenRenderbuffers,GLsizei,GLuint*

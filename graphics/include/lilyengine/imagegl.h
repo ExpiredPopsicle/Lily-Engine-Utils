@@ -34,7 +34,8 @@ namespace ExPop {
             Image *image,
             ImageTexture *imgTex,
             ImageFormat format = IMAGE_FORMAT_RGBA_32,
-            bool compressedTexture = true);
+            bool compressedTexture = true,
+            bool convertPow2 = true);
 
     }
 }
