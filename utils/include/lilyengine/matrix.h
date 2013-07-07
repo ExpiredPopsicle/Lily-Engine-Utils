@@ -865,6 +865,26 @@ namespace ExPop {
         return mat;
     }
 
+    /// Make a 3x3 float rotation matrix around the Z axis.
+    inline FMatrix3x3 make2DRotationMatrix(float angle) {
+
+        float c = std::cos(angle);
+        float s = std::sin(angle);
+        float t = 1 - c;
+
+        FMatrix3x3 mat;
+
+        mat(0, 0) = c;
+        mat(0, 1) = -s;
+        mat(0, 2) = 0;
+
+        mat(1, 0) = s;
+        mat(1, 1) = c;
+        mat(1, 2) = 0;
+
+        return mat;
+    }
+
     /// Make a 4x4 float scaling matrix.
     inline FMatrix4x4 makeScaleMatrix(const FVec3 &scale) {
 
