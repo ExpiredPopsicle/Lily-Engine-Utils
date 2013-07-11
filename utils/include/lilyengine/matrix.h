@@ -870,7 +870,6 @@ namespace ExPop {
 
         float c = std::cos(angle);
         float s = std::sin(angle);
-        float t = 1 - c;
 
         FMatrix3x3 mat;
 
