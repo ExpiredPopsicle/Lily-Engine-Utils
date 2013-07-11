@@ -7,6 +7,9 @@ if lilyUtilsAppend == None:
 
 env.Append(**lilyUtilsAppend);
 
+env.Append(CXXFLAGS="-g -Wall");
+env.Append(LDFLAGS="-g");
+
 # If we're not on Windows, assume something POSIXy.
 if(not(env["PLATFORM"] == "win32")):
     env.Append(LINKFLAGS="-pthread");
