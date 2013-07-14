@@ -57,10 +57,35 @@ using namespace ExPop;
 
 // TODO[: Degenerate test2.
 
+// TODO [100]: Herp derp derp
+//
+// This is some source file extra data.
+
 string testThinger  = "// TODO: Don't read this string";
 string testThinger2 = "\" // TODO: Don't read this string either";
 
 // ----------------------------------------------------------------------
+
+// Now serious issues...
+
+// FIXME: "DONE" stuff keeps ending up at the top of whatever source
+// file they were supposedly originally in.
+//
+// That is, stuff from the org-mode file that isn't in the source
+// file, which we assumed to be done.
+
+// FIXME: (Maybe) Stuff is showing up as DONE in the org file, but the
+// issue still exists in the cpp file.
+//
+// This is because the ones in the org file had the issue number
+// assigned to them while the stuff in the cpp file was unchanged.
+// Presumed that this bug will go away once we actually start writing
+// files.
+
+// TODO: Add file writing.
+
+// TODO: Determine and implement correct behavior for unrelated lines
+// in org files.
 
 enum BlockType {
     BLOCKTYPE_NONE,
@@ -69,6 +94,9 @@ enum BlockType {
     BLOCKTYPE_FIXME,
     BLOCKTYPE_DONE,
 };
+
+const char extraDataReadOnlyTag[] = "+ Ext: ";
+const char extraDataNotesHeader[] = "+ Saved Notes:";
 
 struct CommentBlock {
     int startLineNumber;
@@ -193,7 +221,7 @@ void loadFileLines(
     }
 }
 
-void tagBlocks(vector<CommentBlock*> &commentBlocks) {
+void setBlockTypesByTag(vector<CommentBlock*> &commentBlocks) {
 
     // Now go through and set block types for everything based on the
     // tag at the start of the block.
@@ -364,7 +392,7 @@ void processSourceFile(
 
 // Fix the comment lines themselves in each file. (Or our buffers of
 // those files, anyway.)
-void fixupIssueIds(
+void fixupIssueIdsInSourceFiles(
     const vector<CommentBlock *> &commentBlocks,
     map<string, vector<string> > &linesByFile) {
 
@@ -372,6 +400,10 @@ void fixupIssueIds(
 
         // Skip over normal boring comments.
         if(commentBlocks[i]->type == BLOCKTYPE_NONE)
+            continue;
+
+        // Skip over anything marked as "done".
+        if(commentBlocks[i]->type == BLOCKTYPE_DONE)
             continue;
 
         if(commentBlocks[i]->needsNewId) {
@@ -446,6 +478,18 @@ void outputOrgFile(
             getIssueIdNumber(commentBlocks[i]->comment, &startOfActualComment);
             commentWithoutJunk = commentBlocks[i]->comment.substr(startOfActualComment);
 
+            // Squish newlines together.
+            ostringstream commentWithoutNewlines;
+            vector<string> commentLines;
+            stringTokenize(commentWithoutJunk, "\n", commentLines);
+            // for(unsigned int i = 0; i < commentLines.size(); i++) {
+            //     if(commentLines[i].size()) {
+            //         commentWithoutNewlines << commentLines[i];
+            //         if(i != commentLines.size() - 1)
+            //             commentWithoutNewlines << " ";
+            //     }
+            // }
+
             // cout << "----------------------------------------------------------------------" << endl;
             // cout << "Comment id: " << i << endl;
             // cout << "Issue id:   " << commentBlocks[i]->issueId << endl;
@@ -454,19 +498,51 @@ void outputOrgFile(
             // // cout << commentBlocks[i]->comment << endl;
             // cout << commentWithoutJunk << endl;
 
+            // Determine appropriate output block type.
             string typeStr = "TODO";
             if(commentBlocks[i]->type == BLOCKTYPE_DONE)
                 typeStr = "DONE";
-            cout << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " << commentWithoutJunk << endl;
 
+            // Output just the first line (whole paragraph block in
+            // source) as the TODO issue title.
+            cout << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " << (commentLines.size() ? commentLines[0] : "")  << endl;
+
+            // Output all additional lines with some silly tag.
+            for(unsigned int j = 1; j < commentLines.size(); j++) {
+                cout << extraDataReadOnlyTag << commentLines[j] << endl;
+            }
+
+            // Create an org-mode link straight to this comment.
+            cout << extraDataReadOnlyTag <<
+                "[[file:" <<
+                commentBlocks[i]->filename <<
+                "::" <<
+                (commentBlocks[i]->startLineNumber + 1) <<
+                "][link to comment]]" <<
+                endl;
+
+            // Create a header for all the notes associated with this.
+            if(commentBlocks[i]->extraData.size()) {
+                cout << extraDataNotesHeader << endl;
+            }
+
+            // Spit out all the stuff that we previously read from the
+            // org-mode file.
             for(unsigned int j = 0; j < commentBlocks[i]->extraData.size(); j++) {
                 cout << commentBlocks[i]->extraData[j] << endl;
             }
 
+            // Arbitrary newline for readability.
+            cout << endl;
         }
     }
 }
 
+
+static inline bool lineEndsLastBlock(const std::string &str) {
+    return strStartsWith("** ", str) ||
+        strStartsWith("* ", str);
+}
 
 void processOrgFile(
     const std::string &filename,
@@ -481,10 +557,12 @@ void processOrgFile(
 
     for(unsigned int lineNum = 0; lineNum < lines.size() + 1; lineNum++) {
 
+        // Note: This can be an invalid reference. Don't use it
+        // without first testing lineNum < lines.size().
         string &line = lines[lineNum];
 
         // Finish the current extra data stuff.
-        if(lineNum == lines.size() || strStartsWith("*", line)) {
+        if(lineNum == lines.size() || lineEndsLastBlock(line)) {
 
             if(issueId != -1) {
 
@@ -528,6 +606,18 @@ void processOrgFile(
 
         if(lineNum < lines.size()) {
 
+            // Skip any line beginning with our "extra" tag. We'll
+            // just regenerate that from source anyway.
+            if(strStartsWith(extraDataReadOnlyTag, line)) {
+                continue;
+            }
+
+            // Skip the notes section header we stick in for
+            // organization.
+            if(strStartsWith(extraDataNotesHeader, line)) {
+                continue;
+            }
+
             if(strStartsWith("* ", line)) {
 
                 // Find the first space after the number of
@@ -555,7 +645,8 @@ void processOrgFile(
                 justLine = justLine.substr(lineStartPos);
                 commentLine = justLine;
 
-            } else if(!strStartsWith("*", line)) {
+            // } else if(!strStartsWith("*", line)) {
+            } else if(!lineEndsLastBlock(line)) {
 
                 // Must be some notes we stuck in the .org file.
                 extraDataLines.push_back(line);
@@ -613,32 +704,41 @@ int main(int argc, char *argv[]) {
     vector<CommentBlock *> commentBlocks;
     map<string, vector<string> > linesByFile;
 
+    unsigned int numCppFiles = 0;
+    unsigned int numOrgFiles = 0;
+    string resultOrgFile;
+
     for(unsigned int i = 1; i < argc; i++) {
         string filename = argv[i];
         if(strEndsWith(".cpp", filename)) {
             loadFileLines(filename, linesByFile[filename]);
             processSourceFile(filename, linesByFile[filename], commentBlocks);
+            numCppFiles++;
         }
     }
 
-    tagBlocks(commentBlocks);
+    setBlockTypesByTag(commentBlocks);
 
     for(unsigned int i = 1; i < argc; i++) {
         string filename = argv[i];
         if(strEndsWith(".org", filename)) {
             loadFileLines(filename, linesByFile[filename]);
             processOrgFile(filename, linesByFile[filename], commentBlocks);
+            resultOrgFile = filename;
+            numOrgFiles++;
         }
     }
 
-    // TODO: Assign issue numbers to unassigned stuff here.
+    if(!numCppFiles || numOrgFiles != 1) {
+        cerr << "Usage: " << argv[0] << " <source files> <org mode file>" << endl;
+    }
+
 
     assignMissingIssueNumbers(commentBlocks);
 
-    fixupIssueIds(commentBlocks, linesByFile);
+    fixupIssueIdsInSourceFiles(commentBlocks, linesByFile);
 
-    outputFiles(linesByFile);
-
+    // outputFiles(linesByFile);
 
     outputOrgFile(commentBlocks);
 
