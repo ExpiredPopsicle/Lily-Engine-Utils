@@ -70,7 +70,7 @@ void outputOrgFile(
 
             // Output just the first line (whole paragraph block in
             // source) as the TODO issue title.
-            out << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " << (commentLines.size() ? commentLines[0] : "")  << endl;
+            out << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " << (commentLines.size() ? strTrim(commentLines[0]) : "")  << endl;
 
             // Output all additional lines with some silly tag.
             for(unsigned int j = 1; j < commentLines.size(); j++) {

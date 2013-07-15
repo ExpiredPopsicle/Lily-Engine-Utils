@@ -101,6 +101,9 @@ string testThinger2 = "\" // TODO: Don't read this string either";
 
 // TODO: Recognize indented blocks for extra data.
 
+// TODO: Some of the lines in the org file are ending up with extra
+// spaces.
+
 // Load a file into a bunch of lines.
 void loadFileLines(
     const std::string &filename,
@@ -155,6 +158,7 @@ void processSourceFile(
     int blockStartLine = -1;
     int blockStartPosInLine = -1;
     bool lastCommentLineWasNewline = false;
+    int indentAmountForLastComment = -1;
 
     for(unsigned int lineNum = 0; lineNum < lines.size(); lineNum++) {
 
@@ -216,15 +220,23 @@ void processSourceFile(
                 // Find the actual start of the line after all the
                 // whitespace.
                 blockStartPosInLine = charNum;
-                while(blockStartPosInLine < lines[lineNum].size() && isWhiteSpace(lines[lineNum][blockStartPosInLine])) {
+
+                while(
+                    blockStartPosInLine < lines[lineNum].size() &&
+                    isWhiteSpace(lines[lineNum][blockStartPosInLine])) {
+
                     blockStartPosInLine++;
                 }
             }
 
-            // // Skip past any whitespace.
-            // while(charNum < lines[lineNum].size() && isWhiteSpace(lines[lineNum][charNum])) {
-            //     charNum++;
-            // }
+            // Skip past any whitespace. Keep track of the amount of
+            // indentation, so we can determine if we want to split
+            // into an ext thing.
+            int indentAmountForThisComment = 0;
+            while(charNum < lines[lineNum].size() && isWhiteSpace(lines[lineNum][charNum])) {
+                charNum++;
+                indentAmountForThisComment++;
+            }
 
             string commentStr = strTrim(lines[lineNum].substr(charNum));
 
@@ -241,6 +253,15 @@ void processSourceFile(
 
                 lastCommentLineWasNewline = false;
             }
+
+            if(commentStr.size() && (indentAmountForLastComment != -1 && indentAmountForLastComment != indentAmountForThisComment)) {
+
+                // Found a comment on a different indentation level.
+                // Begin a new line.
+                commentStr = "\n" + commentStr;
+            }
+
+            indentAmountForLastComment = indentAmountForThisComment;
 
             if(blockStartLine == -1) {
                 blockStartLine = lineNum;
@@ -336,7 +357,8 @@ void outputFiles(
     vector<CommentBlock *> &commentBlocks,
     map<string, vector<string> > &linesByFile,
     GitState &gitState,
-    bool forceWrite) {
+    bool forceWrite,
+    bool writeToStdout) {
 
     // TODO: Make this actually output files.
 
@@ -374,14 +396,17 @@ void outputFiles(
     for(map<string, vector<string> >::iterator i = linesByFile.begin();
         i != linesByFile.end(); i++) {
 
-        // cout << "----------------------------------------------------------------------" << endl;
-        // cout << (*i).first << endl;
-        // cout << "----------------------------------------------------------------------" << endl;
-
         string filename = (*i).first;
         ostringstream outStr;
 
-        cout << "Writing " << filename << endl;
+
+        if(writeToStdout) {
+            cout << "----------------------------------------------------------------------" << endl;
+            cout << (*i).first << endl;
+            cout << "----------------------------------------------------------------------" << endl;
+        } else {
+            cout << "Writing " << filename << endl;
+        }
 
         if(strEndsWith(".org", filename)) {
 
@@ -400,12 +425,14 @@ void outputFiles(
 
         string outData = outStr.str();
 
-        cout << outData << endl;
-
-        // FileSystem::saveFile(
-        //     filename,
-        //     outData.c_str(),
-        //     outData.size());
+        if(writeToStdout) {
+            cout << outData << endl;
+        } else {
+            FileSystem::saveFile(
+                filename,
+                outData.c_str(),
+                outData.size());
+        }
     }
 }
 
@@ -472,6 +499,7 @@ int main(int argc, char *argv[]) {
     string resultOrgFile;
 
     bool forceWrite = false;
+    bool writeToStdout = false;
 
     GitState gitState;
     getGitState(gitState);
@@ -491,6 +519,9 @@ int main(int argc, char *argv[]) {
     for(unsigned int i = 0; i < argsList.size(); i++) {
         if(argsList[i] == "-f") {
             forceWrite = true;
+        }
+        if(argsList[i] == "-o") {
+            writeToStdout = true;
         }
     }
 
@@ -532,17 +563,17 @@ int main(int argc, char *argv[]) {
 
     // Quick sanity check.
     if(!numCppFiles || numOrgFiles != 1) {
-        cerr << "Usage: " << argv[0] << " [-f] <source files> <org mode file>" << endl;
+        cerr << "Usage: " << argv[0] << " [-f] [-o] <source files> <org mode file>" << endl;
         cerr << "    -f: Force writing files, even if they are not in any version control." << endl;
+        cerr << "    -o: Just write everything to stdout instead of any files." << endl;
         exit(1);
     }
-
 
     assignMissingIssueNumbers(commentBlocks);
 
     fixupIssueIdsInSourceFiles(commentBlocks, linesByFile);
 
-    outputFiles(commentBlocks, linesByFile, gitState, forceWrite);
+    outputFiles(commentBlocks, linesByFile, gitState, forceWrite, writeToStdout);
 
     for(unsigned int i = 0; i < commentBlocks.size(); i++) {
         delete commentBlocks[i];
