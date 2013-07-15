@@ -45,7 +45,6 @@ void outputOrgFile(
         }
 
         // Begin file section.
-        out << endl;
         out << "* [" << numComplete << "/" << (numIncomplete + numComplete) << "] " << filename << endl;
 
         for(unsigned int i = 0; i < commentBlocks.size(); i++) {
