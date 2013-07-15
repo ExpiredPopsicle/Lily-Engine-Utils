@@ -798,6 +798,7 @@ namespace ExPop {
         ostringstream outStr;
         unsigned int thisLineLength = 0;
         bool firstLine = true;
+        bool firstWordOnLine = true;
 
         if(!columnsAfterFirstLine) columnsAfterFirstLine = columns;
 
@@ -805,18 +806,27 @@ namespace ExPop {
 
         for(unsigned int i = 0; i < words.size(); i++) {
 
+            // New line?
             if(thisLineLength != 0 && words[i].size() + thisLineLength >= (firstLine ? columns : columnsAfterFirstLine)) {
                 outStr << endl;
                 thisLineLength = 0;
                 firstLine = false;
+                firstWordOnLine = true;
             }
 
+            // Avoid trailing whitespace and whitespace at the start
+            // of a line. Don't put the space before this word if it's
+            // the first one on a line.
+            if(!firstWordOnLine) {
+                outStr << " ";
+                thisLineLength++;
+            } else {
+                firstWordOnLine = false;
+            }
+
+            // Add the word.
             outStr << words[i];
             thisLineLength += words[i].size();
-
-            if(i != words.size() - 1) {
-                outStr << " ";
-            }
         }
 
         return outStr.str();
