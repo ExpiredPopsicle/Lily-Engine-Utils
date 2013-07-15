@@ -31,10 +31,15 @@
 
 #include <iostream>
 #include <vector>
+#include <cstdio>
+#include <cstring>
 using namespace std;
 
 #include <lilyengine/utils.h>
 using namespace ExPop;
+
+#include "orgmodestuff.h"
+#include "common.h"
 
 // This is all testing junk...
 // ----------------------------------------------------------------------
@@ -60,6 +65,10 @@ using namespace ExPop;
 // TODO [100]: Herp derp derp
 //
 // This is some source file extra data.
+
+// TODO [101]: First issue.
+
+// TODO [101]: Second issue.
 
 string testThinger  = "// TODO: Don't read this string";
 string testThinger2 = "\" // TODO: Don't read this string either";
@@ -87,117 +96,10 @@ string testThinger2 = "\" // TODO: Don't read this string either";
 // TODO: Determine and implement correct behavior for unrelated lines
 // in org files.
 
-enum BlockType {
-    BLOCKTYPE_NONE,
+// TODO: Determine what happens when multiple comments have the same
+// issue id number.
 
-    BLOCKTYPE_TODO,
-    BLOCKTYPE_FIXME,
-    BLOCKTYPE_DONE,
-};
-
-const char extraDataReadOnlyTag[] = "+ Ext: ";
-const char extraDataNotesHeader[] = "+ Saved Notes:";
-
-struct CommentBlock {
-    int startLineNumber;
-    int startPositionInLine;
-    string filename;
-    string comment; // Read from source. Save to org.
-    int issueId;
-    BlockType type;
-
-    bool needsNewId;
-
-    vector<string> extraData; // Read from org. Save to org.
-};
-
-// Just get the string length for the initial block token.
-unsigned int getStartLengthForBlockType(BlockType type) {
-    switch(type) {
-        case BLOCKTYPE_TODO:
-        case BLOCKTYPE_DONE:
-            return 4;
-        case BLOCKTYPE_FIXME:
-            return 5;
-        default:
-            return 0;
-    }
-}
-
-BlockType getBlockType(const std::string &str) {
-    if(strStartsWith("TODO", str)) {
-        return BLOCKTYPE_TODO;
-    } else if(strStartsWith("DONE", str)) {
-        return BLOCKTYPE_DONE;
-    } else if(strStartsWith("FIXME", str)) {
-        return BLOCKTYPE_FIXME;
-    }
-    return BLOCKTYPE_NONE;
-}
-
-int getIssueIdNumber(
-    const std::string &str,
-    unsigned int *startOfActualComment = NULL) {
-
-    int ret = -1;
-    BlockType blockType = getBlockType(str);
-    unsigned int startLength = getStartLengthForBlockType(blockType);
-    unsigned int startPos = startLength > 0 ? (startLength + 1) : startLength;
-    unsigned int endPos = startPos;
-
-    if(blockType > BLOCKTYPE_NONE) {
-
-        // Skip a space at the start of the tag if it's there.
-        // (Even though it shouldn't be.)
-        while(
-            startLength < str.size() &&
-            isWhiteSpace(str[startLength])) {
-
-            startLength++;
-            endPos++;
-            startPos++;
-        }
-
-        if(startLength < str.size()) {
-
-            // Pull out an issue id number.
-            if(str[startLength] == '[') {
-
-                // Find the end of the number.
-                while(
-                    endPos < str.size() &&
-                    ((str[endPos] >= '0' &&
-                      str[endPos] <= '9') || str[endPos] == '-')) {
-
-                    endPos++;
-                }
-
-                // Get the number substring and convert it to an
-                // unsigned int.
-                string issueId = str.substr(startPos, endPos - startPos);
-                istringstream issueIdStr(issueId);
-                issueIdStr >> ret;
-            }
-
-            // Skip the ending bracket if it's there.
-            if(endPos < str.size() && str[endPos] == ']')
-                endPos++;
-        }
-    }
-
-    // Record the start of the actual comment.
-    if(startOfActualComment) {
-
-        // Skip any remaining whitespace or :.
-        while(endPos < str.size() && (isWhiteSpace(str[endPos]) || str[endPos] == ':')) {
-            endPos++;
-        }
-
-        *startOfActualComment = endPos;
-    }
-
-    return ret;
-}
+// TODO: Recognize indented blocks for extra data.
 
 // Load a file into a bunch of lines.
 void loadFileLines(
@@ -221,18 +123,16 @@ void loadFileLines(
     }
 }
 
+// Iterate over all the blocks in the list, and set the "type" field
+// based on the text in the block.
 void setBlockTypesByTag(vector<CommentBlock*> &commentBlocks) {
 
-    // Now go through and set block types for everything based on the
-    // tag at the start of the block.
     for(unsigned int i = 0; i < commentBlocks.size(); i++) {
 
         BlockType blockType = BLOCKTYPE_NONE;
-        unsigned int startLength = 0;
 
         blockType = getBlockType(commentBlocks[i]->comment);
 
-        startLength = getStartLengthForBlockType(blockType);
         commentBlocks[i]->type = blockType;
         commentBlocks[i]->issueId = getIssueIdNumber(commentBlocks[i]->comment);
 
@@ -258,7 +158,7 @@ void processSourceFile(
 
     for(unsigned int lineNum = 0; lineNum < lines.size(); lineNum++) {
 
-        // Find the start of a C++ comment
+        // Find the start of a comment
         unsigned int charNum = 0;
         while(charNum < lines[lineNum].size()) {
 
@@ -287,6 +187,8 @@ void processSourceFile(
                 }
             }
 
+            // TODO: Add different comment start things for different
+            // source types.
             if(charNum + 1 < lines[lineNum].size() &&
                lines[lineNum][charNum] == '/' &&
                lines[lineNum][charNum+1] == '/'
@@ -303,8 +205,8 @@ void processSourceFile(
             // If we aren't at the end of a line, I think that
             // means we've found a comment.
 
-            // cout << charNum << " " << lines[lineNum].size() << endl;
-            // cout << "Found a comment on line " << lineNum << endl;
+            // TODO: Different comment start lengths for different
+            // types.
 
             // Skip the comment marker.
             charNum += 2;
@@ -329,12 +231,14 @@ void processSourceFile(
             bool addWhiteSpaceToLineStart = !lastCommentLineWasNewline;
 
             if(!commentStr.size()) {
-                // Blank line comment = newline divider thingy.
+
+                // Blank line comment = newline divider thingy. This
+                // will get turned into extra data in the org file.
                 commentStr = "\n";
                 lastCommentLineWasNewline = true;
-                // cout << "NEWLINE" << endl;
+
             } else {
-                // cout << "NOT NEWLINE: " << commentStr << endl;
+
                 lastCommentLineWasNewline = false;
             }
 
@@ -408,11 +312,8 @@ void fixupIssueIdsInSourceFiles(
 
         if(commentBlocks[i]->needsNewId) {
 
-            // TODO: Generate issue id.
-
-            // If we didn't have an issue already, we need to
-            // output a modified line for this.
-
+            // If we didn't have an issue already, we need to output a
+            // modified line for this.
             unsigned int startLength = getStartLengthForBlockType(commentBlocks[i]->type);
             ostringstream fixedLine;
             string filename = commentBlocks[i]->filename;
@@ -431,251 +332,80 @@ void fixupIssueIdsInSourceFiles(
     }
 }
 
-void outputOrgFile(
-    vector<CommentBlock *> &comments) {
-
-    map<string, vector<CommentBlock *> > commentBlocksByFile;
-    for(unsigned int i = 0; i < comments.size(); i++) {
-        commentBlocksByFile[comments[i]->filename].push_back(comments[i]);
-    }
-
-    for(map<string, vector<CommentBlock *> >::iterator i = commentBlocksByFile.begin();
-        i != commentBlocksByFile.end(); i++) {
-
-        vector<CommentBlock *> &commentBlocks = (*i).second;
-        string filename = (*i).first;
-
-        // Count completed and incomplete issues.
-        unsigned int numIncomplete = 0;
-        unsigned int numComplete = 0;
-        for(unsigned int i = 0; i < commentBlocks.size(); i++) {
-            switch(commentBlocks[i]->type) {
-                case BLOCKTYPE_FIXME:
-                case BLOCKTYPE_TODO:
-                    numIncomplete++;
-                    break;
-                case BLOCKTYPE_DONE:
-                    numComplete++;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        // Begin file section.
-        cout << endl;
-        cout << "* [" << numComplete << "/" << (numIncomplete + numComplete) << "] " << filename << endl;
-        // cout << "* " << filename << endl;
-
-        for(unsigned int i = 0; i < commentBlocks.size(); i++) {
-
-            if(commentBlocks[i]->type == BLOCKTYPE_NONE)
-                continue;
-
-            // Get JUST the comment.
-            string commentWithoutJunk;
-            unsigned int startOfActualComment = 0;
-            getIssueIdNumber(commentBlocks[i]->comment, &startOfActualComment);
-            commentWithoutJunk = commentBlocks[i]->comment.substr(startOfActualComment);
-
-            // Squish newlines together.
-            ostringstream commentWithoutNewlines;
-            vector<string> commentLines;
-            stringTokenize(commentWithoutJunk, "\n", commentLines);
-            // for(unsigned int i = 0; i < commentLines.size(); i++) {
-            //     if(commentLines[i].size()) {
-            //         commentWithoutNewlines << commentLines[i];
-            //         if(i != commentLines.size() - 1)
-            //             commentWithoutNewlines << " ";
-            //     }
-            // }
-
-            // cout << "----------------------------------------------------------------------" << endl;
-            // cout << "Comment id: " << i << endl;
-            // cout << "Issue id:   " << commentBlocks[i]->issueId << endl;
-            // cout << "Type:       " << commentBlocks[i]->type << endl;
-            // cout << "Line:       " << commentBlocks[i]->startLineNumber << endl;
-            // // cout << commentBlocks[i]->comment << endl;
-            // cout << commentWithoutJunk << endl;
-
-            // Determine appropriate output block type.
-            string typeStr = "TODO";
-            if(commentBlocks[i]->type == BLOCKTYPE_DONE)
-                typeStr = "DONE";
-
-            // Output just the first line (whole paragraph block in
-            // source) as the TODO issue title.
-            cout << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " << (commentLines.size() ? commentLines[0] : "")  << endl;
-
-            // Output all additional lines with some silly tag.
-            for(unsigned int j = 1; j < commentLines.size(); j++) {
-                cout << extraDataReadOnlyTag << commentLines[j] << endl;
-            }
-
-            // Create an org-mode link straight to this comment.
-            cout << extraDataReadOnlyTag <<
-                "[[file:" <<
-                commentBlocks[i]->filename <<
-                "::" <<
-                (commentBlocks[i]->startLineNumber + 1) <<
-                "][link to comment]]" <<
-                endl;
-
-            // Create a header for all the notes associated with this.
-            if(commentBlocks[i]->extraData.size()) {
-                cout << extraDataNotesHeader << endl;
-            }
-
-            // Spit out all the stuff that we previously read from the
-            // org-mode file.
-            for(unsigned int j = 0; j < commentBlocks[i]->extraData.size(); j++) {
-                cout << commentBlocks[i]->extraData[j] << endl;
-            }
-
-            // Arbitrary newline for readability.
-            cout << endl;
-        }
-    }
-}
-
-
-static inline bool lineEndsLastBlock(const std::string &str) {
-    return strStartsWith("** ", str) ||
-        strStartsWith("* ", str);
-}
-
-void processOrgFile(
-    const std::string &filename,
-    vector<string> &lines,
-    vector<CommentBlock*> &commentBlocks) {
-
-    string currentSourceFile;
-    BlockType type = BLOCKTYPE_NONE;
-    int issueId = -1;
-    vector<string> extraDataLines;
-    string commentLine;
-
-    for(unsigned int lineNum = 0; lineNum < lines.size() + 1; lineNum++) {
-
-        // Note: This can be an invalid reference. Don't use it
-        // without first testing lineNum < lines.size().
-        string &line = lines[lineNum];
-
-        // Finish the current extra data stuff.
-        if(lineNum == lines.size() || lineEndsLastBlock(line)) {
-
-            if(issueId != -1) {
-
-                // Find the comment block in the list of comment
-                // blocks.
-                unsigned int i;
-                for(i = 0; i < commentBlocks.size(); i++) {
-
-                    if(commentBlocks[i]->issueId == issueId) {
-
-                        // Found it. Stick the extra data on it.
-                        commentBlocks[i]->extraData = extraDataLines;
-                        break;
-                    }
-                }
-
-                if(i == commentBlocks.size()) {
-
-                    // Made it to the end without finding anything.
-                    // Must be one of the DONE comments. One way or
-                    // another, we need to make a new one.
-                    CommentBlock *newBlock = new CommentBlock();
-                    newBlock->startLineNumber = 0;
-                    newBlock->startPositionInLine = 0;
-                    newBlock->issueId = issueId;
-                    newBlock->comment = commentLine;
-                    newBlock->filename = currentSourceFile;
-                    newBlock->type = BLOCKTYPE_DONE;
-                    newBlock->extraData = extraDataLines;
-                    newBlock->needsNewId = true;
-                    commentBlocks.push_back(newBlock);
-                }
-            }
-
-            // Now cleanup so we can start again.
-            issueId = -1;
-            extraDataLines.clear();
-            type = BLOCKTYPE_NONE;
-            commentLine = "";
-        }
-
-        if(lineNum < lines.size()) {
-
-            // Skip any line beginning with our "extra" tag. We'll
-            // just regenerate that from source anyway.
-            if(strStartsWith(extraDataReadOnlyTag, line)) {
-                continue;
-            }
-
-            // Skip the notes section header we stick in for
-            // organization.
-            if(strStartsWith(extraDataNotesHeader, line)) {
-                continue;
-            }
-
-            if(strStartsWith("* ", line)) {
-
-                // Find the first space after the number of
-                // open/closed issues.
-                unsigned int filenameStart = 2;
-                while(filenameStart < line.size() && line[filenameStart] != ' ') {
-                    filenameStart++;
-                }
-
-                // Skip the space too.
-                if(filenameStart < line.size()) {
-                    filenameStart++;
-                }
-
-                currentSourceFile = line.substr(filenameStart);
-                cout << "switching source file: " << currentSourceFile << endl;
-
-            } else if(strStartsWith("** ", line)) {
-
-                string justLine = line.substr(3);
-                BlockType type = getBlockType(line);
-                unsigned int lineStartPos = 0;
-                issueId = getIssueIdNumber(justLine, &lineStartPos);
-
-                justLine = justLine.substr(lineStartPos);
-                commentLine = justLine;
-
-            // } else if(!strStartsWith("*", line)) {
-            } else if(!lineEndsLastBlock(line)) {
-
-                // Must be some notes we stuck in the .org file.
-                extraDataLines.push_back(line);
-
-            }
-        }
-
-    }
-
-}
-
 void outputFiles(
-    map<string, vector<string> > &linesByFile) {
+    vector<CommentBlock *> &commentBlocks,
+    map<string, vector<string> > &linesByFile,
+    GitState &gitState,
+    bool forceWrite) {
 
     // TODO: Make this actually output files.
+
+  #ifndef WIN32
+
+    if(!forceWrite) {
+
+        // First, make sure everything we're about to overwrite is
+        // actually in version control (or just doesn't yet exist).
+        for(map<string, vector<string> >::iterator i = linesByFile.begin();
+            i != linesByFile.end(); i++) {
+
+            string filename = (*i).first;
+
+            if(FileSystem::fileExists(filename)) {
+
+                if(gitState.trackedFiles.count(filename) &&
+                   !gitState.modifiedFiles.count(filename)) {
+
+                    // We're okay.
+
+                } else {
+
+                    // Uh oh.
+                    cerr << "File " << (*i).first << " is either not under revision control, or has local modifications." << endl;
+                    cout << "Cowardly refusing to modify this file." << endl;
+                    exit(1);
+                }
+            }
+        }
+    }
+
+  #endif
 
     for(map<string, vector<string> >::iterator i = linesByFile.begin();
         i != linesByFile.end(); i++) {
 
-        cout << "----------------------------------------------------------------------" << endl;
-        cout << (*i).first << endl;
-        cout << "----------------------------------------------------------------------" << endl;
+        // cout << "----------------------------------------------------------------------" << endl;
+        // cout << (*i).first << endl;
+        // cout << "----------------------------------------------------------------------" << endl;
 
-        vector<string> &lines = (*i).second;
-        for(unsigned int j = 0; j < lines.size(); j++) {
-            cout << lines[j] << endl;
+        string filename = (*i).first;
+        ostringstream outStr;
+
+        cout << "Writing " << filename << endl;
+
+        if(strEndsWith(".org", filename)) {
+
+            // Org files get completely regenerated.
+            outputOrgFile(outStr, commentBlocks);
+
+        } else {
+
+            // All other source files just get the modified versions
+            // spit out.
+            vector<string> &lines = (*i).second;
+            for(unsigned int j = 0; j < lines.size(); j++) {
+                outStr << lines[j] << endl;
+            }
         }
-        cout << endl << endl << endl;
 
+        string outData = outStr.str();
+
+        cout << outData << endl;
+
+        // FileSystem::saveFile(
+        //     filename,
+        //     outData.c_str(),
+        //     outData.size());
     }
 }
 
@@ -698,6 +428,39 @@ void assignMissingIssueNumbers(
     }
 }
 
+void getGitState(GitState &state) {
+
+  #ifndef WIN32
+
+    string curLine;
+    int c;
+    FILE *gitRunFd = NULL;
+
+    for(int i = 0; i < 2; i++) {
+
+        gitRunFd = popen(i == 0 ? "git ls-files -m" : "git ls-files", "r");
+
+        while((c = fgetc(gitRunFd)) != EOF) {
+            if(c == '\n') {
+                if(i == 0) {
+                    state.modifiedFiles[curLine] = true;
+                } else {
+                    state.trackedFiles[curLine] = true;
+                }
+                curLine = "";
+            } else {
+                char str[2] = { c, 0 };
+                curLine = curLine + str;
+            }
+        }
+
+        pclose(gitRunFd);
+    }
+
+  #endif
+
+}
+
 int main(int argc, char *argv[]) {
 
     // TODO: Command line parameter usage junk.
@@ -708,9 +471,33 @@ int main(int argc, char *argv[]) {
     unsigned int numOrgFiles = 0;
     string resultOrgFile;
 
+    bool forceWrite = false;
+
+    GitState gitState;
+    getGitState(gitState);
+
+    // Split command line parameters into arguments and files.
+    vector<string> justFileList;
+    vector<string> argsList;
     for(unsigned int i = 1; i < argc; i++) {
-        string filename = argv[i];
-        if(strEndsWith(".cpp", filename)) {
+        if(strlen(argv[i]) && argv[i][0] == '-') {
+            argsList.push_back(argv[i]);
+        } else {
+            justFileList.push_back(argv[i]);
+        }
+    }
+
+    // Handle all the arguments.
+    for(unsigned int i = 0; i < argsList.size(); i++) {
+        if(argsList[i] == "-f") {
+            forceWrite = true;
+        }
+    }
+
+    // Find all the source files.
+    for(unsigned int i = 0; i < justFileList.size(); i++) {
+        string filename = justFileList[i];
+        if(strEndsWith(".cpp", filename) || strEndsWith(".h", filename) || strEndsWith(".c", filename)) {
             loadFileLines(filename, linesByFile[filename]);
             processSourceFile(filename, linesByFile[filename], commentBlocks);
             numCppFiles++;
@@ -719,18 +506,35 @@ int main(int argc, char *argv[]) {
 
     setBlockTypesByTag(commentBlocks);
 
-    for(unsigned int i = 1; i < argc; i++) {
-        string filename = argv[i];
+    // Find the org file.
+    for(unsigned int i = 0; i < justFileList.size(); i++) {
+        string filename = justFileList[i];
         if(strEndsWith(".org", filename)) {
-            loadFileLines(filename, linesByFile[filename]);
-            processOrgFile(filename, linesByFile[filename], commentBlocks);
+
+            // It's okay if an org file doesn't exist. It just means
+            // we'll use it as an output.
+            if(FileSystem::fileExists(filename)) {
+
+                loadFileLines(filename, linesByFile[filename]);
+                processOrgFile(filename, linesByFile[filename], commentBlocks);
+
+            } else {
+
+                // Still need an entry for it, even if it doesn't
+                // exist.
+                linesByFile[filename].push_back("");
+            }
+
             resultOrgFile = filename;
             numOrgFiles++;
         }
     }
 
+    // Quick sanity check.
     if(!numCppFiles || numOrgFiles != 1) {
-        cerr << "Usage: " << argv[0] << " <source files> <org mode file>" << endl;
+        cerr << "Usage: " << argv[0] << " [-f] <source files> <org mode file>" << endl;
+        cerr << "    -f: Force writing files, even if they are not in any version control." << endl;
+        exit(1);
     }
 
 
@@ -738,10 +542,7 @@ int main(int argc, char *argv[]) {
 
     fixupIssueIdsInSourceFiles(commentBlocks, linesByFile);
 
-    // outputFiles(linesByFile);
-
-    outputOrgFile(commentBlocks);
-
+    outputFiles(commentBlocks, linesByFile, gitState, forceWrite);
 
     for(unsigned int i = 0; i < commentBlocks.size(); i++) {
         delete commentBlocks[i];

@@ -18,7 +18,10 @@ env.Program("lilyimgbuffer", "imgbuffer/imgbuffer.cpp");
 env.Program("lilybuffergen", "buffergen/buffergen.cpp");
 toolGlContextGen = env.Program("lilymkglcontextcode", "glcontextcode/mkglcontextcode.cpp");
 env.Program("lilyheaderfixer", "headerfixer/headerfixer.cpp");
-env.Program("lilytodoscan", "todoscan/todoscan.cpp");
+env.Program("lilytodoscan", [
+        "todoscan/todoscan.cpp",
+        "todoscan/orgmodestuff.cpp",
+        "todoscan/commentblock.cpp"]);
 toolArchiver = env.Program("lilyarchiver", "archiver/archiver.cpp");
 
 # Poop file builder.
