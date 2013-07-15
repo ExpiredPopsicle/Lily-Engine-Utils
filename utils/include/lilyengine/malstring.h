@@ -138,6 +138,25 @@ namespace ExPop {
     /// removed.
     std::string strTrim(const std::string &str);
 
+    /// Returns a word-wrapped version of the input string, wrapped at
+    /// the number of characters in columns.
+    std::string strWordWrap(
+        const std::string &str,
+        unsigned int columns,
+        unsigned int columnsAfterFirstLine = 0);
+
+    /// Indent a block of text.
+    std::string strIndent(
+        const std::string &str,
+        unsigned int firstRow,
+        unsigned int afterFirstRow);
+
+    /// Returns a string with each line appended at the beginning with
+    /// some prefix string.
+    std::string strPrefixLines(
+        const std::string &str,
+        const std::string &prefix);
+
     /// Simple buffer that we can dynamically expand or iterate through.
     class SimpleBuffer {
 	public:

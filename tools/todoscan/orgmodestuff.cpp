@@ -3,6 +3,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <cstring>
 using namespace std;
 
 #include <lilyengine/malstring.h>
@@ -74,7 +75,15 @@ void outputOrgFile(
 
             // Output all additional lines with some silly tag.
             for(unsigned int j = 1; j < commentLines.size(); j++) {
-                out << extraDataReadOnlyTag << commentLines[j] << endl;
+                out <<
+                    strPrefixLines(
+                        strIndent(
+                            strWordWrap(
+                                commentLines[j],
+                                60),
+                            0,
+                            2),
+                        extraDataReadOnlyTag) << endl;
             }
 
             // Create an org-mode link straight to this comment.
@@ -94,8 +103,13 @@ void outputOrgFile(
             // Spit out all the stuff that we previously read from the
             // org-mode file.
             for(unsigned int j = 0; j < commentBlocks[i]->extraData.size(); j++) {
-                if(j == commentBlocks[i]->extraData.size() - 1 && commentBlocks[i]->extraData[j] != "")
-                    out << commentBlocks[i]->extraData[j] << endl;
+
+                // Skip whitespace near the end, because it gets added
+                // by the org output thingy.
+                if(j == commentBlocks[i]->extraData.size() - 1 && commentBlocks[i]->extraData[j] == "")
+                    continue;
+
+                out << commentBlocks[i]->extraData[j] << endl;
             }
 
             // Arbitrary newline for readability.

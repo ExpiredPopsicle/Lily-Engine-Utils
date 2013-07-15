@@ -788,6 +788,107 @@ namespace ExPop {
         return str.substr(start, end - start + 1);
     }
 
+    std::string strWordWrap(
+        const std::string &str,
+        unsigned int columns,
+        unsigned int columnsAfterFirstLine) {
+
+        vector<string> lines;
+        vector<string> words;
+        ostringstream outStr;
+        unsigned int thisLineLength = 0;
+        bool firstLine = true;
+
+        if(!columnsAfterFirstLine) columnsAfterFirstLine = columns;
+
+        stringTokenize(str, " \t\r\n", words, false);
+
+        for(unsigned int i = 0; i < words.size(); i++) {
+
+            if(thisLineLength != 0 && words[i].size() + thisLineLength >= (firstLine ? columns : columnsAfterFirstLine)) {
+                outStr << endl;
+                thisLineLength = 0;
+                firstLine = false;
+            }
+
+            outStr << words[i];
+            thisLineLength += words[i].size();
+
+            if(i != words.size() - 1) {
+                outStr << " ";
+            }
+        }
+
+        return outStr.str();
+    }
+
+    std::string strIndent(
+        const std::string &str,
+        unsigned int firstRow,
+        unsigned int afterFirstRow) {
+
+        vector<string> lines;
+        ostringstream outStr;
+
+        stringTokenize(str, "\n", lines);
+
+        for(unsigned int i = 0; i < lines.size(); i++) {
+
+            // Skip past whatever whitespace might have been here in
+            // the first place.
+            unsigned int j = 0;
+            while(j < lines[i].size() && isWhiteSpace(lines[i][j])) {
+                j++;
+            }
+
+            // Output a newline if this isn't the first line. We do it
+            // here so we don't end up with some extra newline at the
+            // end.
+            if(i != 0) outStr << endl;
+
+            if(j < lines[i].size()) {
+
+                // FIXME: Generate strings for first line and after
+                // first line indentation, then use one or the other
+                // here.
+
+                // Output the desired indentation.
+                unsigned int dstLen = (i == 0) ? firstRow : afterFirstRow;
+                for(unsigned int k = 0; k < dstLen; k++) {
+                    outStr << " ";
+                }
+
+                outStr << lines[i].substr(j);
+
+            }
+        }
+
+        return outStr.str();
+    }
+
+    std::string strPrefixLines(
+        const std::string &str,
+        const std::string &prefix) {
+
+        ostringstream outStr;
+        vector<string> lines;
+
+        stringTokenize(str, "\n", lines, true);
+
+        for(unsigned int i = 0; i < lines.size(); i++) {
+
+            outStr << prefix << lines[i];
+
+            // Add a newline if this isn't the last one. Avoids
+            // trailing newline.
+            if(i != lines.size() - 1) {
+                outStr << endl;
+            }
+        }
+
+        return outStr.str();
+    }
+
     // ----------------------------------------------------------------------
     //   SimpleBuffer stuff after this point.
     // ----------------------------------------------------------------------
