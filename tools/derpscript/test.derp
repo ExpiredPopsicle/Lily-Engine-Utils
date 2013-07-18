@@ -1,0 +1,16 @@
+// TODO: Expand this. Make it cover most of the DerpScript features.
+
+// Stupid test function example.
+var testFunc := function(a, b) {
+    out("Param 1: " + string(a) + "\n");
+    out("Param 2: " + string(b) + "\n");
+};
+
+// Function call example.
+testFunc("hurf", "blurf");
+
+var someString = in();
+
+out("Blagh: " + someString);
+
+
