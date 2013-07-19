@@ -35,11 +35,14 @@ namespace ExPop {
         /// Parse and evaluate a string. fileName is used for error
         /// reporting. If this returns a reference to NULL, it
         /// indicates an error. errorState should be checked for an
-        /// explanation.
+        /// explanation. Make sure you pass along the stackDepth value
+        /// when this is called from inside the VM, or someone may be
+        /// able to trick it into recursing infinitely.
         DerpObject::Ref evalString(
             const std::string &str,
             DerpErrorState &errorState,
-            const std::string &fileName);
+            const std::string &fileName,
+            unsigned int stackDepth = 0);
 
         /// Compile a string and return a zero-parameter function
         /// object for it.

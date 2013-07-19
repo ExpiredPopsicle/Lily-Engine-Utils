@@ -160,7 +160,8 @@ namespace ExPop {
             std::vector<DerpObject::Ref> *parameters,
             void *userData,
             DerpErrorState &errorState,
-            bool dontPushContext = false);
+            bool dontPushContext = false,
+            unsigned int stackDepth = 0);
 
         /// Reference type. Counts references to DerpObjects so
         /// external stuff can hold onto stuff inside the VM.
@@ -196,6 +197,7 @@ namespace ExPop {
             std::vector<DerpObject::Ref> parameters;
             void *userData;
             DerpErrorState *errorState;
+            unsigned int stackDepth;
         };
 
         /// Derive custom data type objects from this. (Or just derive

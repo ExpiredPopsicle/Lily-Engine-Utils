@@ -75,13 +75,18 @@ namespace ExPop {
   #define TYPE_NOT_SUPPORTED(op) \
     FLAG_ERROR(derpSprintf("Type %s is not compatible with %s operator.", derpObjectTypeToString(obL->type).c_str(), op))
 
+    // TODO: Maybe all these parameters that we pass around should
+    // just be bundled up in some object.
+
   #define EVAL_PARAMS_DECL                      \
     DerpContext *context,                       \
         DerpReturnType *returnType,             \
         DerpErrorState &errorState,             \
-        void *userData
+        void *userData,                         \
+        unsigned int stackDepth
 
   #define EVAL_PARAMS_PASS                      \
-    context, returnType, errorState, userData
+    context, returnType, errorState, userData,  \
+        stackDepth + 1
 }
 

@@ -139,7 +139,8 @@ namespace ExPop {
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         /// Evaluate to a pointer to the object. This way the pointer
         /// can be reassigned. Note: Given the number of moving parts
@@ -150,7 +151,8 @@ namespace ExPop {
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         /// Copy the entire hierarchy of nodes.
         DerpExecNode *copyTree(void);
@@ -199,31 +201,36 @@ namespace ExPop {
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         DerpObject::Ref eval_binaryMathOp(
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         DerpObject::Ref eval_loop(
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         DerpObject::Ref eval_unaryMathOp(
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         DerpObject::Ref eval_index(
             DerpContext *context,
             DerpReturnType *returnType,
             DerpErrorState &errorState,
-            void *userData);
+            void *userData,
+            unsigned int stackDepth);
 
         DerpVM *vm;
         PooledString::Ref fileName;

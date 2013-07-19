@@ -9,8 +9,16 @@ var testFunc := function(a, b) {
 // Function call example.
 testFunc("hurf", "blurf");
 
-var someString = in();
+// var someString = in();
+// out("Blagh: " + someString);
 
-out("Blagh: " + someString);
+// Intentionally using NON-REFERENCE copy here! (Don't do this, use :=
+// instead!)
+var a = function() {
+    var b = function() {
+        a();
+    };
+    b();
+};
 
-
+a();

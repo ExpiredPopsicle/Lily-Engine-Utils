@@ -63,6 +63,11 @@ namespace ExPop {
             fileName,
             lineNumber);
 
+        if(stackDepth > DERP_MAX_STACK_FRAMES) {
+            FLAG_ERROR("Exceeded maximum stack depth");
+            return NULL;
+        }
+
         vm->garbageCollectWithThreshold();
 
         if(!vm->checkObjectCount()) {
@@ -212,9 +217,11 @@ namespace ExPop {
                 (type == DERPEXEC_FREEBLOCK) ? context : &childContext;
 
             for(unsigned int i = 0; i < children.size(); i++) {
+
                 possibleRet = children[i]->eval(
                     contextForBlock, returnType,
-                    errorState, userData);
+                    errorState, userData,
+                    stackDepth + 1);
 
                 // Check to see if we got a "return", "break", or anything
                 // that would cause us to prematurely end the block. If we

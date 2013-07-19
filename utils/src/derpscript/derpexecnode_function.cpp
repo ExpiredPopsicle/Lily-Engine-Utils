@@ -38,7 +38,8 @@ namespace ExPop {
         DerpContext *context,
         DerpReturnType *returnType,
         DerpErrorState &errorState,
-        void *userData) {
+        void *userData,
+        unsigned int stackDepth) {
 
         // Check that we at least have the function lookup node as a
         // child.
@@ -63,7 +64,8 @@ namespace ExPop {
         }
 
         DerpObject::Ref ret = functionToCall->evalFunction(
-            context, &params, userData, errorState);
+            context, &params, userData,
+            errorState, false, stackDepth + 1);
 
         if(!ret.getPtr()) {
             if(returnType) *returnType = DERPRETURN_ERROR;

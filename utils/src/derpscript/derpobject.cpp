@@ -587,7 +587,8 @@ namespace ExPop {
         vector<DerpObject::Ref> *params,
         void *userData,
         DerpErrorState &errorState,
-        bool dontPushContext) {
+        bool dontPushContext,
+        unsigned int stackDepth) {
 
         if(type != DERPTYPE_FUNCTION) {
             errorState.addError("Tried to call something as a function that is not a function.");
@@ -624,6 +625,7 @@ namespace ExPop {
             passData.parameters = *params;
             passData.userData = userData;
             passData.errorState = &errorState;
+            passData.stackDepth = stackDepth + 1;
 
             DerpObject::Ref ret = functionData.externalFunc(
                 passData);
@@ -669,7 +671,8 @@ namespace ExPop {
 
         DerpObject::Ref ret = functionData.execNode->eval(
             ctx, &localReturnType,
-            errorState, userData);
+            errorState, userData,
+            stackDepth + 1);
 
         functionData.callCounter--;
 

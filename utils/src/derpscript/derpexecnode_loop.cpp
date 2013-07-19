@@ -38,7 +38,8 @@ namespace ExPop {
         DerpContext *context,
         DerpReturnType *returnType,
         DerpErrorState &errorState,
-        void *userData) {
+        void *userData,
+        unsigned int stackDepth) {
 
         DerpContext childContext(context);
         context = &childContext;

@@ -1,0 +1,32 @@
+* For DerpScript speed:
+** TODO Add hashes to pooledstring class
+** TODO Make variable lookups in DerpScript use hashtables
+** TODO Make a hash function that just returns the hash from pooledstring
+** TODO Make pooledstring more complete, so it can do mostly everything that a std::string can do (maybe)
+** TODO PooledMemory for EVERYTHING
+- Grep for everything that does a "new DerpObject" and swap it out
+  with a call to the VM's makeObject() function.
+
+- For some things, we don't want a reference returned, so maybe a
+  makeObject() variant that just returns a pointer. Things like
+  DerpObjects that exist as part of DerpExecNode hierarchies, which
+  don't rely on refcounts for the GC. (These are created during
+  parsing.)
+
+* For DerpScript security:
+** DONE Add recursion limit with error
+
+* For DerpScript future:
+** TODO Add exceptions? We already have the return modes for errors and other
+** TODO Maybe even replace errors with exceptions entirely
+
+* For DerpScript REPL:
+** TODO Autocomplete
+- Will need a read-only VM mode
+  - All const checks result in const
+  - All protected checks result in protected
+    - Should be done as a stack
+    - Add safety check to stack top
+
+- Use curses.h under *nix.
+  - Has getch().

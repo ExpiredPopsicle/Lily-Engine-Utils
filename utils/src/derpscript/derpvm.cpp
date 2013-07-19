@@ -273,7 +273,8 @@ namespace ExPop {
     DerpObject::Ref DerpVM::evalString(
         const std::string &str,
         DerpErrorState &errorState,
-        const std::string &fileName) {
+        const std::string &fileName,
+        unsigned int stackDepth) {
 
         DerpObject::Ref fakeFunctionObject = compileString(
             str,
@@ -289,7 +290,8 @@ namespace ExPop {
             NULL,
             NULL,
             errorState,
-            true);
+            true,
+            stackDepth + 1);
 
         return ret;
     }
