@@ -68,6 +68,13 @@ namespace ExPop {
             return NULL;
         }
 
+        if(vm->execNodeLimit == 0) {
+            FLAG_ERROR("Exceeded maximum instruction count.");
+            return NULL;
+        } else if(vm->execNodeLimit != ~0) {
+            vm->execNodeLimit--;
+        }
+
         vm->garbageCollectWithThreshold();
 
         if(!vm->checkObjectCount()) {

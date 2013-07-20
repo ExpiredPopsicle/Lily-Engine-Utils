@@ -12,13 +12,18 @@ testFunc("hurf", "blurf");
 // var someString = in();
 // out("Blagh: " + someString);
 
-// Intentionally using NON-REFERENCE copy here! (Don't do this, use :=
-// instead!)
-var a = function() {
-    var b = function() {
-        a();
-    };
-    b();
-};
+// // Intentionally using NON-REFERENCE copy here! (Don't do this, use :=
+// // instead!)
+// var a = function() {
+//     var b = function() {
+//         a();
+//     };
+//     b();
+// };
+// a();
 
-a();
+for(var i = 0; i < 1000000; i++) {
+    // out(string(i) + "\n");
+}
+
+

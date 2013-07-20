@@ -70,6 +70,16 @@ namespace ExPop {
         /// garbageCollect() before calling this.
         unsigned int getNumObjects(void);
 
+        /// Set the execution node eval call limit. This will
+        /// constrain the maximum number of execution nodes that will
+        /// run until an error is thrown complaining about it. This
+        /// value will be reduced every time VM code is run.
+        void setExecNodeLimit(unsigned int limit);
+
+        /// Get the current execution node eval call limit. This
+        /// changes every time you execute VM code.
+        unsigned int getExecNodeLimit(void);
+
     private:
 
         // All objects allocated for this VM go in here so we can
@@ -127,5 +137,11 @@ namespace ExPop {
         // Debugging feature. Just keeps track of the highest object
         // count we've had.
         unsigned int maxVmObs;
+
+        // This is how many instructions the VM will execute before
+        // just throwing an error. An execNodeLimit of ~0 is
+        // considered infinite. This can be used to force untrusted
+        // code to return eventually instead of looping forever.x
+        unsigned int execNodeLimit;
     };
 }

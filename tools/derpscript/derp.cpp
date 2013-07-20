@@ -95,6 +95,10 @@ void initVM(DerpVM &vm) {
     DerpObject::Ref outFuncOb = vm.makeObject();
     outFuncOb->setExternalFunction(outFunc);
     vm.getGlobalContext()->setVariable("out", outFuncOb);
+
+    // // If we're running untrusted code, set an execution limit so it
+    // // can't just loop forever.
+    // vm.setExecNodeLimit(1000000);
 }
 
 int main(int argc, char *argv[]) {

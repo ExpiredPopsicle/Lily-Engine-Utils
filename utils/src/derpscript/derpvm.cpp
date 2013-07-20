@@ -55,6 +55,7 @@ namespace ExPop {
         derpVM_registerInternalFunctions(this, &internalContext);
 
         maxVmObs = 0;
+        execNodeLimit = ~0;
     }
 
     DerpVM::~DerpVM(void) {
@@ -350,4 +351,13 @@ namespace ExPop {
     unsigned int DerpVM::getNumObjects(void) {
         return gcObjects.size();
     }
+
+    void DerpVM::setExecNodeLimit(unsigned int limit) {
+        execNodeLimit = limit;
+    }
+
+    unsigned int DerpVM::getExecNodeLimit(void) {
+        return execNodeLimit;
+    }
+
 }

@@ -15,6 +15,9 @@
 
 * For DerpScript security:
 ** DONE Add recursion limit with error
+** TODO Add execution limit
+Just count down the number of eval() calls and error out when it runs
+out.
 
 * For DerpScript future:
 ** TODO Add exceptions? We already have the return modes for errors and other
