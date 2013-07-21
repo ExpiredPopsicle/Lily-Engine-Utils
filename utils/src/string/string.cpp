@@ -757,6 +757,20 @@ namespace ExPop {
 
     }
 
+    std::string constToStr(
+        int value,
+        const StringToConstMapping *table) {
+
+        int i;
+        for(i = 0; strlen(table[i].str); i++) {
+            if(table[i].val == value) {
+                return table[i].str;
+            }
+        }
+
+        return "";
+    }
+
     std::string strTrim(const std::string &str) {
 
         if(!str.size()) return "";

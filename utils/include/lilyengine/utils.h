@@ -38,6 +38,7 @@
 #include "thread.h"
 #include "refsystem.h"
 #include "matrix.h"
+#include "angle.h"
 #include "lilyparser.h"
 #include "hashtable.h"
 #include "assetloader.h"

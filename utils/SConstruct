@@ -17,6 +17,7 @@ commonSources = [
     "src/thread/thread.cpp",
     "src/assetloader/assetloader.cpp",
     "src/math/matrix.cpp",
+    "src/math/angle.cpp",
     "src/assert/malassert.cpp",
     "src/sockets/sockets.cpp",
     "src/string/string.cpp",

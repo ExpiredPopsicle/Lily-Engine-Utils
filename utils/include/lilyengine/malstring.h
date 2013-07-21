@@ -132,7 +132,10 @@ namespace ExPop {
         const std::string &fieldName = "unknown",
         std::ostream *errorOut = &(std::cout));
 
-    // TODO: Make a constToStr
+    /// Look up a constant in a table of string to constant conversions.
+    std::string constToStr(
+        int value,
+        const StringToConstMapping *table);
 
     /// Return a string with all the trailing and leading whitespace
     /// removed.
