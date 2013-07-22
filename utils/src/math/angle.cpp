@@ -52,7 +52,7 @@ namespace ExPop {
            fabs(degrees1 - degrees0)) {
             degrees1 += 360;
         }
-        if(fabs((degrees1 - 360) - degrees0) <
+        if(fabs((degrees1 - 360) - degrees0) <=
            fabs(degrees1 - degrees0)) {
             degrees1 -= 360;
         }
