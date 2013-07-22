@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 namespace ExPop {
 
     /// Angle class. Keeps everything nicely in the 0-360 degree

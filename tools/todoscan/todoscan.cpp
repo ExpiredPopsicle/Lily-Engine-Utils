@@ -222,7 +222,7 @@ void processSourceFile(
                 blockStartPosInLine = charNum;
 
                 while(
-                    blockStartPosInLine < lines[lineNum].size() &&
+                    blockStartPosInLine < int(lines[lineNum].size()) &&
                     isWhiteSpace(lines[lineNum][blockStartPosInLine])) {
 
                     blockStartPosInLine++;
@@ -507,7 +507,7 @@ int main(int argc, char *argv[]) {
     // Split command line parameters into arguments and files.
     vector<string> justFileList;
     vector<string> argsList;
-    for(unsigned int i = 1; i < argc; i++) {
+    for(unsigned int i = 1; i < (unsigned int)argc; i++) {
         if(strlen(argv[i]) && argv[i][0] == '-') {
             argsList.push_back(argv[i]);
         } else {
