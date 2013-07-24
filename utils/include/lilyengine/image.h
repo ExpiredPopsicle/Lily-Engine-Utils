@@ -32,6 +32,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <string>
 
 #ifdef WIN32
 // Apparently Windows lacks stdint.h
