@@ -38,6 +38,9 @@ namespace ExPop {
         /// Clear all variables and protected status.
         void clearAllVariables(void);
 
+        /// Get all variable names accessible from this context.
+        void getVariableNames(std::vector<std::string> &out);
+
     private:
 
         // Get the pointer to a variable reference. This can be used to

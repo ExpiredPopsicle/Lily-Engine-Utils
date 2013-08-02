@@ -13,6 +13,9 @@ env.Append(CPPPATH=[Dir("include/lilyengine")]);
 if(not(env["PLATFORM"] == "win32")):
     env.Append(LINKFLAGS="-pthread");
 
+env.Append(LINKFLAGS="-g");
+env.Append(CXXFLAGS="-g");
+
 commonSources = [
     "src/thread/thread.cpp",
     "src/assetloader/assetloader.cpp",

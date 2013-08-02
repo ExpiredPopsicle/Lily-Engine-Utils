@@ -41,6 +41,14 @@ namespace ExPop {
 
         if(!TOKENS_LEFT()) return NULL;
 
+        // Check for negative sign.
+        bool isNegative = false;
+        if(TOKEN_TYPE() == DERPTOKEN_MATHOP && tokens[i]->str == "-") {
+            isNegative = true;
+            i++;
+            if(!TOKENS_LEFT()) return NULL;
+        }
+
         DerpExecNode *ret = NULL;
         istringstream inStr(tokens[i]->str);
         innerError = false;
@@ -54,7 +62,7 @@ namespace ExPop {
                 // Literal integer.
                 int intVal;
                 inStr >> intVal;
-                literalData->setInt(intVal);
+                literalData->setInt(isNegative ? -intVal : intVal);
 
             } break;
 
@@ -63,7 +71,7 @@ namespace ExPop {
                 // Literal float.
                 float floatVal;
                 inStr >> floatVal;
-                literalData->setFloat(floatVal);
+                literalData->setFloat(isNegative ? -floatVal : floatVal);
 
             } break;
 

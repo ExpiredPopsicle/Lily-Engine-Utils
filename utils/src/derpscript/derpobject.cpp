@@ -289,7 +289,7 @@ namespace ExPop {
                 // Copy the entire execnode tree. This is a big copy, so
                 // users should probably just use the reference copy for
                 // it instead?
-                functionData.execNode = otherOb->functionData.execNode->copyTree();
+                functionData.execNode = otherOb->functionData.execNode ? otherOb->functionData.execNode->copyTree() : NULL;
                 functionData.callCounter = 0;
                 functionData.externalFunc = otherOb->functionData.externalFunc;
 

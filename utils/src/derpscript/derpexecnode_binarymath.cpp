@@ -29,6 +29,8 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+#include <climits>
+
 #include "derpexecnode_internal.h"
 using namespace std;
 
@@ -104,6 +106,10 @@ namespace ExPop {
                         // Integers need protection from division by zero.
                         if(obR->intVal == 0) {
                             FLAG_ERROR("Attempted integer divide by zero.");
+                            return NULL;
+                        }
+                        if(obL->intVal == INT_MIN && obR->intVal == -1) {
+                            FLAG_ERROR("Attempted to do division with undefined results (INT_MIN / -1).");
                             return NULL;
                         }
                         newOb->setInt(obL->intVal / obR->intVal);

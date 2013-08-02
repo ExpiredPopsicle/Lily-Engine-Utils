@@ -1,5 +1,8 @@
 #pragma once
 
+// FIXME: This should be cstdint.
+#include <inttypes.h>
+
 #include <string>
 
 namespace ExPop {

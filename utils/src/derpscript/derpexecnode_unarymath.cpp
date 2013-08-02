@@ -53,6 +53,10 @@ namespace ExPop {
 
             // Increment.
             case DERPEXEC_INCREMENT:
+                if(obL->getConst()) {
+                    FLAG_ERROR("Attempted to increment a constant.");
+                    return NULL;
+                }
                 switch(obL->type) {
                     case DERPTYPE_INT: obL->intVal++; return obL;
                     case DERPTYPE_FLOAT: obL->floatVal++; return obL;
@@ -61,8 +65,12 @@ namespace ExPop {
                         return NULL;
                 }
 
-                // Decrement.
+            // Decrement.
             case DERPEXEC_DECREMENT:
+                if(obL->getConst()) {
+                    FLAG_ERROR("Attempted to decrement a constant.");
+                    return NULL;
+                }
                 switch(obL->type) {
                     case DERPTYPE_INT: obL->intVal--; return obL;
                     case DERPTYPE_FLOAT: obL->floatVal--; return obL;
@@ -71,7 +79,7 @@ namespace ExPop {
                         return NULL;
                 }
 
-                // Not.
+            // Not.
             case DERPEXEC_NOT: {
                 DerpObject::Ref newOb(new DerpObject(vm));
                 switch(obL->type) {

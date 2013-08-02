@@ -101,5 +101,27 @@ namespace ExPop {
         variablesProtected.clear();
     }
 
+    void DerpContext::getVariableNames(std::vector<std::string> &out) {
+
+        for(std::map<std::string, DerpObject::Ref>::iterator i = variables.begin();
+            i != variables.end();
+            i++) {
+
+            std::string name = (*i).first;
+
+            unsigned int i;
+            for(i = 0; i < out.size(); i++) {
+                if(out[i] == name) break;
+            }
+
+            if(i != out.size()) {
+                out.push_back(name);
+            }
+        }
+
+        if(parent) {
+            parent->getVariableNames(out);
+        }
+    }
 }
 

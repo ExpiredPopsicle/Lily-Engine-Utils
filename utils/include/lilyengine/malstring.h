@@ -106,6 +106,9 @@ namespace ExPop {
         std::string &outQuery,
         std::string &outFragment);
 
+    // TODO: Switch all UTF-32 vectors from unsigned int type over to
+    // uint32_t.
+
     /// Convert a UTF-8 string to a UTF-32 string (represented as an
     /// std::vector of unsigned integers).
     void strUTF8ToUTF32(
