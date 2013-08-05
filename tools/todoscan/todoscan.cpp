@@ -33,6 +33,7 @@
 #include <vector>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 using namespace std;
 
 #include <lilyengine/utils.h>
@@ -490,6 +491,17 @@ void getGitState(GitState &state) {
 
 }
 
+bool cmpCommentBlocks(
+    const CommentBlock *cb0,
+    const CommentBlock *cb1) {
+
+    if(cb0->type != cb1->type) {
+        return cb0->type < cb1->type;
+    }
+
+    return cb0->issueId < cb1->issueId;
+}
+
 int main(int argc, char *argv[]) {
 
     // TODO: Command line parameter usage junk.
@@ -572,6 +584,8 @@ int main(int argc, char *argv[]) {
     }
 
     assignMissingIssueNumbers(commentBlocks);
+
+    sort(commentBlocks.begin(), commentBlocks.end(), cmpCommentBlocks);
 
     fixupIssueIdsInSourceFiles(commentBlocks, linesByFile);
 
