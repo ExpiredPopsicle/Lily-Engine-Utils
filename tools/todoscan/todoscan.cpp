@@ -291,6 +291,8 @@ void processSourceFile(
                 blockStartLine = -1;
                 blockStartPosInLine = -1;
                 currentBlockOut.str("");
+
+                indentAmountForLastComment = -1;
             }
         }
 
