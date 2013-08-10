@@ -49,6 +49,7 @@ void outputOrgFile(
 
     map<string, vector<CommentBlock *> > commentBlocksByFile;
     for(unsigned int i = 0; i < comments.size(); i++) {
+        cout << "Pushing comment: " << comments[i]->type << " " << comments[i]->issueId << endl;
         commentBlocksByFile[comments[i]->filename].push_back(comments[i]);
     }
 
@@ -99,17 +100,28 @@ void outputOrgFile(
             if(commentBlocks[i]->type == BLOCKTYPE_DONE)
                 typeStr = "DONE";
 
+            // Org-modes doesn't recognize "FIXME"s, so just jam
+            // it in after all the important junk, if necessary.
+            string fixmeAddin = "";
+            if(commentBlocks[i]->type == BLOCKTYPE_FIXME) {
+                fixmeAddin = "FIXME: ";
+            }
+
             // Output just the first line (whole paragraph block in
             // source) as the TODO issue title.
-            out << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " << (commentLines.size() ? strTrim(commentLines[0]) : "")  << endl;
+            out << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " <<
+                fixmeAddin <<
+                (commentLines.size() ? strTrim(commentLines[0]) : "")  << endl;
 
             // Output all additional lines with some silly tag.
             for(unsigned int j = 1; j < commentLines.size(); j++) {
+
+                // Output a prefixed, indented, wordwrapped thingy.
                 out <<
                     strPrefixLines(
                         strIndent(
                             strWordWrap(
-                                commentLines[j],
+                                fixmeAddin + commentLines[j],
                                 60),
                             0,
                             2),

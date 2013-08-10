@@ -447,9 +447,11 @@ void assignMissingIssueNumbers(
     // First find the highest number.
     for(unsigned int i = 0; i < commentBlocks.size(); i++) {
         if(commentBlocks[i]->issueId > maxIssueNumber)
-            maxIssueNumber = commentBlocks[i]->issueId + 1;
+            maxIssueNumber = commentBlocks[i]->issueId;
     }
+    maxIssueNumber++;
 
+    // Now go through and fix up issue IDs.
     for(unsigned int i = 0; i < commentBlocks.size(); i++) {
         if(commentBlocks[i]->issueId == -1) {
             commentBlocks[i]->issueId = maxIssueNumber;
