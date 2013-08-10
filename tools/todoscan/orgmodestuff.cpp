@@ -49,7 +49,6 @@ void outputOrgFile(
 
     map<string, vector<CommentBlock *> > commentBlocksByFile;
     for(unsigned int i = 0; i < comments.size(); i++) {
-        cout << "Pushing comment: " << comments[i]->type << " " << comments[i]->issueId << endl;
         commentBlocksByFile[comments[i]->filename].push_back(comments[i]);
     }
 
