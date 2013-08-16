@@ -57,7 +57,8 @@ commonSources = [
     "src/refsystem/refsystem.cpp",
     "src/compress/compress.cpp",
     "src/filesystem/filesystem.cpp",
-    "src/filesystem/archive.cpp"];
+    "src/filesystem/archive.cpp",
+    "src/crypto/cryptorc4.cpp"];
 
 testSources = [
     "src/thread/_test_thread.cpp",
