@@ -46,6 +46,10 @@ namespace ExPop {
 
     namespace Gfx {
 
+        // FIXME: Fix GLContext name to be something accurate.
+
+        /// This class holds all the OpenGL functions that we have to
+        /// query for. Yes, it's misnamed.
         class GLContext {
         public:
 
