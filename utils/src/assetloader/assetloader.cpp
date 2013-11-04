@@ -80,7 +80,7 @@ namespace ExPop {
         loaderThreadQuit = false;
         loaderThread = new Threads::Thread(AssetLoader_loaderThreadFunc, this);
 
-        outSetPrefix("assetloader1", "Load thread: ");
+        outSetPrefix("AssetLoader_thread", "AssetLoader(thread): ");
     }
 
     AssetLoader::~AssetLoader(void) {
@@ -136,7 +136,7 @@ namespace ExPop {
             return false;
         }
 
-        out("assetloader1") << "Loading file: " << currentLoad->fileName << endl;
+        out("AssetLoader_thread") << "Loading file: " << currentLoad->fileName << endl;
 
         hasBeenLoading = true;
         currentLoad->started = true;
@@ -152,7 +152,7 @@ namespace ExPop {
 
         } else {
 
-            out("assetloader1") << "Loading a slice: " << currentLoad->start << " " << currentLoad->length << endl;
+            out("AssetLoader_thread") << "Loading a slice: " << currentLoad->start << " " << currentLoad->length << endl;
 
             // Load a slice of the file.
             currentLoad->loadedBuffer = FileSystem::loadFilePart(
@@ -164,7 +164,7 @@ namespace ExPop {
 
         }
 
-        out("assetloader1") <<
+        out("AssetLoader_thread") <<
             "Done loading: " << currentLoad->fileName <<
             " (" << (currentLoad->loadedBuffer ? "SUCCESS" : "FAIL") << ")" << endl;
 
@@ -298,7 +298,7 @@ namespace ExPop {
                 // with something else.
                 if(finishedLoads[i]->age > 30) {
 
-                    out("assetloader1") << "Clearing buffer for file: " << finishedLoads[i]->fileName <<
+                    out("AssetLoader_thread") << "Clearing buffer for file: " << finishedLoads[i]->fileName <<
                         "(" << finishedLoads[i]->start <<
                         ", " << finishedLoads[i]->length << ")" << endl;
 

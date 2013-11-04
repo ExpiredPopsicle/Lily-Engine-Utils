@@ -209,6 +209,9 @@ namespace ExPop {
         /// Equality test.
         inline bool operator==(const MyType &otherMat) const;
 
+        /// Non-equality test.
+        inline bool operator!=(const MyType &otherMat) const;
+
         /// Cross product.
         inline MyType crossProduct(const MyType &v) const;
 
@@ -761,6 +764,12 @@ namespace ExPop {
             if(data[i] != otherMat.data[i]) return false;
         }
         return true;
+    }
+
+    // operator!=
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline bool Matrix<MatScalar, ROWS, COLS>::operator!=(const MyType &otherMat) const {
+        return !(operator==(otherMat));
     }
 
     // crossProduct

@@ -607,7 +607,6 @@ namespace ExPop {
             EXPOP_ASSERT_GL();
 
             // Create the GL texture.
-            // TODO: Make this do greyscale.
             ImageTexture imgTex;
             createGLTextureFromImage(img, &imgTex, IMAGE_FORMAT_GREY_8);
             page->glTextureNum = imgTex.glTexNum;
@@ -615,6 +614,12 @@ namespace ExPop {
             // Unbind it so someone doesn't screw it up later.
             // FIXME: Possibly remove this. Redundant?
             glc->glBindTexture(GL_TEXTURE_2D, 0);
+
+            // FIXME: Rebind whatever texture was already bound.
+
+            // FIXME: Add gl debug stuff around this.
+
+            // FIXME: Incorporate state wrapper thingy.
 
             // TODO: Add an option to skip this cleanup and preserve
             // the Image until later on, so we can use it for things
