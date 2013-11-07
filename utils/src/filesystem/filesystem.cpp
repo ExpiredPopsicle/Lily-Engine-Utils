@@ -491,7 +491,7 @@ namespace ExPop {
 
         std::string loadFileString(const std::string &fileName) {
             int bufLen = 0;
-            char *buf = loadFile(fileName, &bufLen, true);
+            char *buf = loadFile(fileName, &bufLen, false);
             if(!buf) {
                 return "";
             }
