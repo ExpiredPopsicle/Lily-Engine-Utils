@@ -96,7 +96,6 @@ namespace ExPop {
         typename std::map<std::string, LoadedAsset*>::iterator i;
         for(i = loadedAssets.begin();
             i != loadedAssets.end(); i++) {
-
             delete (*i).second;
         }
     }

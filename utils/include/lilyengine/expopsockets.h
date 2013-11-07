@@ -34,6 +34,10 @@
 // FIXME: This should be cstdint.
 #include <inttypes.h>
 
+#ifndef WIN32
+#include <sys/types.h>
+#endif
+
 #include <string>
 
 namespace ExPop {

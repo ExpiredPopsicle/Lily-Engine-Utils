@@ -34,6 +34,10 @@
 #include <string>
 using namespace std;
 
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
 #include "winhacks.h"
 #include "filesystem.h"
 #include "console.h"

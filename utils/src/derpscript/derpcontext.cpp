@@ -109,12 +109,12 @@ namespace ExPop {
 
             std::string name = (*i).first;
 
-            unsigned int i;
-            for(i = 0; i < out.size(); i++) {
-                if(out[i] == name) break;
+            unsigned int j;
+            for(j = 0; j < out.size(); j++) {
+                if(out[j] == name) break;
             }
 
-            if(i != out.size()) {
+            if(j != out.size()) {
                 out.push_back(name);
             }
         }

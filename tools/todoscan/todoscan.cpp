@@ -481,7 +481,7 @@ void getGitState(GitState &state) {
                 }
                 curLine = "";
             } else {
-                char str[2] = { c, 0 };
+                char str[2] = { char(c), 0 };
                 curLine = curLine + str;
             }
         }

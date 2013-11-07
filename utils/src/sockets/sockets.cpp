@@ -40,6 +40,7 @@ using namespace std;
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <unistd.h>
 #else
 #include <windows.h>
 #include <winsock.h>
