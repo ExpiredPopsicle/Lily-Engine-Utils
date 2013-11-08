@@ -168,31 +168,31 @@ namespace ExPop {
 	public:
 
 		SimpleBuffer(void);
-		SimpleBuffer(const void *data, int length, bool myOwnData = true);
+		SimpleBuffer(const void *data, size_t length, bool myOwnData = true);
 		~SimpleBuffer(void);
 
         /// Add some data onto the end. Reallocates if needed. Note:
         /// Doesn't just double the size of the buffer. It only
         /// allocates as much as it needs so continuously adding to
         /// the buffer in this way can be slow.
-		void addData(const void *buffer, int length);
+		void addData(const void *buffer, size_t length);
 
         /// Just get a pointer to the start of the data.
 		const char *getData(void) const;
 
         /// Get the current length of the data.
-		int getLength(void) const;
+		size_t getLength(void) const;
 
         /// Reads a number of bytes equal to the bytes parameter into
         /// the memory pointed to by dst and advances the read pointer
         /// by that amount. Returns a pointer to the position the read
         /// pointer ends at.
-		const char *getDataAndAdvance(void *dst, int bytes);
+		const char *getDataAndAdvance(void *dst, size_t bytes);
 
         /// Moves the read pointer back to the start of the data.
         void seekToStart(void);
 
-        int compare(const void *buffer, int length);
+        int compare(const void *buffer, size_t length);
 
         void clear(void);
 
@@ -203,8 +203,8 @@ namespace ExPop {
         bool myOwnData;
 
 		char *data;
-		int length;
-		int readPtr;
+		size_t length;
+		size_t readPtr;
     };
 
 };

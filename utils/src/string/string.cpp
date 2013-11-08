@@ -917,7 +917,7 @@ namespace ExPop {
     //   SimpleBuffer stuff after this point.
     // ----------------------------------------------------------------------
 
-    SimpleBuffer::SimpleBuffer(const void *data, int length, bool myOwnData) {
+    SimpleBuffer::SimpleBuffer(const void *data, size_t length, bool myOwnData) {
 
         this->myOwnData = myOwnData;
 
@@ -962,12 +962,12 @@ namespace ExPop {
         data = NULL;
     }
 
-    void SimpleBuffer::addData(const void *buffer, int length) {
+    void SimpleBuffer::addData(const void *buffer, size_t length) {
 
         assert(myOwnData);
 
-        int newLength = length + this->length;
-        int oldLength = this->length;
+        size_t newLength = length + this->length;
+        size_t oldLength = this->length;
 
         if(data) {
             data = (char*)realloc(data, newLength);
@@ -986,7 +986,7 @@ namespace ExPop {
         return data;
     }
 
-    const char *SimpleBuffer::getDataAndAdvance(void *dst, int bytes) {
+    const char *SimpleBuffer::getDataAndAdvance(void *dst, size_t bytes) {
 
         if(readPtr >= length) return NULL;
 
@@ -994,7 +994,7 @@ namespace ExPop {
 
         if(dst) {
 
-            int realBytes = bytes;
+            size_t realBytes = bytes;
 
             if(readPtr + bytes > length) {
                 // Trying to run off the end of the buffer.
@@ -1019,18 +1019,18 @@ namespace ExPop {
         readPtr = 0;
     }
 
-    int SimpleBuffer::getLength(void) const {
+    size_t SimpleBuffer::getLength(void) const {
         return length;
     }
 
-    int SimpleBuffer::compare(const void *buffer, int length) {
+    int SimpleBuffer::compare(const void *buffer, size_t length) {
 
         if(length < this->length) return 1;
         if(length > this->length) return -1;
 
         const char *cbuf = (const char *)buffer;
 
-        for(int i = 0; i < length; i++) {
+        for(size_t i = 0; i < length; i++) {
             if(data[i] > cbuf[i]) {
                 return 1;
             }
