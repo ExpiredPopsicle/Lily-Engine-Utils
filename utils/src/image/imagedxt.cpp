@@ -332,10 +332,16 @@ namespace ExPop {
             unsigned int blockSize = 8;
             if(dxtLevel == 5 || dxtLevel == 3) blockSize = 16;
 
+            // FIXME: Do something sensible if the buffer sizes don't
+            // match up.
+            unsigned int expectedNumBlocks = (getWidth() / 4) * (getHeight() / 4);
+            unsigned int expectedBufferLength = blockSize * expectedNumBlocks;
+            assert(expectedBufferLength == bufferLength);
+
             unsigned char* inPtr = buffer;
 
-            for(int y = 0; y < getHeight(); y += 4) {
-                for(int x = 0; x < getWidth(); x += 4) {
+            for(unsigned int y = 0; y < getHeight(); y += 4) {
+                for(unsigned int x = 0; x < getWidth(); x += 4) {
 
                     unsigned char decompressedPixels[16*4];
 

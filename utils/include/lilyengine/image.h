@@ -104,20 +104,20 @@ namespace ExPop {
             }
 
             /// Set a pixel based on linear index.
-            inline void setPixel(const Pixel &p, int index) {
-                if(index < 0 || index > width * height) return;
+            inline void setPixel(const Pixel &p, unsigned int index) {
+                if(index > width * height) return;
                 pixels[index].value = p.value;
             }
 
             /// Get a pointer to a pixel.
             inline Pixel *getPixel(int x, int y) {
-                if(x >= width || x < 0 || y >= height || y < 0) return NULL;
+                if(x >= int(width) || x < 0 || y >= int(height) || y < 0) return NULL;
                 return getPixel(x + y * width);
             }
 
             /// Get a pointer to a pixel based on linear index.
             inline Pixel *getPixel(int index) {
-                if(index < 0 || index > width * height) return NULL;
+                if(index < 0 || index > int(width * height)) return NULL;
                 return &(pixels[index]);
             }
 
@@ -136,12 +136,12 @@ namespace ExPop {
                 float &b, float &a) const;
 
             /// Get the width.
-            inline int getWidth(void) const {
+            inline unsigned int getWidth(void) const {
                 return width;
             }
 
             /// Get the height.
-            inline int getHeight(void) const {
+            inline unsigned int getHeight(void) const {
                 return height;
             }
 
@@ -163,8 +163,8 @@ namespace ExPop {
 
         private:
             Pixel *pixels;
-            int width;
-            int height;
+            unsigned int width;
+            unsigned int height;
         };
 
         /// Load an image from a TGA file in a buffer.
