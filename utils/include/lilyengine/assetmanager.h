@@ -88,6 +88,8 @@ namespace ExPop {
 
         this->loader = loader;
         maxAge = 100;
+
+        Console::outSetPrefix("AssetManager", "AssetManager: ");
     }
 
     template<class T, class E>
@@ -151,6 +153,8 @@ namespace ExPop {
         char *data = loader->requestData(name, 100, &length, status);
 
         if(data) {
+
+            Console::out("AssetManager") << "Initializing asset: " << name << std::endl;
 
             T *newData = new T(
                 name,
