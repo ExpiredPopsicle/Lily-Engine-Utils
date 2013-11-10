@@ -22,14 +22,13 @@ namespace ExPop {
     /// Template parameter T is the asset type. E is the type for
     /// extra data to the instantiation function.
     ///
-    /// Types used must have a constructor in the form of:
-    ///   Object(const std::string &name,
+    /// Types used must have a creator function in the form of:
+    ///   Object *func(
+    ///          const std::string &name,
+    ///          E extraLoadData,
     ///          void* data,
-    ///          size_t dataLength,
-    ///          E extraLoadData);
+    ///          size_t dataLength);
     ///
-    /// If I ever switch over to C++11 support, the interface to this
-    /// will change.
     template<class T, class E>
     class AssetManager {
     public:
