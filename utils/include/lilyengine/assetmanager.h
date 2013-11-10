@@ -37,7 +37,12 @@ namespace ExPop {
         // TODO: We really need better control over instantiation.
         // Instantiation function object?
 
-        AssetManager(AssetLoader *loader, E loadData);
+        /// Create function type.
+        typedef T *(*CreatorFunction)(
+            const std::string &name, E loadData,
+            void *data, size_t dataLength);
+
+        AssetManager(AssetLoader *loader, E loadData, CreatorFunction creatorFunc);
         ~AssetManager(void);
 
         /// Increment the age of all assets by some amount. Anything
@@ -64,6 +69,8 @@ namespace ExPop {
 
     private:
 
+        CreatorFunction creatorFunc;
+
         class LoadedAsset {
         public:
 
@@ -83,9 +90,10 @@ namespace ExPop {
 
 
     template<class T, class E>
-    AssetManager<T, E>::AssetManager(AssetLoader *loader, E loadData) :
+    AssetManager<T, E>::AssetManager(AssetLoader *loader, E loadData, CreatorFunction creatorFunc) :
         extraLoadData(loadData) {
 
+        this->creatorFunc = creatorFunc;
         this->loader = loader;
         maxAge = 100;
 
@@ -156,11 +164,11 @@ namespace ExPop {
 
             Console::out("AssetManager") << "Initializing asset: " << name << std::endl;
 
-            T *newData = new T(
+            T *newData = creatorFunc(
                 name,
-                (void*)data,
-                size_t(length),
-                extraLoadData);
+                extraLoadData,
+                (void*)(data),
+                size_t(length));
 
             LoadedAsset *newAsset = new LoadedAsset(newData);
             loadedAssets[name] = newAsset;
