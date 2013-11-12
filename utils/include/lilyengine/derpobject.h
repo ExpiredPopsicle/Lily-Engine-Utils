@@ -249,7 +249,7 @@ namespace ExPop {
 
             /// Set this to true to delete the object when the last
             /// reference to this custom data goes away. Defaults to
-            /// true.
+            /// true. (Data ownership by VM, or external?)
             bool deleteMeWhenDone;
 
         private:

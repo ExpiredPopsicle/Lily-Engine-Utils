@@ -143,8 +143,19 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    // TODO: Save command line parameters after the script name so
+    // that we can pass them to the script somehow.
+
     // Otherwise, load, compile, and run stuff.
     string source = FileSystem::loadFileString(argv[1]);
+
+    // Special-case to get rid of the hashbang ("#!"). Because we
+    // don't actually recognize '#' as a comment.
+    if(strStartsWith("#!", source)) {
+        // Just replace the #! with our comment marker.
+        source[0] = '/';
+        source[1] = '/';
+    }
 
     if(!source.size()) {
         cerr << "Cannot load " << argv[1] << endl;
