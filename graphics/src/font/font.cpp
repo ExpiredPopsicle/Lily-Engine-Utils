@@ -713,12 +713,14 @@ namespace ExPop {
             const FVec3 &position,
             const FVec2 &uv,
             const FVec3 &color,
-            float verticalPos) {
+            float verticalPos,
+            float characterIndex) {
 
             this->position = position;
             this->uv = uv;
             this->color = color;
             this->verticalPos = verticalPos;
+            this->characterIndex = characterIndex;
 
         }
 
@@ -761,7 +763,8 @@ namespace ExPop {
             const FVec3 &position,
             const FVec2 &uv,
             const FVec3 &color,
-            float verticalPos) {
+            float verticalPos,
+            float characterIndex) {
 
             FontVertexStream *stream =
                 getVertexStreamForTexture(glTextureNumber);
@@ -772,7 +775,8 @@ namespace ExPop {
                     position,
                     uv,
                     color,
-                    verticalPos));
+                    verticalPos,
+                    characterIndex));
 
             return (unsigned short)(stream->vertices.size() - 1);
 
@@ -1168,14 +1172,14 @@ namespace ExPop {
                                 FVec3(x + xOffset, y + yOffset, 0),
                                 FVec2(record->left, record->top),
                                 vt100FgColor * colorScale,
-                                yOffset);
+                                yOffset, i);
 
                             unsigned int index1 = output->renderInfo->addVertex(
                                 currentPage->glTextureNum,
                                 FVec3(x + xOffset + record->width * inputVals->scale, y + yOffset, 0),
                                 FVec2(record->right, record->top),
                                 vt100FgColor * colorScale,
-                                yOffset);
+                                yOffset, i);
 
                             // Bottom
                             unsigned int index2 = output->renderInfo->addVertex(
@@ -1183,14 +1187,14 @@ namespace ExPop {
                                 FVec3(x + xOffset + record->width * inputVals->scale, y + yOffset + record->height * inputVals->scale, 0),
                                 FVec2(record->right, record->bottom),
                                 vt100FgColor * colorScale,
-                                yOffset + record->height * inputVals->scale);
+                                yOffset + record->height * inputVals->scale, i);
 
                             unsigned int index3 = output->renderInfo->addVertex(
                                 currentPage->glTextureNum,
                                 FVec3(x + xOffset, y + yOffset + record->height * inputVals->scale, 0),
                                 FVec2(record->left, record->bottom),
                                 vt100FgColor * colorScale,
-                                yOffset + record->height * inputVals->scale);
+                                yOffset + record->height * inputVals->scale, i);
 
                             // First triangle
                             output->renderInfo->addIndex(

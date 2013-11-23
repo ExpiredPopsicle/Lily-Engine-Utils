@@ -113,7 +113,8 @@ namespace ExPop {
                         const FVec3 &position,
                         const FVec2 &uv,
                         const FVec3 &color,
-                        float verticalPos);
+                        float verticalPos,
+                        float characterIndex);
 
                     FVec3 position;
                     FVec3 color;
@@ -122,6 +123,8 @@ namespace ExPop {
                     // Position up from the baseline (or negative for
                     // below it).
                     float verticalPos;
+
+                    float characterIndex;
 
                 private:
                 };
@@ -196,7 +199,8 @@ namespace ExPop {
                     const FVec3 &position,
                     const FVec2 &uv,
                     const FVec3 &color,
-                    float verticalPos);
+                    float verticalPos,
+                    float characterIndex);
 
                 /// Add an index and automatically assign it to the
                 /// correct vertex stream.
