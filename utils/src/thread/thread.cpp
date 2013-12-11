@@ -75,7 +75,7 @@ namespace ExPop {
 
         Mutex::Mutex(const Mutex &m) {
             mutexPrivate = new MutexPrivate();
-            memcpy(mutexPrivate, m.mutexPrivate, sizeof(mutexPrivate));
+            memcpy(mutexPrivate, m.mutexPrivate, sizeof(*mutexPrivate));
         }
 
         Mutex::Mutex(void) {

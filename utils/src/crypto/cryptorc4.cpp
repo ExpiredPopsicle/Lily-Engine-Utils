@@ -60,7 +60,7 @@ namespace ExPop {
         unsigned int j = 0;
 
         for(unsigned int i = 0; i < 256; i++) {
-            unsigned int keyIndex = i % keyLen;
+            // unsigned int keyIndex = i % keyLen;
             unsigned char keyVal =
                 ((const unsigned char*)keyBytes)[i % keyLen];
 

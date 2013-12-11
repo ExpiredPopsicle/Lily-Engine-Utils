@@ -108,8 +108,8 @@ namespace ExPop {
             *p = 1 << 5; p++;
 
             // Write out the pixels.
-            for(int y = 0; y < height; y++) {
-                for(int x = 0; x < width; x++) {
+            for(unsigned int y = 0; y < height; y++) {
+                for(unsigned int x = 0; x < width; x++) {
                     Pixel *dp = &(pixels[x + y * width]);
 
                     // TGA stores stuff in BGRA.
@@ -167,7 +167,6 @@ namespace ExPop {
 
             assert(IS_POW2(getWidth()) && IS_POW2(getHeight()));
 
-            Pixel *p = NULL;
             for(unsigned int i = 0; i < 4; i++) {
 
                 bool xd = !!(i & 1);
