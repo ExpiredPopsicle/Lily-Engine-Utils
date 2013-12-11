@@ -1036,6 +1036,15 @@ namespace ExPop {
 
                 unsigned int charNum = str[i];
 
+                // Handle cursor setup.
+                if(!cursorPositionSet && inputVals->cursorPosition <= i) {
+                    cursorPositionSet = true;
+                    output->cursorX = x;
+                    output->cursorY = y;
+                    output->cursorHeight = verticalAdvance * inputVals->scale;
+                    output->cursorWidth = 2;
+                }
+
                 // First we try to handle special cases, then we default
                 // to doing stuff normally.
                 if(charNum == '\n') {
@@ -1141,15 +1150,16 @@ namespace ExPop {
                                     y += verticalAdvance * inputVals->scale;
                                 }
                             }
-                        }
 
-                        // Handle cursor setup.
-                        if(!cursorPositionSet && inputVals->cursorPosition <= i) {
-                            cursorPositionSet = true;
-                            output->cursorX = x;
-                            output->cursorY = y;
-                            output->cursorHeight = verticalAdvance * inputVals->scale;
-                            output->cursorWidth = 2;
+                            // Handle cursor setup.
+                            if(inputVals->cursorPosition == i) {
+                                cursorPositionSet = true;
+                                output->cursorX = x;
+                                output->cursorY = y;
+                                output->cursorHeight = verticalAdvance * inputVals->scale;
+                                output->cursorWidth = 2;
+                            }
+
                         }
 
                         // renderInfo will only be there if this is a
