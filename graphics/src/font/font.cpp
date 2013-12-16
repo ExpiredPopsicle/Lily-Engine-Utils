@@ -867,6 +867,7 @@ namespace ExPop {
             cursorY = 0;
             cursorWidth = 0;
             cursorHeight = 0;
+            mouseCursorLocation = 0;
         }
 
         Font::StringActionOutput::~StringActionOutput(void) {
@@ -892,6 +893,8 @@ namespace ExPop {
             defaultColor = FVec3(0.5, 0.5, 0.5);
             wordWrapIndent = 0;
             cursorPosition = 0;
+            mouseCursorX = 0.0f;
+            mouseCursorY = 0.0f;
         }
 
         // ----------------------------------------------------------------------
@@ -997,6 +1000,9 @@ namespace ExPop {
             Font::StringActionBits stringActionBits,
             Font::StringActionInput *inputVals) {
 
+            // FIXME: This function needs some pretty massive
+            // refactoring. It's a giant mess.
+
             // If we don't have inputs, then just use some defaults.
             bool myInputVals = false;
             if(!inputVals) {
@@ -1031,6 +1037,7 @@ namespace ExPop {
 
             bool lastRecordWasValid = true;
             bool cursorPositionSet = false;
+            bool mousePositionSet = false;
 
             for(unsigned int i = 0; i < str.size(); i++) {
 
@@ -1045,10 +1052,34 @@ namespace ExPop {
                     output->cursorWidth = 2;
                 }
 
+
+                // Mouse cursor location. Hovering on some character.
+                if(!mousePositionSet &&
+                   inputVals->mouseCursorX &&
+                   inputVals->mouseCursorY) {
+                    if(inputVals->mouseCursorX < x &&
+                       inputVals->mouseCursorY < y) {
+                        mousePositionSet = true;
+                        if(i == 0) {
+                            output->mouseCursorLocation = 0;
+                        } else {
+                            output->mouseCursorLocation = i - 1;
+                        }
+                    }
+                }
+
                 // First we try to handle special cases, then we default
                 // to doing stuff normally.
                 if(charNum == '\n') {
 
+                    // Mouse cursor location. After the end of a newline.
+                    if(inputVals->mouseCursorY < y &&
+                       !mousePositionSet) {
+                        mousePositionSet = true;
+                        output->mouseCursorLocation = i;
+                    }
+
+                    // Advance line.
                     y += verticalAdvance * inputVals->scale;
                     x = 0;
 
@@ -1142,10 +1173,27 @@ namespace ExPop {
 
                         if(stringActionBits & STRINGACTION_WORDWRAP) {
 
-                            // Handle word wrapping. We allow line breaking on
-                            // invalid characters and whitespace.
+                            // Handle word wrapping. We allow line
+                            // breaking on invalid characters and
+                            // whitespace.
                             if(i > 0 && ((str[i-1] == 0x20) || !lastRecordWasValid)) {
                                 if(nextWordShouldWrap(str, i, x, wrapWidth, inputVals->scale)) {
+
+                                    // Mouse cursor location. Handle
+                                    // cursor at the end of a line
+                                    // when that line break is due to
+                                    // word wrapping.
+                                    if(inputVals->mouseCursorY < y &&
+                                       !mousePositionSet) {
+                                        mousePositionSet = true;
+                                        if(i) {
+                                            output->mouseCursorLocation = i-1;
+                                        } else {
+                                            output->mouseCursorLocation = 0;
+                                        }
+                                    }
+
+                                    // Advance a line.
                                     x = inputVals->wordWrapIndent;
                                     y += verticalAdvance * inputVals->scale;
                                 }
@@ -1256,6 +1304,13 @@ namespace ExPop {
                 output->cursorY = y;
                 output->cursorHeight = verticalAdvance * inputVals->scale;
                 output->cursorWidth = 2;
+            }
+
+            // If we still haven't set the mouse cursor location, set
+            // it now.
+            if(!mousePositionSet) {
+                mousePositionSet = true;
+                output->mouseCursorLocation = str.size();
             }
 
             // Do a final check of the output bounds.

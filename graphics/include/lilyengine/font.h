@@ -267,6 +267,9 @@ namespace ExPop {
 
                 /// The width of a cursor.
                 float cursorWidth;
+
+                /// Text location for the input mouse coordinates.
+                unsigned int mouseCursorLocation;
             };
 
             // ----------------------------------------------------------------------
@@ -301,6 +304,9 @@ namespace ExPop {
                 /// Position in the input. Will output into cursorX,
                 /// cursorY in the output.
                 unsigned int cursorPosition;
+
+                float mouseCursorX;
+                float mouseCursorY;
 
             };
 
