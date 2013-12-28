@@ -895,6 +895,8 @@ namespace ExPop {
             cursorPosition = 0;
             mouseCursorX = 0.0f;
             mouseCursorY = 0.0f;
+            highlightMin = ~(unsigned int)0;
+            highlightMax = ~(unsigned int)0;
         }
 
         // ----------------------------------------------------------------------
@@ -1039,20 +1041,45 @@ namespace ExPop {
             bool cursorPositionSet = false;
             bool mousePositionSet = false;
 
+            float maxY = 0.0f;
+
+            // FIXME: The #defines I stuck in here to reduce redundant
+            // code have made Emacs very unhappy.
+
+            // Highlight-related #defines
+
+            // FIXME: The 0.25f is totally arbitrary because we
+            // don't know how far below the baseline we need to
+            // go!
+          #define ADD_HIGHLIGHT_START()                                 \
+            output->highlightQuads.push_back(x);                        \
+            output->highlightQuads.push_back(y + verticalAdvance * inputVals->scale * 0.25f);
+
+          #define ADD_HIGHLIGHT_END()                                   \
+            output->highlightQuads.push_back(x+1);                      \
+            output->highlightQuads.push_back(y - verticalAdvance * inputVals->scale * 0.75f);
+
+          #define IN_HIGHLIGHT() (i >= inputVals->highlightMin && i < inputVals->highlightMax)
+
+            // Cursor-related #defines
+          #define SET_CURSOR_POSITION() {                               \
+            cursorPositionSet = true;                                   \
+            output->cursorX = x;                                        \
+            output->cursorY = y;                                        \
+            output->cursorHeight = verticalAdvance * inputVals->scale;  \
+            output->cursorWidth = 1; }
+
             for(unsigned int i = 0; i < str.size(); i++) {
 
                 unsigned int charNum = str[i];
 
+                // FIXME: Duplicated code.
                 // Handle cursor setup.
                 if(!cursorPositionSet && inputVals->cursorPosition <= i) {
-                    cursorPositionSet = true;
-                    output->cursorX = x;
-                    output->cursorY = y;
-                    output->cursorHeight = verticalAdvance * inputVals->scale;
-                    output->cursorWidth = 2;
+                    SET_CURSOR_POSITION();
                 }
 
-
+                // FIXME: Duplocated code.
                 // Mouse cursor location. Hovering on some character.
                 if(!mousePositionSet &&
                    inputVals->mouseCursorX &&
@@ -1068,10 +1095,20 @@ namespace ExPop {
                     }
                 }
 
+                // Can't use an 'or' operator here. We might have to
+                // start and end the quads on the same spot.
+                if(i == inputVals->highlightMin) {
+                    ADD_HIGHLIGHT_START();
+                }
+                if(i == inputVals->highlightMax) {
+                    ADD_HIGHLIGHT_END();
+                }
+
                 // First we try to handle special cases, then we default
                 // to doing stuff normally.
                 if(charNum == '\n') {
 
+                    // FIXME: Duplicated code.
                     // Mouse cursor location. After the end of a newline.
                     if(inputVals->mouseCursorY < y &&
                        !mousePositionSet) {
@@ -1079,11 +1116,23 @@ namespace ExPop {
                         output->mouseCursorLocation = i;
                     }
 
+                    if(IN_HIGHLIGHT()) {
+                        ADD_HIGHLIGHT_END();
+                    }
+
                     // Advance line.
                     y += verticalAdvance * inputVals->scale;
                     x = 0;
 
+
+                    if(IN_HIGHLIGHT()) {
+                        ADD_HIGHLIGHT_START();
+                    }
+
                 } else if(charNum == 0x1B && (stringActionBits & STRINGACTION_VT100COLOR)) {
+
+                    // FIXME: I don't know why I need this crap
+                    // anymore.
 
                     // Handle VT100 color emulation (so we can easily hook
                     // it up to our existing Console system, mainly.)
@@ -1193,19 +1242,24 @@ namespace ExPop {
                                         }
                                     }
 
+                                    if(IN_HIGHLIGHT()) {
+                                        ADD_HIGHLIGHT_END();
+                                    }
+
                                     // Advance a line.
                                     x = inputVals->wordWrapIndent;
                                     y += verticalAdvance * inputVals->scale;
+
+                                    if(IN_HIGHLIGHT()) {
+                                        ADD_HIGHLIGHT_START();
+                                    }
                                 }
                             }
 
+                            // FIXME: Duplicated code.
                             // Handle cursor setup.
                             if(inputVals->cursorPosition == i) {
-                                cursorPositionSet = true;
-                                output->cursorX = x;
-                                output->cursorY = y;
-                                output->cursorHeight = verticalAdvance * inputVals->scale;
-                                output->cursorWidth = 2;
+                                SET_CURSOR_POSITION();
                             }
 
                         }
@@ -1220,6 +1274,8 @@ namespace ExPop {
 
                             float yOffset = -record->baseline * inputVals->scale;
                             float xOffset = inputVals->scale * (record->advance - record->width) / 2.0;
+
+                            // if(y - yOffset > maxY) maxY = y - yOffset;
 
                             float colorScale =
                                 (vt100Bold || !(stringActionBits & Font::STRINGACTION_VT100COLOR)) ? 2.0 : 1.0;
@@ -1280,6 +1336,8 @@ namespace ExPop {
                                 currentPage->glTextureNum,
                                 index0);
 
+
+                            output->renderedHeight = MAX(y + yOffset, output->renderedHeight);
                         }
 
                         // Move the cursor along.
@@ -1296,16 +1354,14 @@ namespace ExPop {
                 }
             }
 
+            // FIXME: Duplicated code.
             // If we still don't have a cursor set by now, it's probably
             // off the end (which is okay.)
             if(!cursorPositionSet) {
-                cursorPositionSet = true;
-                output->cursorX = x;
-                output->cursorY = y;
-                output->cursorHeight = verticalAdvance * inputVals->scale;
-                output->cursorWidth = 2;
+                SET_CURSOR_POSITION();
             }
 
+            // FIXME: Duplicated code.
             // If we still haven't set the mouse cursor location, set
             // it now.
             if(!mousePositionSet) {
@@ -1313,9 +1369,13 @@ namespace ExPop {
                 output->mouseCursorLocation = str.size();
             }
 
+            if(inputVals->highlightMax >= str.size()) {
+                ADD_HIGHLIGHT_END();
+            }
+
             // Do a final check of the output bounds.
             output->renderedWidth  = MAX(x, output->renderedWidth);
-            output->renderedHeight = MAX(y, output->renderedHeight + verticalAdvance * inputVals->scale);
+            output->renderedHeight = MAX(MAX(y, output->renderedHeight + verticalAdvance * inputVals->scale), maxY);
 
             // Clean up default inputs if we created it.
             if(myInputVals) {

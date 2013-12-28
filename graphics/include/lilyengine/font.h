@@ -270,6 +270,11 @@ namespace ExPop {
 
                 /// Text location for the input mouse coordinates.
                 unsigned int mouseCursorLocation;
+
+                // FIXME: There's undoubtedly a much better way to
+                // represent this. Maybe with another VBO. Definitely
+                // with some more descriptive structure.
+                std::vector<float> highlightQuads;
             };
 
             // ----------------------------------------------------------------------
@@ -307,6 +312,9 @@ namespace ExPop {
 
                 float mouseCursorX;
                 float mouseCursorY;
+
+                unsigned int highlightMin;
+                unsigned int highlightMax;
 
             };
 
