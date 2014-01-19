@@ -56,6 +56,8 @@ using namespace ExPop;
 
 #define fontScale 16
 
+#include <SDL/SDL.h>
+
 namespace ExPop {
 
     namespace Gfx {
@@ -515,11 +517,11 @@ namespace ExPop {
                 }
 
                 // And try to output it.
-                maxWidth = MAX(maxWidth, (unsigned int)face->glyph->bitmap.width);
+                maxWidth = MAX(maxWidth, (unsigned int)face->glyph->bitmap.pitch);
                 maxHeight = MAX(maxHeight, (unsigned int)face->glyph->bitmap.rows);
 
                 // Get rendered bitmap bounds.
-                int maxx = face->glyph->bitmap.width;
+                int maxx = face->glyph->bitmap.pitch;
                 int maxy = face->glyph->bitmap.rows;
 
                 page->characterRecords[recordNum].advance = (face->glyph->advance.x >> 6);
@@ -555,7 +557,7 @@ namespace ExPop {
                             //     p->rgba.g = 0;
                             // }
 
-                            if(x < face->glyph->bitmap.width && y < face->glyph->bitmap.rows) {
+                            if(x < face->glyph->bitmap.pitch && y < face->glyph->bitmap.rows) {
                                 val = face->glyph->bitmap.buffer[x + y * face->glyph->bitmap.pitch];
                             }
 
@@ -585,11 +587,11 @@ namespace ExPop {
                 page->characterRecords[recordNum].top    = currentYPos;
                 page->characterRecords[recordNum].bottom = currentYPos + maxy;
 
-                page->characterRecords[recordNum].width  = face->glyph->bitmap.width;
+                page->characterRecords[recordNum].width  = face->glyph->bitmap.pitch;
                 page->characterRecords[recordNum].height = face->glyph->bitmap.rows;
 
                 // currentXPos += (face->glyph->advance.x >> 6);
-                currentXPos += face->glyph->bitmap.width;
+                currentXPos += face->glyph->bitmap.pitch;
                 currentXPos += padding;
 
                 numGlyphsDumped++;
@@ -627,6 +629,11 @@ namespace ExPop {
 
             // Clean up some stuff.
             assert(page->img == img);
+
+            cout << img->getWidth() << endl;
+            cout << img->getHeight() << endl;
+
+
             delete img;
             img = NULL;
             page->img = NULL;
@@ -1057,9 +1064,11 @@ namespace ExPop {
 
           #define ADD_HIGHLIGHT_END()                                   \
             output->highlightQuads.push_back(x+1);                      \
-            output->highlightQuads.push_back(y - verticalAdvance * inputVals->scale * 0.75f);
+            output->highlightQuads.push_back(y - verticalAdvance * inputVals->scale * 1.0f);
 
-          #define IN_HIGHLIGHT() (i >= inputVals->highlightMin && i < inputVals->highlightMax)
+          #define IN_HIGHLIGHT()                \
+            (i >= inputVals->highlightMin &&    \
+             i < inputVals->highlightMax)
 
             // Cursor-related #defines
           #define SET_CURSOR_POSITION() {                               \
@@ -1079,7 +1088,7 @@ namespace ExPop {
                     SET_CURSOR_POSITION();
                 }
 
-                // FIXME: Duplocated code.
+                // FIXME: Duplicated code.
                 // Mouse cursor location. Hovering on some character.
                 if(!mousePositionSet &&
                    inputVals->mouseCursorX &&
@@ -1337,7 +1346,9 @@ namespace ExPop {
                                 index0);
 
 
-                            output->renderedHeight = MAX(y + yOffset, output->renderedHeight);
+                            output->renderedHeight = MAX(
+                                y + yOffset + record->height * inputVals->scale,
+                                output->renderedHeight);
                         }
 
                         // Move the cursor along.
@@ -1369,13 +1380,15 @@ namespace ExPop {
                 output->mouseCursorLocation = str.size();
             }
 
-            if(inputVals->highlightMax >= str.size()) {
+            if(inputVals->highlightMin < str.size() &&
+               inputVals->highlightMax >= str.size()) {
                 ADD_HIGHLIGHT_END();
             }
 
             // Do a final check of the output bounds.
             output->renderedWidth  = MAX(x, output->renderedWidth);
-            output->renderedHeight = MAX(MAX(y, output->renderedHeight + verticalAdvance * inputVals->scale), maxY);
+            output->renderedHeight =
+                MAX(MAX(y, output->renderedHeight), maxY);
 
             // Clean up default inputs if we created it.
             if(myInputVals) {
