@@ -1,6 +1,12 @@
 #include <sstream>
 #include <iostream>
+
+#if __cplusplus > 201103L
 #include <cstdint>
+#else
+#include <stdint.h>
+#endif
+
 #include <cassert>
 using namespace std;
 
@@ -139,24 +145,12 @@ namespace ExPop {
             ostringstream currentChunkStr;
 
             uint32_t nextChunk = strBase64Encode_getNextChunk(ptr, tmpLength);
-            // uint32_t tmp = nextChunk;
 
             for(unsigned int i = 0; i < 4; i++) {
-                // uint32_t chunkPiece = nextChunk & (63 << (6 * (3-i)));
-                // chunkPiece >>= (6 * (3-i))
-
-
                 uint32_t chunkPiece = nextChunk >> (6 * (3-i));
                 chunkPiece &= 63;
-
-
-                // nextChunk >>= 6;
-                // ostr << chunkPiece << endl;
                 currentChunkStr << strBase64Lookup[chunkPiece];
             }
-
-            // cout << currentChunkStr.str() << ":" <<
-            //     tmp << ":" << strBase64DecodeChunk(currentChunkStr.str()) << endl;
 
             ostr << currentChunkStr.str();
         }

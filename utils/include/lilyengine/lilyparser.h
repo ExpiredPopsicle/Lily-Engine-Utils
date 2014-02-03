@@ -125,8 +125,12 @@ namespace ExPop {
         /// Erase a value completely.
         void clearValue(const std::string &name);
 
+        /// Get a list of all the values.
+        void getValueNames(std::vector<std::string> &names) const;
+
         /// Get a child by its index.
         ParserNode *getChild(int index);
+        const ParserNode *getChild(int index) const;
 
         /// Get the number of child nodes.
         int getNumChildren(void) const;
@@ -142,6 +146,17 @@ namespace ExPop {
         /// stream in a format readable by parseBuffer() and
         /// parseString().
         void output(std::ostream &out, int indentLevel) const;
+
+        /// Output this ParserNode and all its children in JSON. NOTE:
+        /// Because of the nature of JSON involving key/value pairs
+        /// instead of arbitrarily named children, all similarly-named
+        /// children will be grouped into JSON arrays. Order relative
+        /// to other elements may be lost. Also, make sure you don't
+        /// have children and attributes with the same name.
+        void outputJson(
+            std::ostream &out,
+            int indentLevel,
+            bool lineStart = true) const;
 
         /// Output this ParserNode and all its children to an XML
         /// format.
@@ -189,6 +204,9 @@ namespace ExPop {
     /// compliant. Actually, it's more just an XML-like language.
     ParserNode *parseXmlString(const std::string &str, std::string *errorStr = NULL);
 
+    /// Parse a JSON string. Not fully standards compliant.
+    ParserNode *parseJsonString(const std::string &str, std::string *errorStr = NULL);
+
     /// Output to an ostream.
     std::ostream &operator<<(std::ostream &out, const ParserNode &node);
 
@@ -196,4 +214,16 @@ namespace ExPop {
 
     /// Load and parse a file.
     ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr = NULL);
+
+    /// Internal token. Used by multiple parser modules.
+    class ParserToken {
+    public:
+        ParserToken(const std::string &str, int type, int lineNumber);
+        ParserToken(char c, int lineNumber);
+        std::string str;
+        int type;
+        int lineNumber;
+    private:
+    };
+
 }

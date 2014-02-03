@@ -163,6 +163,27 @@ namespace ExPop {
         const std::string &str,
         const std::string &prefix);
 
+    // Base64 stuff.
+
+    /// Decode a buffer from a base64 string as specified in RFC 2045.
+    /// Returns a pointer to a buffer allocated with new.
+    /// Responsibility for freeing this buffer with delete[] is up to
+    /// the caller.
+    unsigned char *strBase64Decode(const std::string &str, unsigned int *length);
+
+    /// Decode a string from a base64 string. Convenience function for
+    /// text data.
+    std::string strBase64DecodeString(const std::string &str);
+
+    /// Encode a buffer to a base64 string.
+    std::string strBase64Encode(const void *buffer, size_t length);
+
+    /// Encode a string to a base64 string. Convenience function for
+    /// text data.
+    std::string strBase64EncodeString(const std::string &str);
+
+
+
     /// Simple buffer that we can dynamically expand or iterate through.
     class SimpleBuffer {
 	public:

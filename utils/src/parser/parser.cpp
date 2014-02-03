@@ -113,6 +113,13 @@ namespace ExPop {
         return children[index];
     }
 
+    const ParserNode *ParserNode::getChild(int index) const {
+        if(index >= (int)children.size() || index < 0) {
+            return NULL;
+        }
+        return children[index];
+    }
+
     int ParserNode::getNumChildren(void) const {
         return (int)children.size();
     }
@@ -439,6 +446,13 @@ namespace ExPop {
 
     }
 
+    void ParserNode::getValueNames(std::vector<std::string> &names) const {
+        for(std::map<std::string, std::string>::const_iterator i = values.begin();
+            i != values.end(); i++) {
+            names.push_back((*i).first);
+        }
+    }
+
     int ParserNode::getChildIndexByName(const std::string &name, int after) {
 
         if(after < -1 || after >= int(children.size()) - 1) {
@@ -480,33 +494,23 @@ namespace ExPop {
     //   The parser itself
     // ------------------------------------------------------------------------
 
-    class ParserToken {
+    ParserToken::ParserToken(const std::string &str, int type, int lineNumber) {
+        this->str = str;
+        this->type = type;
+        this->lineNumber = lineNumber;
+    }
 
-        public:
+    ParserToken::ParserToken(char c, int lineNumber) {
 
-            ParserToken(const std::string &str, int type, int lineNumber) {
-                this->str = str;
-                this->type = type;
-                this->lineNumber = lineNumber;
-            }
+        // This seems oddly the simplest way to do this...
+        str = " ";
+        str[0] = c;
 
-            ParserToken(char c, int lineNumber) {
+        this->type = PT_UNKNOWN;
 
-                // This seems oddly the simplest way to do this...
-                str = " ";
-                str[0] = c;
+        this->lineNumber = lineNumber;
+    }
 
-                this->type = PT_UNKNOWN;
-
-                this->lineNumber = lineNumber;
-            }
-
-            std::string str;
-            int type;
-            int lineNumber;
-
-        private:
-    };
 
     static ParserNode *parseTokens(const std::vector<ParserToken*> &tokens, const std::string &nodeName, int *pos, std::string *errorStr) {
 

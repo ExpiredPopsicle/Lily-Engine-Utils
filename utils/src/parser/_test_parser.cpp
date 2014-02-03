@@ -39,6 +39,7 @@
 #include <cstdlib>
 using namespace std;
 
+#include "filesystem.h"
 #include "malstring.h"
 #include "lilyparser.h"
 using namespace ExPop;
@@ -67,6 +68,19 @@ int main(int argc, char *argv[]) {
 
         cout << "--------" << endl << *node << endl;
 
+
+        cout << "----------------------------------------------------------------------" << endl;
+        cout << " XML output test" << endl;
+        cout << "----------------------------------------------------------------------" << endl;
+        node->outputXml(cout, 0);
+
+        cout << "----------------------------------------------------------------------" << endl;
+        cout << " JSON output test" << endl;
+        cout << "----------------------------------------------------------------------" << endl;
+        node->outputJson(cout, 0);
+
+
+
         delete node;
 
     } else {
@@ -74,6 +88,29 @@ int main(int argc, char *argv[]) {
         cout << "Parser error: " << errStr << endl;
 
     }
+
+    {
+        string inBuf = FileSystem::loadFileString(
+            "../../utils/src/parser/testdata2.json");
+        ParserNode *node = NULL;
+
+        if(inBuf.size()) {
+            node = parseJsonString(inBuf, NULL);
+            if(node) {
+                node->outputJson(cout, 0);
+            }
+            delete node;
+        }
+    }
+
+
+
+
+    // "testdata.json";
+
+
+
+
 
     return 0;
 }
