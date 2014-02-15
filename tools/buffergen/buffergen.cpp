@@ -39,10 +39,27 @@ using namespace std;
 #include <lilyengine/utils.h>
 using namespace ExPop;
 
+std::string sanitizeName(const std::string &in) {
+    string out;
+    out.reserve(in.size());
+    for(unsigned int i = 0; i < in.size(); i++) {
+        if((in[i] >= 'a' && in[i] <= 'z') ||
+           (in[i] >= 'A' && in[i] <= 'Z') ||
+           (in[i] >= '0' && in[i] <= '9') ||
+           in[i] == '_') {
+            out = out + in[i];
+        } else {
+            out = out + "_";
+        }
+    }
+    return out;
+}
+
 int main(int argc, char *argv[]) {
 
-    if(argc < 3) {
-        cerr << "Specify a file name and a variale name!" << endl;
+    if(argc < 2) {
+        cerr << "Specify a file name and possibly a variable name!" << endl;
+        cerr << "Like this: " << argv[0] << " <filename> [variable]" << endl;
         return 1;
     }
 
@@ -54,8 +71,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    cout << "const unsigned int " << argv[2] << "_len = " << fileLen << ";" << endl;
-    cout << "const char " << argv[2] << "[] = {" << endl;
+    string variableName;
+    if(argc >= 3) {
+        variableName = argv[2];
+    } else {
+        string base = ExPop::FileSystem::getBaseName(argv[1]);
+        string baseNoExt;
+        string junk;
+        stringSplit(base, ".", baseNoExt, junk, true);
+        variableName = sanitizeName(baseNoExt);
+    }
+
+    cout << "const unsigned int " << variableName << "_len = " << fileLen << ";" << endl;
+    cout << "const char " << variableName << "[] = {" << endl;
 
     // Note that this loop goes to one past the end so we can add a
     // null terminating character and use it as a string later. The
