@@ -98,9 +98,11 @@ namespace ExPop {
 
         /// Get a value in the same way as setCustomValue().
         template<class T>
-        inline bool getCustomValue(const std::string &name, T* value) {
-            if(values.count(name)) {
-                std::istringstream str(values[name]);
+        inline bool getCustomValue(const std::string &name, T* value) const {
+            std::map<std::string, std::string>::const_iterator i =
+                values.find(name);
+            if(i != values.end()) {
+                std::istringstream str((*i).second);
                 str >> *value;
                 return true;
             }
