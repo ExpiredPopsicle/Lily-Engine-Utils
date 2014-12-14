@@ -243,6 +243,44 @@ namespace ExPop {
         return ret;
     }
 
+    static DerpObject::Ref table_size(DerpObject::ExternalFuncData &data) {
+
+        DerpBasicType dt = data.parameters[0]->getType();
+        if(dt != DERPTYPE_TABLE) {
+            data.errorState->addError(
+                "Non-table passed to table_size.");
+            return NULL;
+        }
+
+        DerpObject::Ref ret = data.vm->makeObject();
+        ret->setInt((int)data.parameters[0]->getTableSize());
+        return ret;
+    }
+
+    static DerpObject::Ref table_keys(DerpObject::ExternalFuncData &data) {
+
+        DerpBasicType dt = data.parameters[0]->getType();
+        if(dt != DERPTYPE_TABLE) {
+            data.errorState->addError(
+                "Non-table passed to table_keys.");
+            return NULL;
+        }
+
+        DerpObject::Ref ret = data.vm->makeObject();
+        ret->setTable();
+
+        std::vector<DerpObject::Ref> keysArray = data.parameters[0]->getTableKeys();
+
+        for(size_t i = 0; i < keysArray.size(); i++) {
+
+            DerpObject::Ref keyOb = data.vm->makeObject();
+            keyOb->setInt(i);
+
+            ret->setInTable(keyOb, keysArray[i]);
+        }
+
+        return ret;
+    }
 
     static void addInternalFunction(
         DerpVM *vm,
@@ -266,6 +304,8 @@ namespace ExPop {
         addInternalFunction(vm, ctx, "table", makeTable);
         addInternalFunction(vm, ctx, "table_isSet", table_isSet);
         addInternalFunction(vm, ctx, "table_unSet", table_unSet);
+        addInternalFunction(vm, ctx, "table_size", table_size);
+        addInternalFunction(vm, ctx, "table_keys", table_keys);
     }
 }
 

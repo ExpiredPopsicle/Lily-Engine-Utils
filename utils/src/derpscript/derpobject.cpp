@@ -223,6 +223,26 @@ namespace ExPop {
         return NULL;
     }
 
+    unsigned int DerpObject::getTableSize(void) const {
+
+        assert(type == DERPTYPE_TABLE);
+
+        return tableData->size();
+    }
+
+    std::vector<DerpObject::Ref> DerpObject::getTableKeys(void) const {
+
+        assert(type == DERPTYPE_TABLE);
+
+        std::vector<DerpObject::Ref> ret;
+        std::map<DerpObject::Ref, DerpObject::Ref, DerpObjectCompare>::iterator i;
+        for(i = tableData->begin(); i != tableData->end(); i++) {
+            ret.push_back((*i).first);
+        }
+
+        return ret;
+    }
+
     bool DerpObject::isValidKeyType(DerpBasicType t) {
         return
             t == DERPTYPE_STRING ||

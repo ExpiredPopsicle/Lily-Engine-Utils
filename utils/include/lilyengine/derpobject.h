@@ -123,6 +123,12 @@ namespace ExPop {
         /// Get a pointer to the ref that holds an object in a table.
         DerpObject::Ref *getInTablePtr(DerpObject::Ref key);
 
+        /// Get the number of objects in the table.
+        unsigned int getTableSize(void) const;
+
+        /// Get all the keys in a table.
+        std::vector<DerpObject::Ref> getTableKeys(void) const;
+
         /// Determine if a given type is valid for indexing into a
         /// table.
         static bool isValidKeyType(DerpBasicType t);

@@ -71,7 +71,7 @@ namespace ExPop {
         if(vm->execNodeLimit == 0) {
             FLAG_ERROR("Exceeded maximum instruction count.");
             return NULL;
-        } else if(vm->execNodeLimit != ~0) {
+        } else if(vm->execNodeLimit != ~(unsigned int)0) {
             vm->execNodeLimit--;
         }
 
