@@ -351,9 +351,15 @@ namespace ExPop {
 
             if(!result) {
                 if(!obL->getConst()) {
+
                     result = vm->makeObject();
                     result->setInt(0);
+
+                    // Very important: COPY the key instead of just
+                    // referring to the key. This way it won't modify
+                    // the key after it's been created.
                     obL->setInTable(obR->copy(), result);
+
                 } else {
                     FLAG_ERROR("Tried to access a non-existing entry in a const table. Cannot auto-create entry.");
                     return NULL;

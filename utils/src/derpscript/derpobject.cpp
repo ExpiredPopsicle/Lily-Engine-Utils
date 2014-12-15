@@ -42,6 +42,9 @@ using namespace std;
 namespace ExPop {
 
     bool DerpObjectCompare::operator()(const DerpObject::Ref &a, const DerpObject::Ref &b) const {
+        // Look closely. It's not a pointer comparison. It's just
+        // dereferencing things and passing over to the
+        // DerpObject::operator<().
         return *a.getPtr() < *b.getPtr();
     }
 
@@ -721,6 +724,9 @@ namespace ExPop {
                 // TODO: User data.
                 // TODO: Functions.
                 // TODO: External functions.
+
+                // FIXME: ^ These are all disabled in other places
+                // from being keys for tables.
 
             default:
                 // Unimplemented?

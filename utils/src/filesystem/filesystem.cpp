@@ -757,6 +757,8 @@ namespace ExPop {
 
         std::string getCwd(void) {
 
+            // FIXME: Hardcoded directory lengths are bad.
+
             char dirBuf[2048];
 
           #ifdef WIN32

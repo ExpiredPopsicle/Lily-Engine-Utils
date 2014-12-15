@@ -276,7 +276,9 @@ namespace ExPop {
             DerpObject::Ref keyOb = data.vm->makeObject();
             keyOb->setInt(i);
 
-            ret->setInTable(keyOb, keysArray[i]);
+            // Very important: Copy the keys out. Don't just give
+            // anyone access to the real keys inside the table.
+            ret->setInTable(keyOb, keysArray[i]->copy());
         }
 
         return ret;
