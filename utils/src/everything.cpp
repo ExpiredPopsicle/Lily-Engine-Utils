@@ -34,17 +34,50 @@
 // it as part of a project with the cpp files themselves unless you
 // want lots of redefined symbols all over the place.
 
-#include "thread/thread.cpp"
+// These ones depend on or implement the thread module in some way...
+
+// #include "thread/thread.cpp"
+// #include "filesystem/archive.cpp"
+// #include "filesystem/filesystem.cpp"
+// #include "console/console.cpp"
+// #include "parser/parser.cpp"
+// #include "parser/parserxml.cpp"
+// #include "assetloader/assetloader.cpp"
+// #include "preprocess/preprocess.cpp"
+
+// Completely independent systems...
+
+#include "string/base64.cpp"
 #include "string/string.cpp"
-#include "filesystem/archive.cpp"
-#include "filesystem/filesystem.cpp"
-#include "console/console.cpp"
-#include "parser/parser.cpp"
-#include "parser/parserxml.cpp"
+#include "string/pooledstring.cpp"
 #include "assert/malassert.cpp"
 #include "compress/compress.cpp"
 #include "math/matrix.cpp"
 #include "refsystem/refsystem.cpp"
-#include "assetloader/assetloader.cpp"
-#include "preprocess/preprocess.cpp"
+
+// DerpScript...
+
+#include "derpscript/derpcontext.cpp"
+#include "derpscript/derperror.cpp"
+#include "derpscript/derpexecnode_binarymath.cpp"
+#include "derpscript/derpexecnode.cpp"
+#include "derpscript/derpexecnode_function.cpp"
+#include "derpscript/derpexecnode_loop.cpp"
+#include "derpscript/derpexecnode_unarymath.cpp"
+#include "derpscript/derplexer.cpp"
+#include "derpscript/derpobject.cpp"
+#include "derpscript/derpparser_block.cpp"
+#include "derpscript/derpparser.cpp"
+#include "derpscript/derpparser_debug.cpp"
+#include "derpscript/derpparser_expression.cpp"
+#include "derpscript/derpparser_functioncall.cpp"
+#include "derpscript/derpparser_function.cpp"
+#include "derpscript/derpparser_ifelse.cpp"
+#include "derpscript/derpparser_index.cpp"
+#include "derpscript/derpparser_loops.cpp"
+#include "derpscript/derpparser_statement.cpp"
+#include "derpscript/derpparser_value.cpp"
+#include "derpscript/derpparser_variabledec.cpp"
+#include "derpscript/derpvm_builtinfunctions.cpp"
+#include "derpscript/derpvm.cpp"
 
