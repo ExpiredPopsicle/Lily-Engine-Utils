@@ -22,7 +22,6 @@ env.Program("lilytodoscan", [
         "todoscan/todoscan.cpp",
         "todoscan/orgmodestuff.cpp",
         "todoscan/commentblock.cpp"]);
-env.Program("derp", "derpscript/derp.cpp");
 toolArchiver = env.Program("lilyarchiver", "archiver/archiver.cpp");
 
 # Poop file builder.

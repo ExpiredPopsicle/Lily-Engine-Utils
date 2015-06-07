@@ -48,36 +48,11 @@
 // Completely independent systems...
 
 #include "string/base64.cpp"
+// FIXME: These two stolen by DerpScript.
 #include "string/string.cpp"
-#include "string/pooledstring.cpp"
+// #include "string/pooledstring.cpp"
 #include "assert/malassert.cpp"
 #include "compress/compress.cpp"
 #include "math/matrix.cpp"
 #include "refsystem/refsystem.cpp"
-
-// DerpScript...
-
-#include "derpscript/derpcontext.cpp"
-#include "derpscript/derperror.cpp"
-#include "derpscript/derpexecnode_binarymath.cpp"
-#include "derpscript/derpexecnode.cpp"
-#include "derpscript/derpexecnode_function.cpp"
-#include "derpscript/derpexecnode_loop.cpp"
-#include "derpscript/derpexecnode_unarymath.cpp"
-#include "derpscript/derplexer.cpp"
-#include "derpscript/derpobject.cpp"
-#include "derpscript/derpparser_block.cpp"
-#include "derpscript/derpparser.cpp"
-#include "derpscript/derpparser_debug.cpp"
-#include "derpscript/derpparser_expression.cpp"
-#include "derpscript/derpparser_functioncall.cpp"
-#include "derpscript/derpparser_function.cpp"
-#include "derpscript/derpparser_ifelse.cpp"
-#include "derpscript/derpparser_index.cpp"
-#include "derpscript/derpparser_loops.cpp"
-#include "derpscript/derpparser_statement.cpp"
-#include "derpscript/derpparser_value.cpp"
-#include "derpscript/derpparser_variabledec.cpp"
-#include "derpscript/derpvm_builtinfunctions.cpp"
-#include "derpscript/derpvm.cpp"
 

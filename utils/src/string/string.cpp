@@ -802,6 +802,7 @@ namespace ExPop {
         return str.substr(start, end - start + 1);
     }
 
+    // FIXME: Not UTF-8 compatible.
     std::string strWordWrap(
         const std::string &str,
         unsigned int columns,
