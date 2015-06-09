@@ -29,20 +29,34 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// For memset.
+#include <cstring>
+
 #include "cryptorc4.h"
 
-namespace ExPop {
-
-    CryptoRC4::CryptoRC4(void) {
+namespace ExPop
+{
+    CryptoRC4::CryptoRC4()
+    {
         for(unsigned int i = 0; i < 256; i++) {
             state[i] = i;
         }
+        state_i = 0;
+        state_j = 0;
     }
 
-    static inline void swapChar(unsigned char &a, unsigned char &b) {
+    CryptoRC4::~CryptoRC4()
+    {
+        state_i = 0;
+        state_j = 0;
+        std::memset(state, 0, sizeof(state));
+    }
 
-        // For some reason, the XOR swap trick isn't working. What the
-        // hell?
+    static inline void swapChar(unsigned char &a, unsigned char &b)
+    {
+        // The XOR swap trick isn't working, because sometimes we're
+        // passed the same reference for both parameters. It's here in
+        // case we ever want to fix that.
 
         // a = a ^ b;
         // b = a ^ b;
@@ -55,12 +69,12 @@ namespace ExPop {
         b = tmp;
     }
 
-    void CryptoRC4::setKey(const void *keyBytes, size_t keyLen) {
-
+    void CryptoRC4::setKey(const void *keyBytes, size_t keyLen)
+    {
         unsigned int j = 0;
 
         for(unsigned int i = 0; i < 256; i++) {
-            // unsigned int keyIndex = i % keyLen;
+
             unsigned char keyVal =
                 ((const unsigned char*)keyBytes)[i % keyLen];
 
@@ -69,22 +83,25 @@ namespace ExPop {
         }
     }
 
-    void CryptoRC4::encrypt(void *data, size_t length) {
+    unsigned char CryptoRC4::getRandomness()
+    {
+        state_i = (state_i + 1) % 256;
+        state_j = (state_j + state[state_i]) % 256;
 
-        unsigned int i = 0;
-        unsigned int j = 0;
+        swapChar(state[state_i], state[state_j]);
+
+        unsigned int n = state[state_i] + state[state_j];
+
+        return state[n % 256];
+    }
+
+    void CryptoRC4::encrypt(void *data, size_t length)
+    {
         unsigned int msgPt = 0;
 
         do {
-            i = (i + 1) % 256;
-            j = (j + state[i]) % 256;
-
-            swapChar(state[i], state[j]);
-
-            unsigned int n = state[i] + state[j];
-
             unsigned char *dataPtr = ((unsigned char*)data) + msgPt;
-            *dataPtr = *dataPtr ^ state[n % 256];
+            *dataPtr = *dataPtr ^ getRandomness();
 
             msgPt++;
 

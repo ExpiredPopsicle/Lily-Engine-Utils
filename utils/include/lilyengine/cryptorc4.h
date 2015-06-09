@@ -29,6 +29,10 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// FIXME: This implementation has not been tested against any examples
+//   since it was changed to have the randomness generation split off
+//   from the actual encryption.
+
 #pragma once
 
 // For size_t
@@ -40,7 +44,8 @@ namespace ExPop {
     class CryptoRC4 {
     public:
 
-        CryptoRC4(void);
+        CryptoRC4();
+        ~CryptoRC4();
 
         /// Set the key and initialize the state array. This can be
         /// called multiple times to slightly mitigate some weaknesses
@@ -51,8 +56,30 @@ namespace ExPop {
         /// Encrypt data in-place. Modifies input!
         void encrypt(void *data, size_t length);
 
+        /// Just get the random values that would normally be XORed to
+        /// encrypt or decrypt. Gets one byte of randomness.
+        unsigned char getRandomness();
+
+        /// This gets a random integer of some integer type. Doesn't
+        /// care about sign bits so you probably want to use with
+        /// unsigned types only.
+        template<typename T>
+        T getRandomIntegral()
+        {
+            static_assert(
+                std::is_integral<T>::value,
+                "Some kind of integer-like thing required.");
+            T val;
+            for(size_t i = 0; i < sizeof(T); i++) {
+                *(((unsigned char*)&val) + i) = getRandomness();
+            }
+            return val;
+        }
+
     private:
 
+        uint32_t state_i;
+        uint32_t state_j;
         unsigned char state[256];
 
     };

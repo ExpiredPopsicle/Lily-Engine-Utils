@@ -55,4 +55,5 @@
 #include "compress/compress.cpp"
 #include "math/matrix.cpp"
 #include "refsystem/refsystem.cpp"
+#include "crypto/cryptorc4.cpp"
 
