@@ -396,7 +396,7 @@ namespace ExPop {
     // ----------------------------------------------------------------------
 
     // Different from the normal output indent!
-    static void indentOutput(ostream &out, int indentLevel) {
+    static void indentOutputJson(ostream &out, int indentLevel) {
         for(int i = 0; i < indentLevel; i++) {
             out << "  ";
         }
@@ -521,7 +521,7 @@ namespace ExPop {
         bool lineStart) const {
 
         if(lineStart) {
-            indentOutput(out, indentLevel);
+            indentOutputJson(out, indentLevel);
         }
 
         if(name == "_arrayObject") {
@@ -549,7 +549,7 @@ namespace ExPop {
             for(std::map<std::string, std::string>::const_iterator i = values.begin();
                 i != values.end(); i++) {
 
-                indentOutput(out, indentLevel + 1);
+                indentOutputJson(out, indentLevel + 1);
                 out << "\"" << stringEscape((*i).first) << "\": ";
                 printJsonValue((*i).second, out);
 
@@ -564,7 +564,7 @@ namespace ExPop {
 
         // Print out children.
         for(int i = 0; i < getNumChildren(); i++) {
-            indentOutput(out, indentLevel + 1);
+            indentOutputJson(out, indentLevel + 1);
 
             if(!isArray) {
                 out << "\"" << stringEscape(children[i]->name) << "\": ";
