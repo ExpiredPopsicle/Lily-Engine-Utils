@@ -440,8 +440,9 @@ namespace ExPop {
         // ITT ternary operator abuse for clever for loops that go in
         // whatever direction we want.
         for(unsigned int i = (startFromEnd ? str.size() - 1 : 0);
-            // FIXME: i >= 0 test doesn't actually do anything.
-            (startFromEnd ? (i >= 0) : (i < str.size()));
+            // startFromEnd logic handled separately before overflow
+            // can happen.
+            startFromEnd || (i < str.size());
             i += (startFromEnd ? -1 : 1)) {
 
             if(str[i] == divider[0]) {
