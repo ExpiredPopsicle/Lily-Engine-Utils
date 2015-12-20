@@ -90,17 +90,17 @@ namespace ExPop {
         /// Set a value that can be written to a normal ostream and
         /// read from an istream.
         template<class T>
-        inline void setCustomValue(const std::string &name, const T* value) {
+        inline void setCustomValue(const std::string &valueName, const T* value) {
             std::ostringstream str;
             str << *value;
-            values[name] = str.str();
+            values[valueName] = str.str();
         }
 
         /// Get a value in the same way as setCustomValue().
         template<class T>
-        inline bool getCustomValue(const std::string &name, T* value) const {
+        inline bool getCustomValue(const std::string &valueName, T* value) const {
             std::map<std::string, std::string>::const_iterator i =
-                values.find(name);
+                values.find(valueName);
             if(i != values.end()) {
                 std::istringstream str((*i).second);
                 str >> *value;

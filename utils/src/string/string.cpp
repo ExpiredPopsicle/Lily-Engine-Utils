@@ -919,18 +919,18 @@ namespace ExPop {
     //   SimpleBuffer stuff after this point.
     // ----------------------------------------------------------------------
 
-    SimpleBuffer::SimpleBuffer(const void *data, size_t length, bool myOwnData) {
+    SimpleBuffer::SimpleBuffer(const void *inData, size_t inLength, bool inMyOwnData) {
 
-        this->myOwnData = myOwnData;
+        this->myOwnData = inMyOwnData;
 
         this->length = 0;
 
-        if(myOwnData) {
+        if(inMyOwnData) {
 
             // This object keeps its own copy of the data.
-            this->data = (char*)malloc(length);
-            this->length = length;
-            memcpy(this->data, data, length);
+            this->data = (char*)malloc(inLength);
+            this->length = inLength;
+            memcpy(this->data, inData, inLength);
 
         } else {
 
@@ -938,8 +938,8 @@ namespace ExPop {
 
             // FIXME: This just gets rid of the const. Probably a really
             // horrible way to handle this, but whatever.
-            memcpy(&this->data, &data, sizeof(void*));
-            this->length = length;
+            memcpy(&this->data, &inData, sizeof(void*));
+            this->length = inLength;
         }
 
         readPtr = 0;
@@ -964,11 +964,11 @@ namespace ExPop {
         data = NULL;
     }
 
-    void SimpleBuffer::addData(const void *buffer, size_t length) {
+    void SimpleBuffer::addData(const void *buffer, size_t inLength) {
 
         assert(myOwnData);
 
-        size_t newLength = length + this->length;
+        size_t newLength = inLength + this->length;
         size_t oldLength = this->length;
 
         if(data) {
@@ -979,7 +979,7 @@ namespace ExPop {
 
         char *dataWritePtr = data + oldLength;
 
-        memcpy(dataWritePtr, buffer, length);
+        memcpy(dataWritePtr, buffer, inLength);
 
         this->length = newLength;
     }
@@ -1025,14 +1025,14 @@ namespace ExPop {
         return length;
     }
 
-    int SimpleBuffer::compare(const void *buffer, size_t length) {
+    int SimpleBuffer::compare(const void *inBuffer, size_t inLength) {
 
-        if(length < this->length) return 1;
-        if(length > this->length) return -1;
+        if(inLength < this->length) return 1;
+        if(inLength > this->length) return -1;
 
-        const char *cbuf = (const char *)buffer;
+        const char *cbuf = (const char *)inBuffer;
 
-        for(size_t i = 0; i < length; i++) {
+        for(size_t i = 0; i < inLength; i++) {
             if(data[i] > cbuf[i]) {
                 return 1;
             }
