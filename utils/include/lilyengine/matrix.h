@@ -215,6 +215,12 @@ namespace ExPop {
         /// Cross product.
         inline MyType crossProduct(const MyType &v) const;
 
+        /// Get number of rows.
+        static inline size_t getNumRows();
+
+        /// Get number of columns.
+        static inline size_t getNumCols();
+
         // ----------------------------------------------------------------------
         // Debug junk.
         // ----------------------------------------------------------------------
@@ -785,6 +791,18 @@ namespace ExPop {
         out.data[2] =  data[0]   * v.data[1] - data[1]   *  v.data[0];
 
         return out;
+    }
+
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline size_t Matrix<MatScalar, ROWS, COLS>::getNumRows()
+    {
+        return ROWS;
+    }
+
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline size_t Matrix<MatScalar, ROWS, COLS>::getNumCols()
+    {
+        return COLS;
     }
 
     // Utility/helper functions...
