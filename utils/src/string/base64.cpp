@@ -136,7 +136,7 @@ namespace ExPop {
         static const char strBase64Lookup[] =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz"
-            "01234567890"
+            "0123456789"
             "+/";
 
         size_t tmpLength = length;
