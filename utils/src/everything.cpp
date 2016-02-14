@@ -51,7 +51,7 @@
 // FIXME: These two stolen by DerpScript.
 #include "string/string.cpp"
 // #include "string/pooledstring.cpp"
-#include "assert/malassert.cpp"
+// #include "assert/malassert.cpp"
 #include "compress/compress.cpp"
 #include "math/matrix.cpp"
 #include "refsystem/refsystem.cpp"
