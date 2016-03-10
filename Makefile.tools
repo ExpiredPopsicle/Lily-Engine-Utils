@@ -1,0 +1,12 @@
+buffergen : tools/buffergen/buffergen.cpp
+	clang++ --std=c++11 \
+		tools/buffergen/buffergen.cpp \
+		utils/src/everything.cpp \
+		utils/src/filesystem/filesystem.cpp \
+		utils/src/filesystem/archive.cpp \
+		utils/src/thread/thread.cpp \
+		utils/src/console/console.cpp \
+		utils/src/assert/malassert.cpp \
+		-pthread \
+		-Iutils/include \
+		-Iutils/include/lilyengine -o $@
