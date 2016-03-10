@@ -44,20 +44,6 @@ using namespace std;
 
 namespace ExPop {
 
-    bool strStartsWith(const std::string &needle, const std::string &haystack) {
-        if(haystack.size() < needle.size()) return false;
-        return strncmp(needle.c_str(), haystack.c_str(), needle.size()) == 0;
-    }
-
-    bool strEndsWith(const std::string &needle, const std::string &haystack) {
-        if(haystack.size() < needle.size()) return false;
-        return strncmp(needle.c_str(), haystack.c_str() + (haystack.size() - needle.size()), needle.size()) == 0;
-    }
-
-    bool isWhiteSpace(char c) {
-        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-    }
-
     void stringTokenize(const std::string &str, const std::string &delims, std::vector<std::string> &tokens, bool allowEmpty) {
 
         unsigned int i = 0;
@@ -93,88 +79,6 @@ namespace ExPop {
                 tokens.push_back(token);
             }
         }
-    }
-
-    std::string stringEscape(const std::string &str, const std::string &newLineReplace) {
-
-        ostringstream outStr;
-
-        for(unsigned int i = 0; i < str.size(); i++) {
-
-            switch(str[i]) {
-
-                case '"':
-                    outStr << "\\\"";
-                    break;
-
-                case '\\':
-                    outStr << "\\\\";
-                    break;
-
-                case '\n':
-                    outStr << newLineReplace;
-                    break;
-
-                case '\r':
-                    outStr << "\\r";
-                    break;
-
-                default:
-                    outStr << str[i];
-                    break;
-            }
-
-        }
-
-        return outStr.str();
-
-    }
-
-    std::string stringUnescape(const std::string &str) {
-
-        ostringstream outStr;
-
-        for(unsigned int i = 0; i < str.size(); i++) {
-
-            if(str[i] == '\\') {
-
-                i++;
-
-                if(i >= str.size()) break;
-
-                switch(str[i]) {
-
-                    case '\\':
-                        outStr << "\\";
-                        break;
-
-                    case '"':
-                        outStr << "\"";
-                        break;
-
-                    case 'n':
-                        outStr << "\n";
-                        break;
-
-                    case 'r':
-                        outStr << "\r";
-                        break;
-
-                    default:
-                        // What the heck is this?
-                        outStr << str[i];
-                        break;
-
-                }
-
-            } else {
-
-                outStr << str[i];
-
-            }
-        }
-
-        return outStr.str();
     }
 
     std::string stringXmlEscape(const std::string &str) {
@@ -227,22 +131,22 @@ namespace ExPop {
 
                 if(i >= str.size()) break;
 
-                if(strStartsWith("amp;", str.c_str() + i)) {
+                if(strStartsWith<char>("amp;", str.c_str() + i)) {
 
                     i += 3;
                     outStr << '&';
 
-                } else if(strStartsWith("quot;", str.c_str() + i)) {
+                } else if(strStartsWith<char>("quot;", str.c_str() + i)) {
 
                     i += 4;
                     outStr << '"';
 
-                } else if(strStartsWith("lt;", str.c_str() + i)) {
+                } else if(strStartsWith<char>("lt;", str.c_str() + i)) {
 
                     i += 2;
                     outStr << '<';
 
-                } else if(strStartsWith("gt;", str.c_str() + i)) {
+                } else if(strStartsWith<char>("gt;", str.c_str() + i)) {
 
                     i += 2;
                     outStr << '>';

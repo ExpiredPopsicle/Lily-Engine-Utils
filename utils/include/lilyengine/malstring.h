@@ -35,6 +35,8 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <cassert>
+#include <sstream>
 
 namespace ExPop {
 
@@ -42,17 +44,45 @@ namespace ExPop {
     // string). Possibly toss it into a namespace under ExPop.
 
     /// Return true if the character is whitespace. False otherwise.
-    bool isWhiteSpace(char c);
+    template<typename T>
+    inline bool isWhiteSpace(T c)
+    {
+        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    }
 
     /// Simple function to see if a string starts with another string.
     /// (needle is the string we're looking for, haystack is the
     /// string we're looking in).
-    bool strStartsWith(const std::string &needle, const std::string &haystack);
+    template<typename T>
+    inline bool strStartsWith(
+        const std::basic_string<T> &needle,
+        const std::basic_string<T> &haystack)
+    {
+        if(haystack.size() < needle.size()) return false;
+        for(size_t i = 0; i < needle.size(); i++) {
+            if(needle[i] != haystack[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /// Return true if one string ends with another string. (needle is
     /// the string we're looking for, haystack is the string we're
     /// looking in).
-    bool strEndsWith(const std::string &needle, const std::string &haystack);
+    template<typename T>
+    inline bool strEndsWith(
+        const std::basic_string<T> &needle,
+        const std::basic_string<T> &haystack)
+    {
+        if(haystack.size() < needle.size()) return false;
+        for(size_t i = 0; i < needle.size(); i++) {
+            if(needle[i] != haystack[haystack.size() - needle.size() + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /// Generate tokens from a string. Stores saved tokens into the
     /// passed-in tokens parameter.
@@ -62,14 +92,97 @@ namespace ExPop {
         std::vector<std::string> &tokens,
         bool allowEmpty = false);
 
-    // TODO: Advanced string tokenization, escape/unescape, etc.
-
     /// Escape a string. newLineReplace will be used to replace new
     /// lines.
-    std::string stringEscape(const std::string &str, const std::string &newLineReplace = "\\n");
+    template<typename T>
+    inline std::basic_string<T> stringEscape(
+        const std::basic_string<T> &str,
+        bool replaceNewlines = true)
+    {
+        std::basic_ostringstream<T> outStr;
+
+        for(unsigned int i = 0; i < str.size(); i++) {
+
+            switch(str[i]) {
+
+                case '"':
+                    outStr << '\\' << '\"';
+                    break;
+
+                case '\\':
+                    outStr << '\\' << '\\';
+                    break;
+
+                case '\n':
+                    if(replaceNewlines) {
+                        outStr << '\\' << 'n';
+                    }
+                    break;
+
+                case '\r':
+                    outStr << '\\' << 'r';
+                    break;
+
+                default:
+                    outStr << str[i];
+                    break;
+            }
+
+        }
+
+        return outStr.str();
+    }
 
     /// Unescape a string.
-    std::string stringUnescape(const std::string &str);
+    template<typename T>
+    std::basic_string<T> stringUnescape(
+        const std::basic_string<T> &str)
+    {
+        std::basic_ostringstream<T> outStr;
+
+        for(unsigned int i = 0; i < str.size(); i++) {
+
+            if(str[i] == '\\') {
+
+                i++;
+
+                if(i >= str.size()) break;
+
+                switch(str[i]) {
+
+                    case '\\':
+                        outStr << '\\';
+                        break;
+
+                    case '"':
+                        outStr << '\"';
+                        break;
+
+                    case 'n':
+                        outStr << '\n';
+                        break;
+
+                    case 'r':
+                        outStr << '\r';
+                        break;
+
+                    default:
+                        // What the heck is this?
+                        outStr << str[i];
+                        break;
+
+                }
+
+            } else {
+
+                outStr << str[i];
+
+            }
+        }
+
+        return outStr.str();
+
+    }
 
     /// Escape a string by adding some XML entities. Only a few of
     /// them.
@@ -228,5 +341,16 @@ namespace ExPop {
 		size_t readPtr;
     };
 
+
+
+    inline void doStringTests()
+    {
+        assert(strStartsWith<char>("dick", "dickbutts"));
+        assert(strEndsWith<char>("butts", "dickbutts"));
+        assert(!strEndsWith<char>("dick", "dickbutts"));
+        assert(!strStartsWith<char>("butts", "dickbutts"));
+        assert(stringUnescape<char>("foo\\n\\\\") == "foo\n\\");
+        assert("foo\\n\\\\" == stringEscape<char>("foo\n\\"));
+    }
 };
 
