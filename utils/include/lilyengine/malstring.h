@@ -116,6 +116,8 @@ namespace ExPop {
                 case '\n':
                     if(replaceNewlines) {
                         outStr << '\\' << 'n';
+                    } else {
+                        outStr << str[i];
                     }
                     break;
 
