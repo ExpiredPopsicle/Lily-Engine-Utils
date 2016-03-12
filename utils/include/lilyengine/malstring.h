@@ -54,7 +54,7 @@ namespace ExPop {
     /// (needle is the string we're looking for, haystack is the
     /// string we're looking in).
     template<typename T>
-    inline bool strStartsWith(
+    inline bool stringStartsWith(
         const std::basic_string<T> &needle,
         const std::basic_string<T> &haystack)
     {
@@ -71,7 +71,7 @@ namespace ExPop {
     /// the string we're looking for, haystack is the string we're
     /// looking in).
     template<typename T>
-    inline bool strEndsWith(
+    inline bool stringEndsWith(
         const std::basic_string<T> &needle,
         const std::basic_string<T> &haystack)
     {
@@ -137,7 +137,7 @@ namespace ExPop {
 
     /// Unescape a string.
     template<typename T>
-    std::basic_string<T> stringUnescape(
+    inline std::basic_string<T> stringUnescape(
         const std::basic_string<T> &str)
     {
         std::basic_ostringstream<T> outStr;
@@ -224,40 +224,45 @@ namespace ExPop {
     // TODO: Switch all UTF-32 vectors from unsigned int type over to
     // uint32_t.
 
-    /// Convert a UTF-8 string to a UTF-32 string (represented as an
-    /// std::vector of unsigned integers).
-    void strUTF8ToUTF32(
-        const std::string &utf8Str,
-        std::vector<unsigned int> &utf32Out);
+    /// Convert a UTF-8 string to a UTF-32 string.
+    std::basic_string<uint32_t> strUTF8ToUTF32(
+        const std::string &utf8Str);
 
-    /// Convert a UTF-32 string (as an std::vector of unsigned
-    /// integers) to a UTF-8 string.
-    void strUTF32ToUTF8(
-        const std::vector<unsigned int> &utf32Str,
-        std::string &utf8Out);
-
-    /// Pass in arrays of this to strToConst or constToStr. Last one
-    /// is a default entry with a zero-length string.
-    struct StringToConstMapping {
-        const char *str;
-        int val;
-    };
-
-    /// Look up a string in a table of string to constant conversions.
-    int strToConst(
-        const std::string &str,
-        const StringToConstMapping *table,
-        const std::string &fieldName = "unknown",
-        std::ostream *errorOut = &(std::cout));
-
-    /// Look up a constant in a table of string to constant conversions.
-    std::string constToStr(
-        int value,
-        const StringToConstMapping *table);
+    /// Convert a UTF-32 string to a UTF-8 string.
+    std::string strUTF32ToUTF8(
+        const std::vector<unsigned int> &utf32Str);
 
     /// Return a string with all the trailing and leading whitespace
     /// removed.
-    std::string strTrim(const std::string &str);
+    template<typename T>
+    std::basic_string<T> stringTrim(const std::basic_string<T> &str)
+    {
+        if(!str.size()) {
+            return std::basic_string<T>();
+        }
+
+        // Find the start (first non-whitespace character).
+        unsigned int start = 0;
+        while(start < str.size() && isWhiteSpace(str[start])) {
+            start++;
+        }
+
+        // All whitespace? Return now. Otherwise we'll end up with
+        // some serious issues when the end is the start and the start
+        // is the end.
+        if(start == str.size()) {
+            return std::basic_string<T>();
+        }
+
+        // Find the end.
+        size_t end = str.size() - 1;
+        while(isWhiteSpace(str[end]) && end != 0) {
+            end--;
+        }
+
+        // Just return the substring.
+        return str.substr(start, end - start + 1);
+    }
 
     /// Returns a word-wrapped version of the input string, wrapped at
     /// the number of characters in columns.
@@ -347,12 +352,18 @@ namespace ExPop {
 
     inline void doStringTests()
     {
-        assert(strStartsWith<char>("dick", "dickbutts"));
-        assert(strEndsWith<char>("butts", "dickbutts"));
-        assert(!strEndsWith<char>("dick", "dickbutts"));
-        assert(!strStartsWith<char>("butts", "dickbutts"));
+        assert(stringStartsWith<char>("dick", "dickbutts"));
+        assert(stringEndsWith<char>("butts", "dickbutts"));
+        assert(!stringEndsWith<char>("dick", "dickbutts"));
+        assert(!stringStartsWith<char>("butts", "dickbutts"));
         assert(stringUnescape<char>("foo\\n\\\\") == "foo\n\\");
         assert("foo\\n\\\\" == stringEscape<char>("foo\n\\"));
+        assert(stringTrim<char>("  asdf") == std::string("asdf"));
+        assert(stringTrim<char>("asdf  ") == std::string("asdf"));
+        assert(stringTrim<char>("  asdf  ") == std::string("asdf"));
+        assert(stringTrim<char>("asdf") == std::string("asdf"));
+        assert(stringTrim<char>("  ") == std::string(""));
+        assert(stringTrim<char>("") == std::string(""));
     }
 };
 

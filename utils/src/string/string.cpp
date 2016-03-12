@@ -131,22 +131,22 @@ namespace ExPop {
 
                 if(i >= str.size()) break;
 
-                if(strStartsWith<char>("amp;", str.c_str() + i)) {
+                if(stringStartsWith<char>("amp;", str.c_str() + i)) {
 
                     i += 3;
                     outStr << '&';
 
-                } else if(strStartsWith<char>("quot;", str.c_str() + i)) {
+                } else if(stringStartsWith<char>("quot;", str.c_str() + i)) {
 
                     i += 4;
                     outStr << '"';
 
-                } else if(strStartsWith<char>("lt;", str.c_str() + i)) {
+                } else if(stringStartsWith<char>("lt;", str.c_str() + i)) {
 
                     i += 2;
                     outStr << '<';
 
-                } else if(strStartsWith<char>("gt;", str.c_str() + i)) {
+                } else if(stringStartsWith<char>("gt;", str.c_str() + i)) {
 
                     i += 2;
                     outStr << '>';
@@ -450,11 +450,10 @@ namespace ExPop {
 #define b00111111 63
 
     // TODO: Handle byte order marker.
-    void strUTF8ToUTF32(
-        const std::string &utf8Str,
-        std::vector<unsigned int> &utf32Out) {
+    std::basic_string<uint32_t> strUTF8ToUTF32(
+        const std::string &utf8Str) {
 
-        utf32Out.clear();
+        std::basic_string<uint32_t> utf32Out;
 
         // TODO: Recognize and discard the UTF-8 byte order mark. (The
         // only byte order mark that even means anything in UTF-8.)
@@ -485,7 +484,7 @@ namespace ExPop {
 
             // (1 << validBitsInFirstByte) - 1 should turn into a mask of
             // bits that we can use on the first byte.
-            unsigned int outCharacter = inByte & ((1 << validBitsInFirstByte) - 1);
+            uint32_t outCharacter = inByte & ((1 << validBitsInFirstByte) - 1);
 
             for(unsigned int j = 0; j < numExtraBytes; j++) {
 
@@ -499,6 +498,7 @@ namespace ExPop {
             utf32Out.push_back(outCharacter);
         }
 
+        return utf32Out;
     }
 
     static int findHighestBit(unsigned int bits) {
@@ -536,9 +536,8 @@ namespace ExPop {
     //     return str.str();
     // }
 
-    void strUTF32ToUTF8(
-        const std::vector<unsigned int> &utf32Str,
-        std::string &utf8Out) {
+    std::string strUTF32ToUTF8(
+        const std::vector<unsigned int> &utf32Str) {
 
         ostringstream outStr;
 
@@ -586,6 +585,7 @@ namespace ExPop {
                 unsigned int outByte = 0;
                 for(int fb = numFullBytes; fb > 0; fb--) {
 
+                    // Try not to think about this line too hard.
                     outByte = 0x80 | ((utf32Str[i] >> (6 * (numFullBytes - fb))) & (b00111111));
 
                     tmpOutChunk[fb] = char(outByte);
@@ -620,91 +620,7 @@ namespace ExPop {
             }
         }
 
-        // Done. Now just copy out the string.
-        utf8Out = outStr.str();
-    }
-
-    int strToConst(
-        const std::string &str,
-        const StringToConstMapping *table,
-        const std::string &fieldName,
-        std::ostream *errorOut) {
-
-        // Try to find whatever value in the table.
-
-        int i;
-        for(i = 0; strlen(table[i].str); i++) {
-            if(str == table[i].str) {
-                return table[i].val;
-            }
-        }
-
-        if(str.size() && errorOut) {
-
-            // Tried to have a value, but didn't find a match. Show an
-            // error. If the user didn't specify a value we'd just go
-            // with the default without complaining.
-
-            (*errorOut) << "Unknown value (" << str << ") for field " << fieldName << endl;
-            (*errorOut) << "Possible values are..." << endl;
-
-            for(int j = 0; strlen(table[j].str); j++) {
-                (*errorOut) << "  " << table[j].str << endl;
-            }
-        }
-
-        // TODO: Possibly fill up a table of autocomplete
-        // possibilities for whatever we got as input.
-
-        // i is still at the final, default value, so just go ahead
-        // and return that.
-        return table[i].val;
-
-    }
-
-    std::string constToStr(
-        int value,
-        const StringToConstMapping *table) {
-
-        int i;
-        for(i = 0; strlen(table[i].str); i++) {
-            if(table[i].val == value) {
-                return table[i].str;
-            }
-        }
-
-        return "";
-    }
-
-    std::string strTrim(const std::string &str) {
-
-        if(!str.size()) return "";
-
-        unsigned int start = 0;
-
-        // Find the start.
-        while(start < str.size() && isWhiteSpace(str[start])) {
-            start++;
-        }
-
-        // All whitespace? Return now. Otherwise we'll end up with
-        // some serious issues when the end is the start and the start
-        // is the end.
-        if(start == str.size()) return "";
-
-        // Find the end.
-        unsigned int end = str.size() - 1;
-        while(1) {
-
-            if(!isWhiteSpace(str[end])) {
-                break;
-            }
-
-            if(end == 0) break;
-            end--;
-        }
-
-        return str.substr(start, end - start + 1);
+        return outStr.str();
     }
 
     // FIXME: Not UTF-8 compatible.
