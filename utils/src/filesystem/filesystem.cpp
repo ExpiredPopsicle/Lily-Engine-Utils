@@ -742,7 +742,7 @@ namespace ExPop {
 
             for(unsigned int i = 0; i < inputList.size(); i++) {
                 for(unsigned int j = 0; j < extensions.size(); j++) {
-                    if(strEndsWith(string(".") + extensions[j], inputList[i])) {
+                    if(stringEndsWith(string(".") + extensions[j], inputList[i])) {
 
                         // This check only does anything if the list is
                         // sorted. Removes doubles.
