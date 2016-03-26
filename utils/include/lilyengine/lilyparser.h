@@ -214,8 +214,8 @@ namespace ExPop {
 
     // TODO: istream input.
 
-    /// Load and parse a file.
-    ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr = NULL);
+    // /// Load and parse a file.
+    // ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr = NULL);
 
     /// Internal token. Used by multiple parser modules.
     class ParserToken {

@@ -225,7 +225,7 @@ namespace ExPop {
 
                     string tokStr;
                     if(tokens[tokNum]->type == XMLTOKEN_TEXT) {
-                        tokStr = strTrim(tokens[tokNum]->str);
+                        tokStr = stringTrim(tokens[tokNum]->str);
                     } else {
                         tokStr = tokens[tokNum]->str;
                     }

@@ -162,7 +162,9 @@ namespace ExPop {
                     indented = indented + "    ";
                 }
 
-                escapedOut = stringEscape((*i).second, "\\n\"\n" + indented + "\"");
+                escapedOut = stringEscape(
+                    // (*i).second, "\\n\"\n" + indented + "\"");
+                    (*i).second, true);
 
                 out << indented << "\"" << escapedOut << "\";" << endl;
 
@@ -706,7 +708,9 @@ namespace ExPop {
                 strncpy(quoteCStr, buf + quoteStartPos, quoteLength);
                 quoteCStr[quoteLength] = 0;
 
-                tokens.push_back(new ParserToken(stringUnescape(quoteCStr + 1), PT_STRING, lineNumber));
+                tokens.push_back(new ParserToken(
+                        stringUnescape<char>(quoteCStr + 1),
+                        PT_STRING, lineNumber));
 
                 delete[] quoteCStr;
 
@@ -823,21 +827,21 @@ namespace ExPop {
 
     }
 
-    ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr) {
+    // ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr) {
 
-        int length = 0;
-        char *inBuf = FileSystem::loadFile(fileName, &length);
-        ParserNode *node = NULL;
+    //     int length = 0;
+    //     char *inBuf = FileSystem::loadFile(fileName, &length);
+    //     ParserNode *node = NULL;
 
-        if(inBuf) {
-            node = parseBuffer(inBuf, length, errorStr);
-            delete[] inBuf;
-        } else if(errorStr) {
-            *errorStr = "Failed to open file";
-        }
+    //     if(inBuf) {
+    //         node = parseBuffer(inBuf, length, errorStr);
+    //         delete[] inBuf;
+    //     } else if(errorStr) {
+    //         *errorStr = "Failed to open file";
+    //     }
 
-        return node;
-    }
+    //     return node;
+    // }
 
 }
 
