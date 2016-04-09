@@ -183,6 +183,9 @@ namespace ExPop {
         /// Just get the first child with this name.
         ParserNode *getChildByName(const std::string &name);
 
+        /// Clone the entire tree.
+        ParserNode *clone() const;
+
     private:
 
         std::map<std::string, std::string> values;

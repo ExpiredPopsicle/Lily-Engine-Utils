@@ -843,5 +843,21 @@ namespace ExPop {
     //     return node;
     // }
 
+    ParserNode *ParserNode::clone() const
+    {
+        assert(this);
+        ParserNode *newNode = new ParserNode(getName());
+        newNode->values = values;
+        for(size_t i = 0; i < children.size(); i++) {
+            ParserNode *newChild = nullptr;
+            if(children[i]) {
+                newChild = children[i]->clone();
+            }
+            newNode->children.push_back(newChild);
+        }
+
+        return newNode;
+    }
+
 }
 
