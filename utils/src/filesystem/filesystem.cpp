@@ -60,7 +60,14 @@ namespace ExPop {
 
     namespace FileSystem {
 
+        // Stick in a fake mutex class and pretend if we aren't using
+        // threads at all.
+      #if EXPOP_THREADS
         static Threads::Mutex archivesMutex;
+      #else
+        class FakeMutex { public: void lock() { } void unlock() { } } archivesMutex;
+      #endif
+
         static vector<Archive*> searchArchives;
 
         bool getAllFiles(const std::string &directory, std::vector<std::string> &names) {
@@ -204,7 +211,9 @@ namespace ExPop {
 
             struct stat fileStat;
             if(stat(fileName.c_str(), &fileStat) == -1) {
+              #if EXPOP_CONSOLE
                 // out("error") << "Could not stat " << fileName << endl;
+              #endif
                 return 0;
             }
 
@@ -347,9 +356,9 @@ namespace ExPop {
 
                 for(unsigned int i = 0; i < names.size(); i++) {
                     if(!recursiveDelete(fileName + string("/") + names[i])) {
-#ifndef NO_CONSOLE_LIB
+                      #if EXPOP_CONSOLE
                         out("error") << "Recursive delete of \"" << fileName + string("/") + names[i] << "\" failed" << endl;
-#endif
+                      #endif
                         return false;
                     }
                 }
@@ -592,9 +601,9 @@ namespace ExPop {
 
                 // Hmm... that didn't go well. Not a fatal error, though.
                 delete newArch;
-#ifndef NO_CONSOLE_LIB
+              #if EXPOP_CONSOLE
                 out("error") << "Failed to open archive file \"" << archiveFileName << "\"" << endl;
-#endif
+              #endif
 
             } else {
 

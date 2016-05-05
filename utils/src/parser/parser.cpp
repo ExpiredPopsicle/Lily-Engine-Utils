@@ -845,7 +845,6 @@ namespace ExPop {
 
     ParserNode *ParserNode::clone() const
     {
-        assert(this);
         ParserNode *newNode = new ParserNode(getName());
         newNode->values = values;
         for(size_t i = 0; i < children.size(); i++) {

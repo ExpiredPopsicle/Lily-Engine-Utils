@@ -36,14 +36,14 @@
 
 // These ones depend on or implement the thread module in some way...
 
-// #include "thread/thread.cpp"
-// #include "filesystem/archive.cpp"
-// #include "filesystem/filesystem.cpp"
+#if EXPOP_THREADS
+#include "thread/thread.cpp"
+#endif
+#include "filesystem/archive.cpp"
+#include "filesystem/filesystem.cpp"
 // #include "console/console.cpp"
-// #include "parser/parser.cpp"
-// #include "parser/parserxml.cpp"
 // #include "assetloader/assetloader.cpp"
-// #include "preprocess/preprocess.cpp"
+#include "preprocess/preprocess.cpp"
 
 // Completely independent systems...
 

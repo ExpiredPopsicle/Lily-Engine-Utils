@@ -63,6 +63,11 @@ namespace ExPop {
         // TODO: Maybe something to limit the include file options? Like a
         // whitelist of includable files.
 
+        /// File loader callback type and variable. Defaults to
+        /// ExPop::FileSystem::loadFileString().
+        typedef std::string(*LoadFileCallback)(const std::string &filename);
+        LoadFileCallback loadFileCallback;
+
         // ----------------------------------------------------------------------
         // Error reporting
         // ----------------------------------------------------------------------

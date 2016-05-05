@@ -45,13 +45,16 @@ namespace ExPop {
   #define RECURSION_LIMIT 64
   #define MAX_SYMBOL_LOOKUPS_FOR_IF 64
 
-    PreprocessorState::PreprocessorState(void) {
+    PreprocessorState::PreprocessorState(void)
+    {
         recursionCount = 0;
         hadError = false;
         annotateIncludes = false;
+        loadFileCallback = ExPop::FileSystem::loadFileString;
     }
 
-    static std::string convertQuotedPath(const std::string &in) {
+    static std::string convertQuotedPath(const std::string &in)
+    {
         if(in.size() < 2) return "";
 
         string workStr;
@@ -66,7 +69,8 @@ namespace ExPop {
         return workStr;
     }
 
-    static std::string cppItoa(int i) {
+    static std::string cppItoa(int i)
+    {
         ostringstream ostr;
         ostr << i;
         return ostr.str();
@@ -210,32 +214,30 @@ namespace ExPop {
                             }
 
                             string name = convertQuotedPath(tokens[1]);
-                            int bufLen;
-                            char *buf = NULL;
+                            std::string buf;
                             string fullName;
 
                             // First try loading from the same directory.
                             fullName = FileSystem::fixFileName(currentFilePath + "/" + name);
-                            buf = FileSystem::loadFile(fullName, &bufLen, true);
+                            buf = inState.loadFileCallback(fullName);
 
-                            if(!buf) {
+                            if(!buf.size()) {
 
                                 // Failed to load from current directory.
                                 // Try include paths.
                                 for(unsigned int i = 0; i < inState.includePaths.size(); i++) {
                                     fullName = FileSystem::fixFileName(inState.includePaths[i] + "/" + name);
-                                    buf = FileSystem::loadFile(fullName, &bufLen, true);
-                                    if(buf) break;
+                                    buf = inState.loadFileCallback(fullName);
+                                    if(buf.size()) break;
                                 }
                             }
 
                             // TODO: Get the name in there somewhere after
                             // I change this from just being asserts.
-                            CHECK_OR_ERROR(buf, "Could not open include file");
+                            CHECK_OR_ERROR(buf.size(), "Could not open include file");
 
                             inState.recursionCount++;
                             string includedBuf = preprocess(fullName, buf, inState);
-                            delete[] buf;
                             inState.recursionCount--;
 
                             CHECK_OR_ERROR(
@@ -519,16 +521,15 @@ namespace ExPop {
                             }
 
                             // Load the included file.
-                            char *code = NULL;
-                            int codeLength = 0;
+                            std::string code;
 
                             // Try to load from the current directory
                             // first.
-                            code = FileSystem::loadFile(fullIncludeFilePath, &codeLength, true);
+                            code = FileSystem::loadFileString(fullIncludeFilePath);
 
                             // If that failed, start going through the
                             // include paths.
-                            if(!code && includePaths) {
+                            if(!code.size() && includePaths) {
                                 for(unsigned int i = 0; i < includePaths->size(); i++) {
 
                                     // Correct any trailing forward
@@ -541,12 +542,12 @@ namespace ExPop {
 
                                     // Try to load the file and break
                                     // out of the loop if we succeed.
-                                    code = FileSystem::loadFile(path + "/" + includeFileName, &codeLength, true);
-                                    if(code) break;
+                                    code = FileSystem::loadFileString(path + "/" + includeFileName);
+                                    if(code.size()) break;
                                 }
                             }
 
-                            if(code) {
+                            if(code.size()) {
 
                                 // Process another file's contents
                                 // straight into our own output list.
@@ -575,8 +576,6 @@ namespace ExPop {
                                 currentFileOutput.push_back(
                                     getFileLineNumber(
                                         allFileNames, fileName, lineNumber));
-
-                                delete[] code;
 
                             } else {
 
