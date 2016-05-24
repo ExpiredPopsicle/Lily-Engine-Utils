@@ -49,6 +49,17 @@ imgbuffer : tools/imgbuffer/imgbuffer.cpp
 		tools/imgbuffer/imgbuffer.cpp \
 		-o $@
 
+
+# ----------------------------------------------------------------------
+# todoscan
+
+todoscan : tools/todoscan/todoscan.cpp
+	clang++ $(COMMON_FLAGS) \
+		tools/todoscan/todoscan.cpp \
+		tools/todoscan/orgmodestuff.cpp \
+		tools/todoscan/commentblock.cpp \
+		-o $@
+
 # ----------------------------------------------------------------------
 
 clean :

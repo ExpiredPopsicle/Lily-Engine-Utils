@@ -54,11 +54,11 @@ unsigned int getStartLengthForBlockType(BlockType type) {
 }
 
 BlockType getBlockType(const std::string &str) {
-    if(strStartsWith("TODO", str)) {
+    if(stringStartsWith<char>("TODO", str)) {
         return BLOCKTYPE_TODO;
-    } else if(strStartsWith("DONE", str)) {
+    } else if(stringStartsWith<char>("DONE", str)) {
         return BLOCKTYPE_DONE;
-    } else if(strStartsWith("FIXME", str)) {
+    } else if(stringStartsWith<char>("FIXME", str)) {
         return BLOCKTYPE_FIXME;
     }
     return BLOCKTYPE_NONE;

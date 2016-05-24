@@ -239,7 +239,7 @@ void processSourceFile(
                 indentAmountForThisComment++;
             }
 
-            string commentStr = strTrim(lines[lineNum].substr(charNum));
+            string commentStr = stringTrim(lines[lineNum].substr(charNum));
 
             bool addWhiteSpaceToLineStart = !lastCommentLineWasNewline;
 
@@ -411,7 +411,7 @@ void outputFiles(
             cout << "Writing " << filename << endl;
         }
 
-        if(strEndsWith(".org", filename)) {
+        if(stringEndsWith<char>(".org", filename)) {
 
             // Org files get completely regenerated.
             outputOrgFile(outStr, commentBlocks);
@@ -544,7 +544,7 @@ int main(int argc, char *argv[]) {
     // Find all the source files.
     for(unsigned int i = 0; i < justFileList.size(); i++) {
         string filename = justFileList[i];
-        if(strEndsWith(".cpp", filename) || strEndsWith(".h", filename) || strEndsWith(".c", filename)) {
+        if(stringEndsWith<char>(".cpp", filename) || stringEndsWith<char>(".h", filename) || stringEndsWith<char>(".c", filename)) {
             loadFileLines(filename, linesByFile[filename]);
             processSourceFile(filename, linesByFile[filename], commentBlocks);
             numCppFiles++;
@@ -556,7 +556,7 @@ int main(int argc, char *argv[]) {
     // Find the org file.
     for(unsigned int i = 0; i < justFileList.size(); i++) {
         string filename = justFileList[i];
-        if(strEndsWith(".org", filename)) {
+        if(stringEndsWith<char>(".org", filename)) {
 
             // It's okay if an org file doesn't exist. It just means
             // we'll use it as an output.

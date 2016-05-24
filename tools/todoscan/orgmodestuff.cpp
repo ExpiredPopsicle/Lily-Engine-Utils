@@ -110,7 +110,7 @@ void outputOrgFile(
             // source) as the TODO issue title.
             out << "** " << typeStr << " [" << commentBlocks[i]->issueId << "] " <<
                 fixmeAddin <<
-                (commentLines.size() ? strTrim(commentLines[0]) : "")  << endl;
+                (commentLines.size() ? stringTrim(commentLines[0]) : "")  << endl;
 
             // Output all additional lines with some silly tag.
             for(unsigned int j = 1; j < commentLines.size(); j++) {
@@ -161,8 +161,8 @@ void outputOrgFile(
 
 
 static inline bool lineEndsLastBlock(const std::string &str) {
-    return strStartsWith("** ", str) ||
-        strStartsWith("* ", str);
+    return stringStartsWith<char>("** ", str) ||
+        stringStartsWith<char>("* ", str);
 }
 
 void processOrgFile(
@@ -227,17 +227,17 @@ void processOrgFile(
 
             // Skip any line beginning with our "extra" tag. We'll
             // just regenerate that from source anyway.
-            if(strStartsWith(extraDataReadOnlyTag, line)) {
+            if(stringStartsWith<char>(extraDataReadOnlyTag, line)) {
                 continue;
             }
 
             // Skip the notes section header we stick in for
             // organization.
-            if(strStartsWith(extraDataNotesHeader, line)) {
+            if(stringStartsWith<char>(extraDataNotesHeader, line)) {
                 continue;
             }
 
-            if(strStartsWith("* ", line)) {
+            if(stringStartsWith<char>("* ", line)) {
 
                 // Find the first space after the number of
                 // open/closed issues.
@@ -253,7 +253,7 @@ void processOrgFile(
 
                 currentSourceFile = line.substr(filenameStart);
 
-            } else if(strStartsWith("** ", line)) {
+            } else if(stringStartsWith<char>("** ", line)) {
 
                 string justLine = line.substr(3);
                 unsigned int lineStartPos = 0;
@@ -262,7 +262,7 @@ void processOrgFile(
                 justLine = justLine.substr(lineStartPos);
                 commentLine = justLine;
 
-            // } else if(!strStartsWith("*", line)) {
+            // } else if(!stringStartsWith<char>("*", line)) {
             } else if(!lineEndsLastBlock(line)) {
 
                 // Must be some notes we stuck in the .org file.
