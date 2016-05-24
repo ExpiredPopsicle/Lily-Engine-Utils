@@ -38,7 +38,8 @@ namespace ExPop {
     /// Angle class. Keeps everything nicely in the 0-360 degree
     /// range. Also handles interpolation so you can always
     /// interpolate across the smallest possible arc.
-    class Angle {
+    class Angle
+    {
     public:
 
         Angle(void);
@@ -50,6 +51,9 @@ namespace ExPop {
         void setDegrees(float degrees);
         void setRadians(float radians);
 
+        // TODO: Implement operator overloading so we more easily do
+        // simple math with angles.
+
     private:
 
         // We store it as degrees internally because it makes the
@@ -59,12 +63,14 @@ namespace ExPop {
 
     Angle interpAngle(const Angle &a, const Angle &b, float alpha);
 
-    inline std::ostream &operator<<(std::ostream &out, const Angle &angle) {
+    inline std::ostream &operator<<(std::ostream &out, const Angle &angle)
+    {
         out << angle.getDegrees();
         return out;
     }
 
-    inline std::istream &operator>>(std::istream &in, Angle &angle) {
+    inline std::istream &operator>>(std::istream &in, Angle &angle)
+    {
         float degrees;
         in >> degrees;
         angle.setDegrees(degrees);

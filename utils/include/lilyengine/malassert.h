@@ -29,9 +29,18 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// This is a simple assertion system that, on Linux, will dump a call
+// stack to stdout on failure before raising the SIGINT. Sometimes
+// saves a little tiny bit of time from having to open the debugger to
+// deal with an assert.
+
 #pragma once
 
-#define exPopAssert(x) ExPop::fancyAssert(x, ##x)
+#ifdef __linux__
+#define exPopAssert(x) ExPop::fancyAssert((x), ##x)
+#else
+#define exPopAssert(x) assert(x)
+#endif
 
 namespace ExPop {
 
@@ -42,7 +51,8 @@ namespace ExPop {
 
     /// Assert with a custom error message. Use exPopAssert(condition)
     /// to do with with just the condition as the message.
-    inline void fancyAssert(bool b, const char *str) {
+    inline void fancyAssert(bool b, const char *str)
+    {
         if(b) return;
         fancyAssertFail(str);
     }

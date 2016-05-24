@@ -37,23 +37,28 @@ using namespace std;
 
 namespace ExPop {
 
-    Angle::Angle(void) {
+    Angle::Angle(void)
+    {
         angleDegrees = 0.0f;
     }
 
-    Angle::Angle(float degrees) {
+    Angle::Angle(float degrees)
+    {
         setDegrees(degrees);
     }
 
-    float Angle::getDegrees(void) const {
+    float Angle::getDegrees(void) const
+    {
         return angleDegrees;
     }
 
-    float Angle::getRadians(void) const {
+    float Angle::getRadians(void) const
+    {
         return angleDegrees * 3.14159f/180.0f;
     }
 
-    void Angle::setDegrees(float degrees) {
+    void Angle::setDegrees(float degrees)
+    {
         angleDegrees = degrees;
 
         if(angleDegrees >= 360.0f) {
@@ -69,11 +74,13 @@ namespace ExPop {
         }
     }
 
-    void Angle::setRadians(float radians) {
+    void Angle::setRadians(float radians)
+    {
         setDegrees(radians * 180.0f/3.14159f);
     }
 
-    Angle interpAngle(const Angle &a, const Angle &b, float alpha) {
+    Angle interpAngle(const Angle &a, const Angle &b, float alpha)
+    {
         float degrees0 = a.getDegrees();
         float degrees1 = b.getDegrees();
 

@@ -44,9 +44,15 @@ using namespace std;
 
 namespace ExPop {
 
-    void fancyAssertFail(const char *errMsg) {
+    void fancyAssertFail(const char *errMsg)
+    {
 
 #if __linux__
+
+        // On Linux we may get access to a stack trace that we can
+        // just dump to a console instead of having to load it up in
+        // the debugger. Probaby only useful if we compiled with
+        // debugging symbols enabled.
 
         const int stackLength = 256;
         void *stackArray[stackLength];
@@ -61,6 +67,11 @@ namespace ExPop {
             cout << setw(8) << i << ": " <<  symbols[i] << endl;
         }
 
+        // I'm not sure if we should bother with a free() here,
+        // because in the case of a heap corruption related failure,
+        // this could make the situation even worse. We could also
+        // just want to resume in the debugger after the SIGINT, in
+        // which case we'd want heap allocations to go away.
         free(symbols);
 
         // Drop us into the debugger or just explode.
@@ -68,6 +79,8 @@ namespace ExPop {
 
 #else
 
+        // We probably won't hit this, because on non-Linux platforms
+        // we just assert() normally.
         cout << "Assertion \"" << errMsg << "\"failed." << endl;
         assert(0);
 
