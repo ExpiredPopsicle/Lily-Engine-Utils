@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 //
-//   Lily Engine alpha
+//   Lily Engine Utils
 //
-//   Copyright (c) 2012 Clifford Jolly
+//   Copyright (c) 2012-2016 Clifford Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
