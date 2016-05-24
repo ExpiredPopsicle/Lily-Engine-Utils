@@ -42,8 +42,8 @@ using namespace std;
 
 using namespace ExPop;
 
-const char *headerMarker =
-	"// -------------------------- END HEADER -------------------------------------";
+std::string linePrefix = "// ";
+std::string headerMarker = "-------------------------- END HEADER -------------------------------------";
 
 bool strCompareIgnoreWindowsBullshit(const string &str1, const string &str2)
 {
@@ -114,7 +114,7 @@ void stripOldHeader(vector<string> &lines)
 				break;
 			}
 
-		} else if(strCompareIgnoreWindowsBullshit(lines[i], headerMarker)) {
+		} else if(strCompareIgnoreWindowsBullshit(lines[i], linePrefix + headerMarker)) {
 
 			// Still looking for header.
 
@@ -150,43 +150,70 @@ vector<string> loadLinesFromBuffer(const char *buf)
     return lines;
 }
 
+void showHelp(const char *argv0)
+{
+    cout << "Usage: " << argv0 << " <source files>" << endl;
+    cout << endl;
+    cout << "ExpiredPopsicle's header fixer tool 1.0" << endl;
+    cout << endl;
+    cout << "Automate fixing copyright notices in lots of C/C++ source" << endl;
+    cout << "and header files." << endl;
+    cout << endl;
+    cout << "Use \"--\" as an input filename if you want the built-in," << endl;
+    cout << "default header." << endl;
+    cout << endl;
+    cout << "Options:" << endl;
+    cout << endl;
+    cout << "  --help            You're sitting in it." << endl;
+    cout << "  --dumpheader      Write the built-in, default header to" << endl;
+    cout << "                    standard output and quit." << endl;
+    cout << "  --header <file>   Use a file as the header text." << endl;
+    cout << "  --prefix <text>   Prefix each line with text instead of the" << endl;
+    cout << "                    default \"// \" used for C++ files." << endl;
+    cout << "  --strip           Strip all headers." << endl;
+    cout << endl;
+    cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+}
+
 int main(int argc, char *argv[])
 {
-    bool showHelp = false;
-    if(argc > 1 && !strcmp(argv[1],"--help")) {
-        showHelp = true;
+    // Parse params.
+    std::vector<std::string> paramNames = { "header", "prefix" };
+    std::vector<ParsedParameter> params;
+    parseCommandLine(argc, argv, paramNames, params);
+
+    std::string headerFilename;
+    std::vector<std::string> filenames;
+    bool stripMode;
+
+    for(size_t i = 0; i < params.size(); i++) {
+        if(params[i].name == "help") {
+            showHelp(argv[0]);
+            return 0;
+        } else if(params[i].name == "dumpheader") {
+            cout << mainHeader << endl;
+            return 0;
+        } else if(params[i].name == "header") {
+            headerFilename = params[i].value;
+        } else if(params[i].name == "prefix") {
+            linePrefix = params[i].value;
+        } else if(params[i].name == "strip") {
+            stripMode = true;
+        } else {
+            filenames.push_back(params[i].value);
+        }
     }
 
-	if(argc < 2 || showHelp) {
-		cout << "Usage: " << argv[0] << " <header file name> <source files>" << endl;
-        cout << endl;
-        cout << "ExpiredPopsicle's header fixer tool 1.0" << endl;
-        cout << endl;
-        cout << "Automate fixing copyright notices in lots of C/C++ source" << endl;
-        cout << "and header files." << endl;
-        cout << endl;
-        cout << "Use \"--\" as an input filename if you want the built-in," << endl;
-        cout << "default header." << endl;
-        cout << endl;
-        cout << "Options:" << endl;
-        cout << endl;
-        cout << "  --help            You're sitting in it." << endl;
-        cout << endl;
-        cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
-
-        if(showHelp) {
-            return 0;
-        }
-
+	if(argc < 2) {
+        showHelp(argv[0]);
 		return 1;
 	}
 
 	vector<string> headerLines;
-
-    if(!strcmp(argv[1], "--")) {
+    if(!headerFilename.size()) {
         headerLines = loadLinesFromBuffer(mainHeader);
     } else {
-        headerLines = loadLinesFromFile(argv[1]);
+        headerLines = loadLinesFromFile(headerFilename);
     }
 
 	ostringstream headerConvertedStr;
@@ -196,15 +223,15 @@ int main(int argc, char *argv[])
         // Make distinction for empty strings here to deal with
         // leading whitespace.
         if(headerLines[j].size()) {
-            headerConvertedStr << "// " << headerLines[j] << endl;
+            headerConvertedStr << linePrefix << headerLines[j] << endl;
         } else {
-            headerConvertedStr << "//" << endl;
+            headerConvertedStr << linePrefix << endl;
         }
 	}
 
-	for(int i = 2; i < argc; i++) {
+	for(int i = 0; i < filenames.size(); i++) {
 
-		string fileName = argv[i];
+		string fileName = filenames[i];
 
 		if(!FileSystem::fileExists(fileName)) {
 			cout << "File " << fileName << " does not exist!" << endl;
@@ -219,11 +246,14 @@ int main(int argc, char *argv[])
 
         stripOldHeader(fileLines);
 
-        // Add header.
-        outputStr << headerConvertedStr.str();
+        if(!stripMode) {
 
-        // Header end. (With extra line for niceness.)
-        outputStr << headerMarker << endl << endl;
+            // Add header.
+            outputStr << headerConvertedStr.str();
+
+            // Header end. (With extra line for niceness.)
+            outputStr << linePrefix << headerMarker << endl << endl;
+        }
 
         for(unsigned int j = 0; j < fileLines.size(); j++) {
 

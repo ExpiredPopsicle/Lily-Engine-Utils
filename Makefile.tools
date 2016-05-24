@@ -1,46 +1,55 @@
+COMMON_FLAGS := \
+	--std=c++11 \
+	utils/src/string/string.cpp \
+	utils/src/filesystem/filesystem.cpp \
+	utils/src/filesystem/archive.cpp \
+	utils/src/assert/malassert.cpp \
+	utils/src/params/params.cpp \
+	utils/src/image/image.cpp \
+	-Iutils/include \
+	-Iutils/include/lilyengine
+
 all : buffergen lilyarchiver headerfixer imgbuffer
 
+# ----------------------------------------------------------------------
+# buffergen
+
 buffergen : tools/buffergen/buffergen.cpp
-	clang++ --std=c++11 \
+	clang++ $(COMMON_FLAGS) \
 		tools/buffergen/buffergen.cpp \
-        utils/src/string/string.cpp \
-		utils/src/filesystem/filesystem.cpp \
-		utils/src/filesystem/archive.cpp \
-		utils/src/assert/malassert.cpp \
-		utils/src/params/params.cpp \
-		-Iutils/include \
-		-Iutils/include/lilyengine -o $@
+		-o $@
+
+# ----------------------------------------------------------------------
+# lilyarchiver
 
 lilyarchiver : tools/archiver/archiver.cpp
-	clang++ --std=c++11 \
+	clang++ $(COMMON_FLAGS) \
 		tools/archiver/archiver.cpp \
-        utils/src/string/string.cpp \
-		utils/src/filesystem/filesystem.cpp \
-		utils/src/filesystem/archive.cpp \
-		utils/src/assert/malassert.cpp \
-		-Iutils/include \
-		-Iutils/include/lilyengine -o $@
+		-o $@
 
-headerfixer : tools/headerfixer/headerfixer.cpp
-	clang++ --std=c++11 \
+# ----------------------------------------------------------------------
+# headerfixer
+
+tools/headerfixer/mainheader.h : buffergen tools/headerfixer/mainheader.txt
+	bash tools/headerfixer/generateheader.bsh
+
+headerfixer : \
+	tools/headerfixer/headerfixer.cpp \
+	tools/headerfixer/mainheader.h
+
+	clang++ $(COMMON_FLAGS) \
 		tools/headerfixer/headerfixer.cpp \
-        utils/src/string/string.cpp \
-		utils/src/filesystem/filesystem.cpp \
-		utils/src/filesystem/archive.cpp \
-		utils/src/assert/malassert.cpp \
-		-Iutils/include \
-		-Iutils/include/lilyengine -o $@
+		-o $@
+
+# ----------------------------------------------------------------------
+# imgbuffer
 
 imgbuffer : tools/imgbuffer/imgbuffer.cpp
-	clang++ --std=c++11 \
+	clang++ $(COMMON_FLAGS) \
 		tools/imgbuffer/imgbuffer.cpp \
-        utils/src/string/string.cpp \
-        utils/src/image/image.cpp \
-		utils/src/filesystem/filesystem.cpp \
-		utils/src/filesystem/archive.cpp \
-		utils/src/assert/malassert.cpp \
-		-Iutils/include \
-		-Iutils/include/lilyengine -o $@
+		-o $@
+
+# ----------------------------------------------------------------------
 
 clean :
 	- rm imgbuffer
