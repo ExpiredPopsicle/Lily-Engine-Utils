@@ -42,7 +42,7 @@ using namespace std;
 
 using namespace ExPop;
 
-std::string linePrefix = "// ";
+std::string linePrefix = "//";
 std::string headerMarker = "-------------------------- END HEADER -------------------------------------";
 
 bool strCompareIgnoreWindowsBullshit(const string &str1, const string &str2)
@@ -114,7 +114,7 @@ void stripOldHeader(vector<string> &lines)
 				break;
 			}
 
-		} else if(strCompareIgnoreWindowsBullshit(lines[i], linePrefix + headerMarker)) {
+		} else if(strCompareIgnoreWindowsBullshit(lines[i], linePrefix + " " + headerMarker)) {
 
 			// Still looking for header.
 
@@ -169,7 +169,7 @@ void showHelp(const char *argv0)
     cout << "                    standard output and quit." << endl;
     cout << "  --header <file>   Use a file as the header text." << endl;
     cout << "  --prefix <text>   Prefix each line with text instead of the" << endl;
-    cout << "                    default \"// \" used for C++ files. Note" << endl;
+    cout << "                    default \"//\" used for C++ files. Note" << endl;
     cout << "                    that this alters the search for the old" << endl;
     cout << "                    header. Use --strip to remove an old one" << endl;
     cout << "                    before attempting to alter a prefix." << endl;
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
         // Make distinction for empty strings here to deal with
         // leading whitespace.
         if(headerLines[j].size()) {
-            headerConvertedStr << linePrefix << headerLines[j] << endl;
+            headerConvertedStr << linePrefix << " " << headerLines[j] << endl;
         } else {
             headerConvertedStr << linePrefix << endl;
         }
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
             outputStr << headerConvertedStr.str();
 
             // Header end. (With extra line for niceness.)
-            outputStr << linePrefix << headerMarker << endl << endl;
+            outputStr << linePrefix << " " << headerMarker << endl << endl;
         }
 
         for(unsigned int j = 0; j < fileLines.size(); j++) {
