@@ -39,7 +39,8 @@ using namespace std;
 #include <lilyengine/utils.h>
 using namespace ExPop;
 
-std::string sanitizeName(const std::string &in) {
+std::string sanitizeName(const std::string &in)
+{
     string out;
     out.reserve(in.size());
     for(unsigned int i = 0; i < in.size(); i++) {
@@ -55,11 +56,32 @@ std::string sanitizeName(const std::string &in) {
     return out;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+    // Parse params. We only have a help parameter here, because this
+    // thing is so simple.
+    std::vector<std::string> paramNames = {};
+    std::vector<ParsedParameter> params;
+    parseCommandLine(argc, argv, paramNames, params);
+    for(size_t i = 0; i < params.size(); i++) {
+        if(params[i].name == "help") {
+            cout << "Usage: " << argv[0] << " <filename> [variable]" << endl;
+            cout << endl;
+            cout << "ExpiredPopsicle's static buffer header generator 1.0" << endl;
+            cout << "Useful for when you really want to embed a whole damn" << endl;
+            cout << "file into your source code." << endl;
+            cout << endl;
+            cout << "Options:" << endl;
+            cout << endl;
+            cout << "  --help            You're sitting in it." << endl;
+            cout << endl;
+            cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+            exit(0);
+        }
+    }
 
     if(argc < 2) {
         cerr << "Specify a file name and possibly a variable name!" << endl;
-        cerr << "Like this: " << argv[0] << " <filename> [variable]" << endl;
         return 1;
     }
 

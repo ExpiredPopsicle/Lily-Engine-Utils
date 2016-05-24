@@ -1,12 +1,51 @@
+all : buffergen lilyarchiver headerfixer imgbuffer
+
 buffergen : tools/buffergen/buffergen.cpp
 	clang++ --std=c++11 \
 		tools/buffergen/buffergen.cpp \
-		utils/src/everything.cpp \
+        utils/src/string/string.cpp \
 		utils/src/filesystem/filesystem.cpp \
 		utils/src/filesystem/archive.cpp \
-		utils/src/thread/thread.cpp \
-		utils/src/console/console.cpp \
 		utils/src/assert/malassert.cpp \
-		-pthread \
+		utils/src/params/params.cpp \
 		-Iutils/include \
 		-Iutils/include/lilyengine -o $@
+
+lilyarchiver : tools/archiver/archiver.cpp
+	clang++ --std=c++11 \
+		tools/archiver/archiver.cpp \
+        utils/src/string/string.cpp \
+		utils/src/filesystem/filesystem.cpp \
+		utils/src/filesystem/archive.cpp \
+		utils/src/assert/malassert.cpp \
+		-Iutils/include \
+		-Iutils/include/lilyengine -o $@
+
+headerfixer : tools/headerfixer/headerfixer.cpp
+	clang++ --std=c++11 \
+		tools/archiver/archiver.cpp \
+        utils/src/string/string.cpp \
+		utils/src/filesystem/filesystem.cpp \
+		utils/src/filesystem/archive.cpp \
+		utils/src/assert/malassert.cpp \
+		-Iutils/include \
+		-Iutils/include/lilyengine -o $@
+
+imgbuffer : tools/imgbuffer/imgbuffer.cpp
+	clang++ --std=c++11 \
+		tools/imgbuffer/imgbuffer.cpp \
+        utils/src/string/string.cpp \
+        utils/src/image/image.cpp \
+		utils/src/filesystem/filesystem.cpp \
+		utils/src/filesystem/archive.cpp \
+		utils/src/assert/malassert.cpp \
+		-Iutils/include \
+		-Iutils/include/lilyengine -o $@
+
+
+clean :
+	- rm imgbuffer
+	- rm buffergen
+	- rm lilyarchiver
+	- rm headerfixer
+

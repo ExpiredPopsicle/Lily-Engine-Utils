@@ -39,7 +39,11 @@ using namespace std;
 #include <lilyengine/filesystem.h>
 using namespace ExPop;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+    // This was all written before the ExPop::parseCommandLine()
+    // system existed. There's not really any good reason to change
+    // it.
 
     if(argc > 2 && !strcmp(argv[1], "-c")) {
 
@@ -130,11 +134,32 @@ int main(int argc, char *argv[]) {
         return 0;
 
     } else {
+
         cout << "Usages: " << endl;
         cout << "  " << argv[0] << " -c <archive filename> [files to add]     - Create an archive." << endl;
         cout << "  " << argv[0] << " -e <archive filename> [files to extract] - Extract files from an archive." << endl;
         cout << "  " << argv[0] << " -l <archive filename>                    - List files in an archive." << endl;
         cout << "  " << argv[0] << " -d <archive filename> [files to dump]    - Dump specified files to stdout." << endl;
+
+        cout << endl;
+        cout << "ExpiredPopsicle's archive generator 1.0" << endl;
+        cout << "Generates a file for use with the archive subsystem of" << endl;
+        cout << "LilyEngineUtils." << endl;
+        cout << endl;
+        cout << "Options:" << endl;
+        cout << endl;
+        cout << "  --help            You're sitting in it." << endl;
+        cout << endl;
+        cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+
+        if(argc > 1 && !strcmp(argv[1], "--help")) {
+            // If they actually asked for --help, then that's not
+            // really an error.
+            return 0;
+        }
+
+        // If they got here, they didn't ask for --help, but had to
+        // get it anyway, probably because they screwed it up.
         return 1;
     }
 

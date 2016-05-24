@@ -46,6 +46,7 @@
 #include "image.h"
 #include "cellarray.h"
 #include "expopsockets.h"
+#include "params.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)
