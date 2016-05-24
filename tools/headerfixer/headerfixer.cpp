@@ -169,7 +169,10 @@ void showHelp(const char *argv0)
     cout << "                    standard output and quit." << endl;
     cout << "  --header <file>   Use a file as the header text." << endl;
     cout << "  --prefix <text>   Prefix each line with text instead of the" << endl;
-    cout << "                    default \"// \" used for C++ files." << endl;
+    cout << "                    default \"// \" used for C++ files. Note" << endl;
+    cout << "                    that this alters the search for the old" << endl;
+    cout << "                    header. Use --strip to remove an old one" << endl;
+    cout << "                    before attempting to alter a prefix." << endl;
     cout << "  --strip           Strip all headers." << endl;
     cout << endl;
     cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
