@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
             cout << "Usage: " << argv[0] << " <filename> [variable]" << endl;
             cout << endl;
             cout << "ExpiredPopsicle's static buffer header generator 1.0" << endl;
+            cout << endl;
             cout << "Useful for when you really want to embed a whole damn" << endl;
             cout << "file into your source code." << endl;
             cout << endl;

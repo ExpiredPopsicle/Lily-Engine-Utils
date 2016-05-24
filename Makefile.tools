@@ -23,7 +23,7 @@ lilyarchiver : tools/archiver/archiver.cpp
 
 headerfixer : tools/headerfixer/headerfixer.cpp
 	clang++ --std=c++11 \
-		tools/archiver/archiver.cpp \
+		tools/headerfixer/headerfixer.cpp \
         utils/src/string/string.cpp \
 		utils/src/filesystem/filesystem.cpp \
 		utils/src/filesystem/archive.cpp \
@@ -41,7 +41,6 @@ imgbuffer : tools/imgbuffer/imgbuffer.cpp
 		utils/src/assert/malassert.cpp \
 		-Iutils/include \
 		-Iutils/include/lilyengine -o $@
-
 
 clean :
 	- rm imgbuffer

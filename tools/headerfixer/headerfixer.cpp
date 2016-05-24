@@ -45,17 +45,10 @@ using namespace ExPop;
 const char *headerMarker =
 	"// -------------------------- END HEADER -------------------------------------";
 
-// List of file we definitely do NOT WANT TO FUCK WITH THE HEADERS
-// ON. Was TinyXML. But everything in "3rdparty" is excluded too.
-const char *excludedFiles[256] = {
-	"SDLMain.h",
-	NULL
-};
-
-bool strCompareIgnoreWindowsBullshit(const string &str1, const string &str2) {
-
-	unsigned int i = 0;
-	unsigned int j = 0;
+bool strCompareIgnoreWindowsBullshit(const string &str1, const string &str2)
+{
+	size_t i = 0;
+	size_t j = 0;
 
 	// Go through until one of the strings ends.
 
@@ -99,8 +92,8 @@ bool strCompareIgnoreWindowsBullshit(const string &str1, const string &str2) {
 	return true;
 }
 
-void stripOldHeader(vector<string> &lines) {
-
+void stripOldHeader(vector<string> &lines)
+{
 	int headerEndLine = -1;
 	bool foundHeader = false;
 
@@ -134,19 +127,10 @@ void stripOldHeader(vector<string> &lines) {
 	if(headerEndLine != -1) {
 		lines.erase(lines.begin(), lines.begin() + headerEndLine + 1);
 	}
-
-	// Attempt to unfuck all my source after this program screwed up.
-	//for(unsigned int i = 0; i < lines.size(); i++) {
-	//	if(strCompareIgnoreWindowsBullshit(lines[i], headerMarker)) {
-	//		lines.erase(lines.begin() + i);
-	//		i--;
-	//	}
-	//}
-
 }
 
-vector<string> loadLinesFromFile(const string &fileName) {
-
+vector<string> loadLinesFromFile(const string &fileName)
+{
 	int length;
 	char *rawContents = FileSystem::loadFile(fileName, &length, true);
 	vector<string> lines;
@@ -159,18 +143,41 @@ vector<string> loadLinesFromFile(const string &fileName) {
 	return lines;
 }
 
-vector<string> loadLinesFromBuffer(const char *buf) {
-
+vector<string> loadLinesFromBuffer(const char *buf)
+{
 	vector<string> lines;
 	stringTokenize(buf, "\n", lines, true);
     return lines;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+    bool showHelp = false;
+    if(argc > 1 && !strcmp(argv[1],"--help")) {
+        showHelp = true;
+    }
 
-	if(argc < 2) {
+	if(argc < 2 || showHelp) {
 		cout << "Usage: " << argv[0] << " <header file name> <source files>" << endl;
-        cout << "  Use -- as a filename if you want the built-in default header." << endl;
+        cout << endl;
+        cout << "ExpiredPopsicle's header fixer tool 1.0" << endl;
+        cout << endl;
+        cout << "Automate fixing copyright notices in lots of C/C++ source" << endl;
+        cout << "and header files." << endl;
+        cout << endl;
+        cout << "Use \"--\" as an input filename if you want the built-in," << endl;
+        cout << "default header." << endl;
+        cout << endl;
+        cout << "Options:" << endl;
+        cout << endl;
+        cout << "  --help            You're sitting in it." << endl;
+        cout << endl;
+        cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+
+        if(showHelp) {
+            return 0;
+        }
+
 		return 1;
 	}
 
@@ -204,69 +211,30 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-        string skipReason;
+        cout << "Updating " << fileName << "..." << endl;
 
-        // Check list of explicitly excluded files.
-		string base = FileSystem::getBaseName(fileName);
-		int k = 0;
-		bool skipThisFile = false;
-		while(excludedFiles[k]) {
-			if(base == string(excludedFiles[k])) {
-				skipThisFile = true;
-                skipReason = "Explicitly excluded by name";
-				break;
-			}
-			k++;
-		}
+        ostringstream outputStr;
 
-        if(!skipThisFile) {
+        vector<string> fileLines = loadLinesFromFile(fileName);
 
-            // Check to make sure it's not in the "3rdparty" directory.
-            string normalized = FileSystem::fixFileName(fileName);
-            vector<string> fileNameParts;
-            stringTokenize(normalized, "/", fileNameParts);
-            const string excludedDirectory = "3rdparty";
-            for(unsigned int j = 0; j < fileNameParts.size(); j++) {
-                if(fileNameParts[j] == excludedDirectory) {
-                    skipThisFile = true;
-                    skipReason = "Third party system";
-                    break;
-                }
-            }
+        stripOldHeader(fileLines);
+
+        // Add header.
+        outputStr << headerConvertedStr.str();
+
+        // Header end. (With extra line for niceness.)
+        outputStr << headerMarker << endl << endl;
+
+        for(unsigned int j = 0; j < fileLines.size(); j++) {
+
+            // Add each line.
+            outputStr << fileLines[j] << endl;
         }
 
-		if(skipThisFile) {
+        string finalOut = outputStr.str();
 
-			cout << "Skipping " << fileName << " on purpose: " << skipReason << endl;
-
-		} else {
-
-			cout << "Updating " << fileName << "..." << endl;
-
-			ostringstream outputStr;
-
-			vector<string> fileLines = loadLinesFromFile(fileName);
-
-			stripOldHeader(fileLines);
-
-			// Add header.
-			outputStr << headerConvertedStr.str();
-
-			// Header end. (With extra line for niceness.)
-			outputStr << headerMarker << endl << endl;
-
-			for(unsigned int j = 0; j < fileLines.size(); j++) {
-
-				// Add each line.
-				outputStr << fileLines[j] << endl;
-			}
-
-			string finalOut = outputStr.str();
-
-			//cout << outputStr.str() << endl;
-			//FileSystem::renameFile(fileName, fileName + ".bak");
-			FileSystem::saveFile(fileName, finalOut.c_str(), finalOut.size(), false);
-		}
+        //FileSystem::renameFile(fileName, fileName + ".bak");
+        FileSystem::saveFile(fileName, finalOut.c_str(), finalOut.size(), false);
 
 	}
 

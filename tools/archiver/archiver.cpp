@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
 
         cout << endl;
         cout << "ExpiredPopsicle's archive generator 1.0" << endl;
+        cout << endl;
         cout << "Generates a file for use with the archive subsystem of" << endl;
         cout << "LilyEngineUtils." << endl;
         cout << endl;
