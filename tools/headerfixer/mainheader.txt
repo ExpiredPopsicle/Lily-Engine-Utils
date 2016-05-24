@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------
 
-  Lily Engine alpha
+  Lily Engine Utils
 
   Copyright (c) 2016 Clifford Jolly
     http://expiredpopsicle.com
