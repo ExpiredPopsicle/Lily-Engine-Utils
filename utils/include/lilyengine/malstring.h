@@ -345,6 +345,7 @@ namespace ExPop {
         return true;
     }
 
+    /// Do a simple string replacement. Returns the modified string.
     template<typename T>
     inline std::basic_string<T> stringReplace(
         const std::basic_string<T> &stringToReplace,
