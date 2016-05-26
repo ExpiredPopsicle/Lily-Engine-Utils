@@ -527,7 +527,7 @@ namespace ExPop {
 
             if(in.fail()) {
 
-                delete buf;
+                delete[] buf;
 
                 archivesMutex.lock();
 
