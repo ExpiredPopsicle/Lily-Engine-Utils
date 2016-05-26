@@ -44,9 +44,9 @@ using namespace std;
 
 namespace ExPop {
 
-    void stringTokenize(const std::string &str, const std::string &delims, std::vector<std::string> &tokens, bool allowEmpty) {
-
-        unsigned int i = 0;
+    void stringTokenize(const std::string &str, const std::string &delims, std::vector<std::string> &tokens, bool allowEmpty)
+    {
+        size_t i = 0;
         while(i < str.size()) {
 
             bool firstDelim = true;
@@ -81,11 +81,11 @@ namespace ExPop {
         }
     }
 
-    std::string stringXmlEscape(const std::string &str) {
-
+    std::string stringXmlEscape(const std::string &str)
+    {
         ostringstream outStr;
 
-        for(unsigned int i = 0; i < str.size(); i++) {
+        for(size_t i = 0; i < str.size(); i++) {
 
             // TODO: Add a case for completely bizarre Unicode
             // stuff. (Inverse of #xNUMBER;)
@@ -116,14 +116,13 @@ namespace ExPop {
         }
 
         return outStr.str();
-
     }
 
-    std::string stringXmlUnescape(const std::string &str) {
-
+    std::string stringXmlUnescape(const std::string &str)
+    {
         ostringstream outStr;
 
-        for(unsigned int i = 0; i < str.size(); i++) {
+        for(size_t i = 0; i < str.size(); i++) {
 
             if(str[i] == '&') {
 
@@ -175,7 +174,7 @@ namespace ExPop {
 
                     }
 
-                    unsigned int hexVal =
+                    uint32_t hexVal =
                         strtol(hexStr.str().c_str(), NULL, hexMode ? 16 : 10);
 
                     // TODO: Handle unicode and extended stuff better
@@ -194,7 +193,6 @@ namespace ExPop {
         }
 
         return outStr.str();
-
     }
 
     static inline int getNextNonWhiteSpace(const std::string &str, int start) {
@@ -210,18 +208,16 @@ namespace ExPop {
     }
 
 
-    static inline char nibbleToHex(unsigned int n) {
-
+    static inline char nibbleToHex(uint32_t n)
+    {
         if(n < 0xa) {
             return '0' + n;
-        } else {
-            return ('a' + n) - 0xa;
         }
-
+        return ('a' + n) - 0xa;
     }
 
-    static inline unsigned int hexToNibble(char h) {
-
+    static inline uint32_t hexToNibble(char h)
+    {
         if(h >= '0' && h <= '9') {
             return h - '0';
         } else if(h >= 'A' && h <= 'F') {
@@ -235,9 +231,8 @@ namespace ExPop {
 
     }
 
-
-    void strEncodeHex(const void *buf, int length, string &str, int columns) {
-
+    void strEncodeHex(const void *buf, int length, string &str, int columns)
+    {
         str.resize((length * 2) + ((length * 2) / columns), 0);
 
         int strPos = 0;
@@ -260,8 +255,8 @@ namespace ExPop {
 
     }
 
-    char *strDecodeHex(const std::string &str, int *length) {
-
+    char *strDecodeHex(const std::string &str, int *length)
+    {
         // Do this in two passes. First, count up the number of bytes.
         int pos = 0;
 
@@ -319,7 +314,6 @@ namespace ExPop {
         }
 
         return retBuf;
-
     }
 
 
@@ -328,8 +322,8 @@ namespace ExPop {
         const std::string &divider,
         std::string &out1,
         std::string &out2,
-        bool startFromEnd) {
-
+        bool startFromEnd)
+    {
         out1 = out2 = "";
 
         // Handle degenerate cases so we don't have to worry later.
@@ -375,8 +369,8 @@ namespace ExPop {
         std::string &outAuthority,
         std::string &outPath,
         std::string &outQuery,
-        std::string &outFragment) {
-
+        std::string &outFragment)
+    {
         string queryFragment;
         string schemeAuthorityPath;
 
@@ -537,8 +531,8 @@ namespace ExPop {
     // }
 
     std::string strUTF32ToUTF8(
-        const std::vector<unsigned int> &utf32Str) {
-
+        const std::vector<uint32_t> &utf32Str)
+    {
         ostringstream outStr;
 
         // TODO: Recognize and use the byte order marks if they're
@@ -582,7 +576,7 @@ namespace ExPop {
                 // copies starting from the end of the array and
                 // moving towards the front.
                 int numFullBytes = numBytesNeeded - 1;
-                unsigned int outByte = 0;
+                uint32_t outByte = 0;
                 for(int fb = numFullBytes; fb > 0; fb--) {
 
                     // Try not to think about this line too hard.
@@ -595,13 +589,13 @@ namespace ExPop {
                 // Now the first byte in the array is going to be
                 // different. The first few bits of it are 1 for each
                 // byte that was needed including the first.
-                unsigned int currentBitNum = 0;
+                uint32_t currentBitNum = 0;
                 outByte = 0;
-                for(currentBitNum = 0; currentBitNum < (unsigned int)numBytesNeeded; currentBitNum++) {
+                for(currentBitNum = 0; currentBitNum < (uint32_t)numBytesNeeded; currentBitNum++) {
                     outByte |= (0x80 >> currentBitNum);
                 }
 
-                unsigned int finalDataBitMask = (0x80 >> currentBitNum) - 1;
+                uint32_t finalDataBitMask = (0x80 >> currentBitNum) - 1;
 
                 outByte |= (utf32Str[i] >> (6 * numFullBytes)) & finalDataBitMask;
 
@@ -627,8 +621,8 @@ namespace ExPop {
     std::string strWordWrap(
         const std::string &str,
         unsigned int columns,
-        unsigned int columnsAfterFirstLine) {
-
+        unsigned int columnsAfterFirstLine)
+    {
         vector<string> lines;
         vector<string> words;
         ostringstream outStr;
@@ -671,14 +665,14 @@ namespace ExPop {
     std::string strIndent(
         const std::string &str,
         unsigned int firstRow,
-        unsigned int afterFirstRow) {
-
+        unsigned int afterFirstRow)
+    {
         vector<string> lines;
         ostringstream outStr;
 
         stringTokenize(str, "\n", lines);
 
-        for(unsigned int i = 0; i < lines.size(); i++) {
+        for(size_t i = 0; i < lines.size(); i++) {
 
             // Skip past whatever whitespace might have been here in
             // the first place.
@@ -714,8 +708,8 @@ namespace ExPop {
 
     std::string strPrefixLines(
         const std::string &str,
-        const std::string &prefix) {
-
+        const std::string &prefix)
+    {
         ostringstream outStr;
         vector<string> lines;
 

@@ -145,9 +145,9 @@ extraclean : clean
 
 # ----------------------------------------------------------------------
 
+# We probably don't actually want this here.
 ALLSOURCESLIST := \
 	$(shell find tools utils -iname "*.h" -and -not -iname "usagetext.h") \
 	$(shell find tools utils -iname "*.cpp")
-
 TODO.org : $(NATIVETODOSCAN) $(ALLSOURCESLIST)
 	$(NATIVETODOSCAN) $(ALLSOURCESLIST) $@

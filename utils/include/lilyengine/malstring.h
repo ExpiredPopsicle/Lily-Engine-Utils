@@ -101,7 +101,7 @@ namespace ExPop {
     {
         std::basic_ostringstream<T> outStr;
 
-        for(unsigned int i = 0; i < str.size(); i++) {
+        for(size_t i = 0; i < str.size(); i++) {
 
             switch(str[i]) {
 
@@ -142,7 +142,7 @@ namespace ExPop {
     {
         std::basic_ostringstream<T> outStr;
 
-        for(unsigned int i = 0; i < str.size(); i++) {
+        for(size_t i = 0; i < str.size(); i++) {
 
             if(str[i] == '\\') {
 
@@ -230,7 +230,7 @@ namespace ExPop {
 
     /// Convert a UTF-32 string to a UTF-8 string.
     std::string strUTF32ToUTF8(
-        const std::vector<unsigned int> &utf32Str);
+        const std::vector<uint32_t> &utf32Str);
 
     /// Return a string with all the trailing and leading whitespace
     /// removed.
