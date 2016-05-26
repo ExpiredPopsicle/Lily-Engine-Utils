@@ -146,7 +146,7 @@ extraclean : clean
 # ----------------------------------------------------------------------
 
 ALLSOURCESLIST := \
-	$(shell find tools utils -iname "*.h") \
+	$(shell find tools utils -iname "*.h" -and -not -iname "usagetext.h") \
 	$(shell find tools utils -iname "*.cpp")
 
 TODO.org : $(NATIVETODOSCAN) $(ALLSOURCESLIST)
