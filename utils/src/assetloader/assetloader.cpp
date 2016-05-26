@@ -34,7 +34,7 @@
 #include <string>
 using namespace std;
 
-#ifndef WIN32
+#if !_WIN32
 #include <unistd.h>
 #endif
 

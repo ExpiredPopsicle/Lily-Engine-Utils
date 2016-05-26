@@ -361,11 +361,12 @@ void outputFiles(
     map<string, vector<string> > &linesByFile,
     GitState &gitState,
     bool forceWrite,
-    bool writeToStdout) {
+    bool writeToStdout)
+{
 
     // TODO: Make this actually output files.
 
-  #ifndef WIN32
+  #if !_WIN32
 
     if(!forceWrite) {
 
@@ -440,8 +441,8 @@ void outputFiles(
 }
 
 void assignMissingIssueNumbers(
-    vector<CommentBlock *> &commentBlocks) {
-
+    vector<CommentBlock *> &commentBlocks)
+{
     int maxIssueNumber = 0;
 
     // First find the highest number.
@@ -460,9 +461,9 @@ void assignMissingIssueNumbers(
     }
 }
 
-void getGitState(GitState &state) {
-
-  #ifndef WIN32
+void getGitState(GitState &state)
+{
+  #if !_WIN32
 
     string curLine;
     int c;

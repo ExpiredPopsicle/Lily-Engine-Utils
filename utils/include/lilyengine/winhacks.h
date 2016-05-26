@@ -31,7 +31,7 @@
 
 #ifndef WINHACKS_H
 #define WINHACKS_H
-#ifdef WIN32
+#if _WIN32
 
 // Windows-specific hacks and stupid crap.
 

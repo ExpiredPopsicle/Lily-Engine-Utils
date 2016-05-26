@@ -31,7 +31,7 @@
 
 #pragma once
 
-#ifdef WIN32
+#if _WIN32
 #include <windows.h>
 #else
 #include <pthread.h>
@@ -44,13 +44,13 @@ namespace ExPop {
 
     namespace Threads {
 
-#ifdef WIN32
+      #if _WIN32
         typedef HANDLE ThreadId;
         typedef HANDLE ThreadType;
-#else
+      #else
         typedef pthread_t ThreadId;
         typedef pthread_t ThreadType;
-#endif
+      #endif
 
         /// Get the current thread's ID.
         ThreadId getMyId(void);
@@ -109,11 +109,11 @@ namespace ExPop {
             ThreadType systemThread;
 
             // Entry point for threads.
-#ifdef WIN32
+          #if _WIN32
             friend DWORD __stdcall threadStarter(void *data);
-#else
+          #else
             friend void *threadStarter(void *data);
-#endif
+          #endif
 
         };
 

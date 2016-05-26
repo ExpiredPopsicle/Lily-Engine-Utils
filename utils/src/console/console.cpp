@@ -43,7 +43,7 @@ using namespace std;
 #include "malassert.h"
 #include "console.h"
 
-#ifndef WIN32
+#if !_WIN32
 #include <unistd.h>
 #endif
 
@@ -410,7 +410,7 @@ namespace ExPop {
 
                 std::string outputLine;
 
-#ifdef WIN32
+#if _WIN32
 
 				// FIXME: VT100 attribs don't work in Windows. :[
 

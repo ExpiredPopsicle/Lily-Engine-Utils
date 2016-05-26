@@ -65,7 +65,7 @@ void bar(void *data) {
 
     cout << "BAR" << endl;
 
-/*#ifdef WIN32
+/*#if _WIN32
     Sleep(50);
     #endif*/
 

@@ -39,7 +39,7 @@ using namespace std;
 #include <sys/stat.h>
 #include <stdio.h>
 
-#ifndef WIN32
+#if !_WIN32
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -74,7 +74,7 @@ namespace ExPop {
 
             std::map<std::string, bool> allFiles;
 
-#ifndef WIN32
+          #if !_WIN32
 
             // Linux/Unix/whatever way...
 
@@ -96,7 +96,7 @@ namespace ExPop {
                 closedir(d);
             }
 
-#else
+          #else
 
             // Windows way...
 
@@ -121,7 +121,8 @@ namespace ExPop {
 
                 FindClose(findHandle);
             }
-#endif
+
+          #endif
 
             // Add all matching archive file names.
 
@@ -222,9 +223,13 @@ namespace ExPop {
 
         bool isSymLink(const std::string &fileName) {
 
-#ifdef WIN32
+          #if _WIN32
+            // TODO: Now that Windows actually supports symbolic
+            // links, we should make this check more accurate. Maybe
+            // start at the documentation for CreateSymbolicLink on
+            // MSDN.
             return false;
-#else
+          #else
             struct stat fileStat;
             if(!stat(fileName.c_str(), &fileStat)) {
                 if(S_ISLNK(fileStat.st_mode)) {
@@ -232,7 +237,7 @@ namespace ExPop {
                 }
             }
             return false;
-#endif
+          #endif
 
         }
 
@@ -312,11 +317,11 @@ namespace ExPop {
 
                 int ret;
 
-#ifndef WIN32
+              #if !_WIN32
                 ret = mkdir(dirPath.c_str(), S_IRWXU);
-#else
+              #else
                 ret = _mkdir(dirPath.c_str());
-#endif
+              #endif
                 if(ret == -1) {
                     return false;
                 }
@@ -770,7 +775,7 @@ namespace ExPop {
 
             char dirBuf[2048];
 
-          #ifdef WIN32
+          #if _WIN32
 
             GetCurrentDirectory(2048, dirBuf);
 

@@ -36,7 +36,7 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
-#ifdef WIN32
+#if _WIN32
 #define EXPOP_GL_API __stdcall
 #else
 #define EXPOP_GL_API

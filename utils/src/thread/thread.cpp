@@ -37,7 +37,7 @@ using namespace std;
 
 #include "thread.h"
 
-#ifdef WIN32
+#if _WIN32
 #include <windows.h>
 #include <process.h>
 #else
@@ -59,7 +59,7 @@ namespace ExPop {
 
         struct Mutex::MutexPrivate {
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows mutexes.
             HANDLE winMutex;
@@ -82,7 +82,7 @@ namespace ExPop {
 
             mutexPrivate = new MutexPrivate();
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows
             mutexPrivate->winMutex = CreateMutex(0, FALSE, 0);
@@ -98,7 +98,7 @@ namespace ExPop {
 
         Mutex::~Mutex(void) {
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows
             CloseHandle(mutexPrivate->winMutex);
@@ -115,7 +115,7 @@ namespace ExPop {
 
         void Mutex::lock(void) {
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows
             WaitForSingleObject(mutexPrivate->winMutex, INFINITE);
@@ -133,7 +133,7 @@ namespace ExPop {
 
         void Mutex::unlock(void) {
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows
             ReleaseMutex(mutexPrivate->winMutex);
@@ -159,7 +159,7 @@ namespace ExPop {
         };
 
 
-      #ifdef WIN32
+      #if _WIN32
 
         // Entry point for threads in Win32.
         DWORD __stdcall threadStarter(void *data) {
@@ -226,7 +226,7 @@ namespace ExPop {
 
             done = false;
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows
 
@@ -257,7 +257,7 @@ namespace ExPop {
 
             if(!done) {
 
-              #ifdef WIN32
+              #if _WIN32
 
                 // Windows
 
@@ -306,7 +306,7 @@ namespace ExPop {
 
             if(threadPrivate) {
 
-              #ifdef WIN32
+              #if _WIN32
 
                 // Windows
                 return systemThread;
@@ -325,7 +325,7 @@ namespace ExPop {
 
         ThreadId getMyId(void) {
 
-          #ifdef WIN32
+          #if _WIN32
 
             // Windows
             return GetCurrentThread();

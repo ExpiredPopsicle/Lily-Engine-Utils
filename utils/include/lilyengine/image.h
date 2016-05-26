@@ -34,7 +34,7 @@
 #include <cstdlib>
 #include <string>
 
-#ifdef WIN32
+#if _WIN32
 // Apparently Windows lacks stdint.h
 typedef unsigned int uint32_t;
 #else

@@ -36,7 +36,7 @@
 #include <cassert>
 using namespace std;
 
-#ifndef WIN32
+#if !_WIN32
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -48,7 +48,7 @@ using namespace std;
 
 #include "expopsockets.h"
 
-#ifdef WIN32
+#if _WIN32
 #define CLOSE_SYSTEM closesocket
 #define CONST_DATA_CAST(x) ((const char*)(x))
 #define DATA_CAST(x) ((char*)(x))
@@ -68,7 +68,7 @@ namespace ExPop {
     static bool socketsDoneInit = false;
 
     void socketsInit(void) {
-      #ifdef WIN32
+      #if _WIN32
         WSADATA wsaData = {0};
         int startupResult = WSAStartup(MAKEWORD(2, 0), &wsaData);
         assert(!startupResult);
@@ -77,7 +77,7 @@ namespace ExPop {
     }
 
     void socketsShutdown(void) {
-      #ifdef WIN32
+      #if _WIN32
         WSACleanup();
       #endif
         socketsDoneInit = false;
