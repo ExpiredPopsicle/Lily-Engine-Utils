@@ -117,7 +117,7 @@ $(NATIVETODOSCAN) : \
 	tools/todoscan/usagetext.h
 
 	$(NATIVECXX) $(COMMON_FLAGS) \
-		$(TODOSCAN_SOURCES)
+		$(TODOSCAN_SOURCES) \
 		-o $@
 
 tools/todoscan/usagetext.h : $(NATIVEBUFFERGEN) tools/todoscan/README.txt
@@ -150,4 +150,4 @@ ALLSOURCESLIST := \
 	$(shell find tools utils -iname "*.cpp")
 
 TODO.org : $(NATIVETODOSCAN) $(ALLSOURCESLIST)
-	echo ASDF
+	$(NATIVETODOSCAN) $(ALLSOURCESLIST) $@
