@@ -1,0 +1,23 @@
+#!/bin/bash
+
+PATHTOME="$(realpath $(dirname "$0"))"
+USAGESTR="Usage: $0 [--libs] [--cflags] [--cxxflags]"
+
+for PARAM in "$@"; do
+    if [ "${PARAM}" == "--cflags" -o "${PARAM}" == "--cxxflags" ]; then
+        echo "-I\"${PATHTOME}/utils/include\" -I\"${PATHTOME}/utils/include/lilyengine\""
+    elif [ "${PARAM}" == "--libs" ]; then
+        echo "\"${PATHTOME}/utils/src/everything.cpp\""
+    else
+        echo "${USAGESTR}" 1>&2
+        exit 1
+    fi
+done
+
+if [ "$#" == 0 ]; then
+    echo "${USAGESTR}" 1>&2
+    exit 1
+fi
+
+
+
