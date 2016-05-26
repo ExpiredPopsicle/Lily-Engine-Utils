@@ -41,6 +41,7 @@ using namespace ExPop;
 
 #include "orgmodestuff.h"
 #include "common.h"
+#include "usagetext.h"
 
 // This is all testing junk...
 // ----------------------------------------------------------------------
@@ -104,6 +105,11 @@ string testThinger2 = "\" // TODO: Don't read this string either";
 
 // TODO: Some of the lines in the org file are ending up with extra
 // spaces.
+
+void showHelp(const char *argv0)
+{
+    cout << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
+}
 
 // Load a file into a bunch of lines.
 void loadFileLines(
@@ -580,10 +586,8 @@ int main(int argc, char *argv[])
 
     // Quick sanity check.
     if(!numCppFiles || numOrgFiles != 1) {
-        cerr << "Usage: " << argv[0] << " [-f] [-o] <source files> <org mode file>" << endl;
-        cerr << "    -f: Force writing files, even if they are not in any version control." << endl;
-        cerr << "    -o: Just write everything to stdout instead of any files." << endl;
-        exit(1);
+        showHelp(argv[0]);
+        return 1;
     }
 
     assignMissingIssueNumbers(commentBlocks);

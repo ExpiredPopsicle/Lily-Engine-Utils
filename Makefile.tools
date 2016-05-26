@@ -7,9 +7,11 @@ COMMON_FLAGS := \
 	utils/src/params/params.cpp \
 	utils/src/image/image.cpp \
 	-Iutils/include \
-	-Iutils/include/lilyengine
+	-Iutils/include/lilyengine \
+	-static
 
 CLEANLIST :=
+GENERATEDLIST :=
 
 # Attempt to discover a native C++ compiler that we can use to build
 # the tools we'll need to generate code for everything else.
@@ -44,6 +46,7 @@ buffergen : tools/buffergen/buffergen.cpp tools/buffergen/usagetext.h
 		-o $@
 
 CLEANLIST := $(CLEANLIST) $(NATIVEBUFFERGEN) buffergen
+GENERATEDLIST := $(GENERATEDLIST) tools/buffergen/usagetext.h
 
 # ----------------------------------------------------------------------
 # lilyarchiver
@@ -60,6 +63,7 @@ lilyarchiver : \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) lilyarchiver
+GENERATEDLIST := $(GENERATEDLIST) tools/archiver/usagetext.h
 
 # ----------------------------------------------------------------------
 # headerfixer
@@ -80,6 +84,7 @@ headerfixer : \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) headerfixer
+GENERATEDLIST := $(GENERATEDLIST) tools/headerfixer/usagetext.h
 
 # ----------------------------------------------------------------------
 # imgbuffer
@@ -96,11 +101,18 @@ imgbuffer : \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) imgbuffer
+GENERATEDLIST := $(GENERATEDLIST) tools/imgbuffer/usagetext.h
 
 # ----------------------------------------------------------------------
 # todoscan
 
-todoscan : tools/todoscan/todoscan.cpp
+tools/todoscan/usagetext.h : $(NATIVEBUFFERGEN) tools/todoscan/README.txt
+	$(NATIVEBUFFERGEN)	tools/todoscan/README.txt usageText > $@
+
+todoscan : \
+	tools/todoscan/todoscan.cpp \
+	tools/todoscan/usagetext.h
+
 	$(CXX) $(COMMON_FLAGS) \
 		tools/todoscan/todoscan.cpp \
 		tools/todoscan/orgmodestuff.cpp \
@@ -108,9 +120,13 @@ todoscan : tools/todoscan/todoscan.cpp
 		-o $@
 
 CLEANLIST := $(CLEANLIST) todoscan
+GENERATEDLIST := $(GENERATEDLIST) tools/todoscan/usagetext.h
 
 # ----------------------------------------------------------------------
 
 clean :
 	- rm $(CLEANLIST)
+
+extraclean : clean
+	- rm $(GENERATEDLIST)
 
