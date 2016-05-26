@@ -20,6 +20,8 @@ NATIVECXX := $(shell which clang++ g++ c++ "$(CXX)" | head -n 1)
 # Version of buffergen built for the native platform tools for some of
 # the needed code generation.
 NATIVEBUFFERGEN := ./buffergen_temp
+NATIVETODOSCAN := ./todoscan_temp
+.INTERMEDIATE : $(NATIVEBUFFERGEN) $(NATIVETODOSCAN)
 
 all : buffergen lilyarchiver headerfixer imgbuffer todoscan
 
@@ -28,7 +30,6 @@ all : buffergen lilyarchiver headerfixer imgbuffer todoscan
 
 # buffergen relies on a primitive version of buffergen to generate the
 # internal --help text buffer!
-.INTERMEDIATE : $(NATIVEBUFFERGEN)
 $(NATIVEBUFFERGEN) : tools/buffergen/buffergen.cpp
 	$(NATIVECXX) $(COMMON_FLAGS) \
 		-DNO_HELP_ALLOWED=1 \
@@ -106,6 +107,19 @@ GENERATEDLIST := $(GENERATEDLIST) tools/imgbuffer/usagetext.h
 # ----------------------------------------------------------------------
 # todoscan
 
+TODOSCAN_SOURCES := \
+	tools/todoscan/todoscan.cpp \
+	tools/todoscan/orgmodestuff.cpp \
+	tools/todoscan/commentblock.cpp
+
+$(NATIVETODOSCAN) : \
+	tools/todoscan/todoscan.cpp \
+	tools/todoscan/usagetext.h
+
+	$(NATIVECXX) $(COMMON_FLAGS) \
+		$(TODOSCAN_SOURCES)
+		-o $@
+
 tools/todoscan/usagetext.h : $(NATIVEBUFFERGEN) tools/todoscan/README.txt
 	$(NATIVEBUFFERGEN)	tools/todoscan/README.txt usageText > $@
 
@@ -114,10 +128,9 @@ todoscan : \
 	tools/todoscan/usagetext.h
 
 	$(CXX) $(COMMON_FLAGS) \
-		tools/todoscan/todoscan.cpp \
-		tools/todoscan/orgmodestuff.cpp \
-		tools/todoscan/commentblock.cpp \
+		$(TODOSCAN_SOURCES) \
 		-o $@
+
 
 CLEANLIST := $(CLEANLIST) todoscan
 GENERATEDLIST := $(GENERATEDLIST) tools/todoscan/usagetext.h
@@ -130,3 +143,11 @@ clean :
 extraclean : clean
 	- rm $(GENERATEDLIST)
 
+# ----------------------------------------------------------------------
+
+ALLSOURCESLIST := \
+	$(shell find tools utils -iname "*.h") \
+	$(shell find tools utils -iname "*.cpp")
+
+TODO.org : $(NATIVETODOSCAN) $(ALLSOURCESLIST)
+	echo ASDF
