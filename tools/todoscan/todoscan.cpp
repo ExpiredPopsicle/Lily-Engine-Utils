@@ -495,8 +495,8 @@ void getGitState(GitState &state) {
 
 bool cmpCommentBlocks(
     const CommentBlock *cb0,
-    const CommentBlock *cb1) {
-
+    const CommentBlock *cb1)
+{
     if(cb0->type != cb1->type) {
         return cb0->type < cb1->type;
     }
@@ -504,8 +504,8 @@ bool cmpCommentBlocks(
     return cb0->issueId < cb1->issueId;
 }
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
     // TODO: Command line parameter usage junk.
     vector<CommentBlock *> commentBlocks;
     map<string, vector<string> > linesByFile;

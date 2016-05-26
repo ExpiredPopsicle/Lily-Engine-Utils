@@ -1,34 +1,3 @@
-// ---------------------------------------------------------------------------
-//
-//   Lily Engine Utils
-//
-//   Copyright (c) 2012-2016 Clifford Jolly
-//     http://expiredpopsicle.com
-//     expiredpopsicle@gmail.com
-//
-// ---------------------------------------------------------------------------
-//
-//   This software is provided 'as-is', without any express or implied
-//   warranty. In no event will the authors be held liable for any
-//   damages arising from the use of this software.
-//
-//   Permission is granted to anyone to use this software for any
-//   purpose, including commercial applications, and to alter it and
-//   redistribute it freely, subject to the following restrictions:
-//
-//   1. The origin of this software must not be misrepresented; you must
-//      not claim that you wrote the original software. If you use this
-//      software in a product, an acknowledgment in the product
-//      documentation would be appreciated but is not required.
-//
-//   2. Altered source versions must be plainly marked as such, and must
-//      not be misrepresented as being the original software.
-//
-//   3. This notice may not be removed or altered from any source
-//      distribution.
-//
-// -------------------------- END HEADER -------------------------------------
-
 const unsigned int mainHeader_len = 1130;
 const char mainHeader[] = {
     0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d,
@@ -87,5 +56,5 @@ const char mainHeader[] = {
     0x69, 0x63, 0x65, 0x20, 0x6d, 0x61, 0x79, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x62, 0x65, 0x20, 0x72, 0x65, 0x6d, 0x6f, 0x76,
     0x65, 0x64, 0x20, 0x6f, 0x72, 0x20, 0x61, 0x6c, 0x74, 0x65, 0x72, 0x65, 0x64, 0x20, 0x66, 0x72, 0x6f, 0x6d, 0x20, 0x61,
     0x6e, 0x79, 0x20, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x0a, 0x20, 0x20, 0x20, 0x20, 0x20, 0x64, 0x69, 0x73, 0x74, 0x72,
-    0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x0a, 0x0a, 0x00,
+    0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x0a, 0x0a,
 };

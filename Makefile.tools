@@ -9,46 +9,89 @@ COMMON_FLAGS := \
 	-Iutils/include \
 	-Iutils/include/lilyengine
 
-all : buffergen lilyarchiver headerfixer imgbuffer
+CLEANLIST :=
+
+# Attempt to discover a native C++ compiler that we can use to build
+# the tools we'll need to generate code for everything else.
+NATIVECXX := $(shell which clang++ g++ | head -n 1)
+
+all : buffergen lilyarchiver headerfixer imgbuffer todoscan
 
 # ----------------------------------------------------------------------
 # buffergen
 
-buffergen : tools/buffergen/buffergen.cpp
+# buffergen relies on a primitive version of buffergen to generate the
+# internal --help text buffer!
+.INTERMEDIATE : tools/buffergen/buffergen_temp
+tools/buffergen/buffergen_temp : tools/buffergen/buffergen.cpp
+	clang++ $(COMMON_FLAGS) \
+		-DNO_HELP_ALLOWED=1 \
+		tools/buffergen/buffergen.cpp \
+		-o $@
+
+tools/buffergen/usagetext.h : tools/buffergen/buffergen_temp tools/buffergen/README.txt
+	./tools/buffergen/buffergen_temp \
+		tools/buffergen/README.txt \
+		usageText > $@
+
+buffergen : tools/buffergen/buffergen.cpp tools/buffergen/usagetext.h
 	clang++ $(COMMON_FLAGS) \
 		tools/buffergen/buffergen.cpp \
 		-o $@
 
+CLEANLIST := $(CLEANLIST) tools/buffergen/buffergen_temp buffergen
+
 # ----------------------------------------------------------------------
 # lilyarchiver
 
-lilyarchiver : tools/archiver/archiver.cpp
+tools/archiver/usagetext.h : buffergen tools/archiver/README.txt
+	./buffergen	tools/archiver/README.txt usageText > $@
+
+lilyarchiver : \
+	tools/archiver/archiver.cpp \
+	tools/archiver/usagetext.h
+
 	clang++ $(COMMON_FLAGS) \
 		tools/archiver/archiver.cpp \
 		-o $@
+
+CLEANLIST := $(CLEANLIST) lilyarchiver
 
 # ----------------------------------------------------------------------
 # headerfixer
 
 tools/headerfixer/mainheader.h : buffergen tools/headerfixer/mainheader.txt
-	bash tools/headerfixer/generateheader.bsh
+	./buffergen tools/headerfixer/mainheader.txt mainHeader > $@
+
+tools/headerfixer/usagetext.h : buffergen tools/headerfixer/README.txt
+	./buffergen	tools/headerfixer/README.txt usageText > $@
 
 headerfixer : \
 	tools/headerfixer/headerfixer.cpp \
-	tools/headerfixer/mainheader.h
+	tools/headerfixer/mainheader.h \
+	tools/headerfixer/usagetext.h
 
 	clang++ $(COMMON_FLAGS) \
 		tools/headerfixer/headerfixer.cpp \
 		-o $@
 
+CLEANLIST := $(CLEANLIST) headerfixer
+
 # ----------------------------------------------------------------------
 # imgbuffer
 
-imgbuffer : tools/imgbuffer/imgbuffer.cpp
+tools/imgbuffer/usagetext.h : buffergen tools/imgbuffer/README.txt
+	./buffergen	tools/imgbuffer/README.txt usageText > $@
+
+imgbuffer : \
+	tools/imgbuffer/imgbuffer.cpp \
+	tools/imgbuffer/usagetext.h
+
 	clang++ $(COMMON_FLAGS) \
 		tools/imgbuffer/imgbuffer.cpp \
 		-o $@
 
+CLEANLIST := $(CLEANLIST) imgbuffer
 
 # ----------------------------------------------------------------------
 # todoscan
@@ -60,11 +103,10 @@ todoscan : tools/todoscan/todoscan.cpp
 		tools/todoscan/commentblock.cpp \
 		-o $@
 
+CLEANLIST := $(CLEANLIST) todoscan
+
 # ----------------------------------------------------------------------
 
 clean :
-	- rm imgbuffer
-	- rm buffergen
-	- rm lilyarchiver
-	- rm headerfixer
+	- rm $(CLEANLIST)
 

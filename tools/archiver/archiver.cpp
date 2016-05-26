@@ -37,7 +37,10 @@ using namespace std;
 
 #include <lilyengine/archive.h>
 #include <lilyengine/filesystem.h>
+#include <lilyengine/malstring.h>
 using namespace ExPop;
+
+#include "usagetext.h"
 
 int main(int argc, char *argv[])
 {
@@ -135,23 +138,25 @@ int main(int argc, char *argv[])
 
     } else {
 
-        cout << "Usages: " << endl;
-        cout << "  " << argv[0] << " -c <archive filename> [files to add]     - Create an archive." << endl;
-        cout << "  " << argv[0] << " -e <archive filename> [files to extract] - Extract files from an archive." << endl;
-        cout << "  " << argv[0] << " -l <archive filename>                    - List files in an archive." << endl;
-        cout << "  " << argv[0] << " -d <archive filename> [files to dump]    - Dump specified files to stdout." << endl;
+        // cout << "Usages: " << endl;
+        // cout << "  " << argv[0] << " -c <archive filename> [files to add]     - Create an archive." << endl;
+        // cout << "  " << argv[0] << " -e <archive filename> [files to extract] - Extract files from an archive." << endl;
+        // cout << "  " << argv[0] << " -l <archive filename>                    - List files in an archive." << endl;
+        // cout << "  " << argv[0] << " -d <archive filename> [files to dump]    - Dump specified files to stdout." << endl;
 
-        cout << endl;
-        cout << "ExpiredPopsicle's archive generator 1.0" << endl;
-        cout << endl;
-        cout << "Generates a file for use with the archive subsystem of" << endl;
-        cout << "LilyEngineUtils." << endl;
-        cout << endl;
-        cout << "Options:" << endl;
-        cout << endl;
-        cout << "  --help            You're sitting in it." << endl;
-        cout << endl;
-        cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+        // cout << endl;
+        // cout << "ExpiredPopsicle's archive generator 1.0" << endl;
+        // cout << endl;
+        // cout << "Generates a file for use with the archive subsystem of" << endl;
+        // cout << "LilyEngineUtils." << endl;
+        // cout << endl;
+        // cout << "Options:" << endl;
+        // cout << endl;
+        // cout << "  --help            You're sitting in it." << endl;
+        // cout << endl;
+        // cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+
+        cout << stringReplace<char>("$0", argv[0], std::string(usageText, usageText_len)) << endl;
 
         if(argc > 1 && !strcmp(argv[1], "--help")) {
             // If they actually asked for --help, then that's not

@@ -35,27 +35,58 @@
 using namespace std;
 
 #include <lilyengine/utils.h>
+#include <lilyengine/malstring.h>
 using namespace ExPop;
 using namespace ExPop::Gfx;
 
-int main(int argc, char *argv[]) {
+#include "usagetext.h"
+
+void showHelp(const char *argv0)
+{
+    cout << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
+}
+
+int main(int argc, char *argv[])
+{
+    // Parse params.
+    std::vector<std::string> paramNames = { };
+    std::vector<ParsedParameter> params;
+    parseCommandLine(argc, argv, paramNames, params);
+
+    std::string filename;
+    std::string variableName;
+
+    for(size_t i = 0; i < params.size(); i++) {
+        if(params[i].name == "help") {
+            showHelp(argv[0]);
+            return 0;
+        } else {
+            if(!filename.size()) {
+                filename = params[i].value;
+            } else if(!variableName.size()) {
+                variableName = params[i].value;
+            } else {
+                cerr << "Unknown parameter: " << params[i].name << endl;
+            }
+        }
+    }
 
     if(argc < 3) {
-        cerr << "Usage: " << argv[0] << " <image.tga> <bufferPrefix>" << endl;
+        showHelp(argv[0]);
         return 1;
     }
 
     int len = 0;
-    char *buf = FileSystem::loadFile(argv[1], &len);
+    char *buf = FileSystem::loadFile(filename, &len);
 
     if(!buf) {
-        cerr << "Error loading file: " << argv[1] << endl;
+        cerr << "Error loading file: " << filename << endl;
         return 1;
     }
 
     Image *img = loadTGA(buf, len);
     if(!img) {
-        cerr << "Error loading TGA data from " << argv[1] << " possibly a malformed or unsupported TGA." << endl;
+        cerr << "Error loading TGA data from " << filename << " possibly a malformed or unsupported TGA." << endl;
         return 1;
     }
 
@@ -102,10 +133,10 @@ int main(int argc, char *argv[]) {
 
     cout << "namespace ExPop {" << endl;
     cout << "    namespace Gfx {" << endl;
-    cout << "        unsigned int " << argv[2] << "_width  = " << img->getWidth() << ";" << endl;
-    cout << "        unsigned int " << argv[2] << "_height = " << img->getHeight() << ";" << endl;
-    cout << "        unsigned int " << argv[2] << "_length = " << outBufLen << ";" << endl;
-    cout << "        char " << argv[2] << "_data[]         = {" << endl;
+    cout << "        unsigned int " << variableName << "_width  = " << img->getWidth() << ";" << endl;
+    cout << "        unsigned int " << variableName << "_height = " << img->getHeight() << ";" << endl;
+    cout << "        unsigned int " << variableName << "_length = " << outBufLen << ";" << endl;
+    cout << "        char " << variableName << "_data[]         = {" << endl;
 
     char hexLookup[] = {
         '0', '1', '2', '3',

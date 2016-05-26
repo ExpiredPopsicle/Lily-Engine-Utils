@@ -39,6 +39,7 @@ using namespace std;
 #include <lilyengine/utils.h>
 
 #include "mainheader.h"
+#include "usagetext.h"
 
 using namespace ExPop;
 
@@ -152,30 +153,7 @@ vector<string> loadLinesFromBuffer(const char *buf)
 
 void showHelp(const char *argv0)
 {
-    cout << "Usage: " << argv0 << " <source files>" << endl;
-    cout << endl;
-    cout << "ExpiredPopsicle's header fixer tool 1.0" << endl;
-    cout << endl;
-    cout << "Automate fixing copyright notices in lots of C/C++ source" << endl;
-    cout << "and header files." << endl;
-    cout << endl;
-    cout << "Use \"--\" as an input filename if you want the built-in," << endl;
-    cout << "default header." << endl;
-    cout << endl;
-    cout << "Options:" << endl;
-    cout << endl;
-    cout << "  --help            You're sitting in it." << endl;
-    cout << "  --dumpheader      Write the built-in, default header to" << endl;
-    cout << "                    standard output and quit." << endl;
-    cout << "  --header <file>   Use a file as the header text." << endl;
-    cout << "  --prefix <text>   Prefix each line with text instead of the" << endl;
-    cout << "                    default \"//\" used for C++ files. Note" << endl;
-    cout << "                    that this alters the search for the old" << endl;
-    cout << "                    header. Use --strip to remove an old one" << endl;
-    cout << "                    before attempting to alter a prefix." << endl;
-    cout << "  --strip           Strip all headers." << endl;
-    cout << endl;
-    cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+    cout << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
 }
 
 int main(int argc, char *argv[])
@@ -203,10 +181,16 @@ int main(int argc, char *argv[])
         } else if(params[i].name == "strip") {
             stripMode = true;
         } else {
-            filenames.push_back(params[i].value);
+            if(!params[i].name.size()) {
+                filenames.push_back(params[i].value);
+            } else {
+                cerr << "Unknown parameter: " << params[i].name << endl;
+            }
         }
     }
 
+    // If we didn't get any parameters at all, dump a help screen and
+    // exit.
 	if(argc < 2) {
         showHelp(argv[0]);
 		return 1;

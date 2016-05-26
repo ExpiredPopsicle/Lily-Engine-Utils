@@ -302,6 +302,78 @@ namespace ExPop {
     /// text data.
     std::string strBase64EncodeString(const std::string &str);
 
+    template<typename T>
+    inline bool stringCompareOffset(
+        const std::basic_string<T> &needle,
+        const std::basic_string<T> &haystack,
+        size_t haystackOffset)
+    {
+        // String length 0 matches anything, including a pointer to
+        // just after the last character.
+        if(needle.size() == 0 && haystackOffset <= haystack.size()) {
+            return true;
+        }
+
+        // Anything in needle won't match a pointer to after the last
+        // character, or further.
+        if(haystackOffset >= haystack.size()) {
+            return false;
+        }
+
+        // Offset + needle would put needle hanging off the end of the
+        // haystack. Obvious failure.
+        if(haystackOffset + needle.size() >= haystack.size()) {
+            return false;
+        }
+
+        // We proooooobably don't have to do this check, unless
+        // haystack really does take up almost the entire address
+        // space some how.
+      #if 0
+        if(haystackOffset > ~(size_t)0 - needle.size()) {
+            return false;
+        }
+      #endif
+
+        // Now do the actual comparison.
+        for(size_t i = 0; i < needle.size(); i++) {
+            if(haystack[i + haystackOffset] != needle[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template<typename T>
+    inline std::basic_string<T> stringReplace(
+        const std::basic_string<T> &stringToReplace,
+        const std::basic_string<T> &replacement,
+        const std::basic_string<T> &sourceText)
+    {
+        assert(stringToReplace.size());
+
+        std::basic_string<T> output;
+        for(size_t i = 0; i < sourceText.size(); i++) {
+
+            if(stringCompareOffset(stringToReplace, sourceText, i)) {
+
+                // Found the string to replace.
+                output = output + replacement;
+                i += stringToReplace.size() - 1;
+
+            } else {
+
+                // No replacement. Just append characters.
+                output = output + sourceText.substr(i, 1);
+
+            }
+
+        }
+
+        return output;
+    }
+
 
 
     /// Simple buffer that we can dynamically expand or iterate through.

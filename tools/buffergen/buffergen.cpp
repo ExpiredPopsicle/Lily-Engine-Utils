@@ -39,6 +39,17 @@ using namespace std;
 #include <lilyengine/utils.h>
 using namespace ExPop;
 
+// buffergen depends on itself to generate the --help text in
+// usageText.h. We'll build it first with NO_HELP_ALLOWED so that we
+// can use it to make the --help text. Then we'll build the final
+// version.
+#if !NO_HELP_ALLOWED
+#include "usagetext.h"
+#else
+const unsigned int usageText_len = 13;
+const char usageText[] = "No help here!";
+#endif
+
 std::string sanitizeName(const std::string &in)
 {
     string out;
@@ -56,6 +67,11 @@ std::string sanitizeName(const std::string &in)
     return out;
 }
 
+void showHelp(const char *argv0)
+{
+    cout << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
+}
+
 int main(int argc, char *argv[])
 {
     // Parse params. We only have a help parameter here, because this
@@ -63,41 +79,43 @@ int main(int argc, char *argv[])
     std::vector<std::string> paramNames = {};
     std::vector<ParsedParameter> params;
     parseCommandLine(argc, argv, paramNames, params);
+
+    bool addNull = false;
+    std::string filename = "";
+    std::string variableName = "";
+
     for(size_t i = 0; i < params.size(); i++) {
         if(params[i].name == "help") {
-            cout << "Usage: " << argv[0] << " <filename> [variable]" << endl;
-            cout << endl;
-            cout << "ExpiredPopsicle's static buffer header generator 1.0" << endl;
-            cout << endl;
-            cout << "Useful for when you really want to embed a whole damn" << endl;
-            cout << "file into your source code." << endl;
-            cout << endl;
-            cout << "Options:" << endl;
-            cout << endl;
-            cout << "  --help            You're sitting in it." << endl;
-            cout << endl;
-            cout << "Report bugs to expiredpopsicle@gmail.com" << endl;
+            showHelp(argv[0]);
             exit(0);
+        } else if(params[i].name == "nonull") {
+            addNull = true;
+        } else if(params[i].name == "") {
+            if(!filename.size()) {
+                filename = params[i].value;
+            } else if(!variableName.size()) {
+                variableName = params[i].value;
+            } else {
+                cerr << "Too many parameters starting at: " << params[i].value << endl;
+            }
         }
     }
 
-    if(argc < 2) {
-        cerr << "Specify a file name and possibly a variable name!" << endl;
+    if(!filename.size()) {
+        showHelp(argv[0]);
         return 1;
     }
 
     int fileLen = 0;
-    char *fileData = FileSystem::loadFile(argv[1], &fileLen);
+    char *fileData = FileSystem::loadFile(filename, &fileLen);
 
     if(!fileData) {
-        cerr << "Failed to open that file." << endl;
+        cerr << "Failed to open " << filename << endl;
         return 1;
     }
 
-    string variableName;
-    if(argc >= 3) {
-        variableName = argv[2];
-    } else {
+    // No variable name? Make one up based on the filename.
+    if(!variableName.size()) {
         string base = ExPop::FileSystem::getBaseName(argv[1]);
         string baseNoExt;
         string junk;
@@ -113,7 +131,7 @@ int main(int argc, char *argv[])
     // _len variable will show the actual size of the buffer without
     // the extra terminator, however.
 
-    for(unsigned int i = 0; i < (unsigned int)fileLen + 1; i++) {
+    for(unsigned int i = 0; i < (unsigned int)fileLen + (addNull ? 1 : 0); i++) {
         if(!(i % 20)) {
             if(i) cout << endl;
 
