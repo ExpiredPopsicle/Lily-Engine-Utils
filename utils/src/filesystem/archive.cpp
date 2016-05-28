@@ -35,12 +35,11 @@
 #include <cstring>
 using namespace std;
 
-#include "filesystem.h"
-#include "archive.h"
+#include <lilyengine/filesystem.h>
+#include <lilyengine/archive.h>
 
 #ifdef OS_ANDROID
 #include <android/asset_manager.h>
-#include "../../hacks/android.h"
 #endif
 
 namespace ExPop {

@@ -34,7 +34,7 @@
 #include <iostream>
 using namespace std;
 
-#include "compress.h"
+#include <lilyengine/compress.h>
 
 #define LENGTHBITS 15
 #define MAXCHUNKLENGTH (1 << (LENGTHBITS - 1))

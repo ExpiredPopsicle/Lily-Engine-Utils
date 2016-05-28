@@ -1,14 +1,10 @@
 COMMON_FLAGS := \
 	-Wall \
 	--std=c++11 \
-	utils/src/string/string.cpp \
-	utils/src/filesystem/filesystem.cpp \
-	utils/src/filesystem/archive.cpp \
+	utils/src/everything.cpp \
 	utils/src/assert/malassert.cpp \
-	utils/src/params/params.cpp \
 	utils/src/image/image.cpp \
 	-Iutils/include \
-	-Iutils/include/lilyengine \
 	-static
 
 CLEANLIST :=

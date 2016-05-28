@@ -36,7 +36,7 @@
 #include <cassert>
 using namespace std;
 
-#include "matrix.h"
+#include <lilyengine/matrix.h>
 
 namespace ExPop {
 }

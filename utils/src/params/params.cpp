@@ -29,7 +29,7 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-#include "params.h"
+#include <lilyengine/params.h>
 
 #include <iomanip>
 #include <iostream>

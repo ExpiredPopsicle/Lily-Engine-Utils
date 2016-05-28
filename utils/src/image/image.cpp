@@ -36,9 +36,9 @@
 #include <cstring>
 using namespace std;
 
-#include "utils.h"
-#include "image.h"
-#include "filesystem.h"
+#include <lilyengine/utils.h>
+#include <lilyengine/image.h>
+#include <lilyengine/filesystem.h>
 using namespace ExPop::Console;
 using namespace ExPop;
 

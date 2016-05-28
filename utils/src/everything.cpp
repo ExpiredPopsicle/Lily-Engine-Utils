@@ -58,3 +58,7 @@
 #include "crypto/cryptorc4.cpp"
 #include "parser/parser.cpp"
 #include "parser/parserxml.cpp"
+
+#include "string/simplebuffer.cpp"
+#include "params/params.cpp"
+

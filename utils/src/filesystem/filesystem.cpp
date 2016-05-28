@@ -48,13 +48,13 @@ using namespace std;
 #include <direct.h>
 #endif
 
-#include "console.h"
+#include <lilyengine/console.h>
 using namespace ExPop::Console;
 
-#include "filesystem.h"
-#include "archive.h"
-#include "malstring.h"
-#include "thread.h"
+#include <lilyengine/filesystem.h>
+#include <lilyengine/archive.h>
+#include <lilyengine/malstring.h>
+#include <lilyengine/thread.h>
 
 namespace ExPop {
 

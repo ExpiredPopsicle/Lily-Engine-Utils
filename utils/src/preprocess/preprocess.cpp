@@ -36,9 +36,9 @@
 #include <map>
 using namespace std;
 
-#include "malstring.h"
-#include "filesystem.h"
-#include "preprocess.h"
+#include <lilyengine/malstring.h>
+#include <lilyengine/filesystem.h>
+#include <lilyengine/preprocess.h>
 
 namespace ExPop {
 

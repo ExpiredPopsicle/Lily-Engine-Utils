@@ -32,7 +32,7 @@
 // For memset.
 #include <cstring>
 
-#include "cryptorc4.h"
+#include <lilyengine/cryptorc4.h>
 
 namespace ExPop
 {
