@@ -67,9 +67,10 @@ std::string sanitizeName(const std::string &in)
     return out;
 }
 
-void showHelp(const char *argv0)
+void showHelp(const char *argv0, bool error)
 {
-    cout << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
+    std::ostream *out = error ? &cerr : &cout;
+    (*out) << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
 }
 
 int main(int argc, char *argv[])
@@ -86,8 +87,8 @@ int main(int argc, char *argv[])
 
     for(size_t i = 0; i < params.size(); i++) {
         if(params[i].name == "help") {
-            showHelp(argv[0]);
-            exit(0);
+            showHelp(argv[0], false);
+            return 0;
         } else if(params[i].name == "nonull") {
             addNull = true;
         } else if(params[i].name == "") {
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
     }
 
     if(!filename.size()) {
-        showHelp(argv[0]);
+        showHelp(argv[0], true);
         return 1;
     }
 

@@ -1,4 +1,5 @@
 COMMON_FLAGS := \
+	-Wall \
 	--std=c++11 \
 	utils/src/string/string.cpp \
 	utils/src/filesystem/filesystem.cpp \

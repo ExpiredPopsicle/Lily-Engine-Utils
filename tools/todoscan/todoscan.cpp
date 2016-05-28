@@ -106,9 +106,10 @@ string testThinger2 = "\" // TODO: Don't read this string either";
 // TODO: Some of the lines in the org file are ending up with extra
 // spaces.
 
-void showHelp(const char *argv0)
+void showHelp(const char *argv0, bool error)
 {
-    cout << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
+    std::ostream *out = error ? &cerr : &cout;
+    (*out) << stringReplace<char>("$0", argv0, std::string(usageText, usageText_len)) << endl;
 }
 
 // Load a file into a bunch of lines.
@@ -531,6 +532,12 @@ int main(int argc, char *argv[])
     vector<string> justFileList;
     vector<string> argsList;
     for(unsigned int i = 1; i < (unsigned int)argc; i++) {
+
+        if(!strcmp(argv[i], "--help")) {
+            showHelp(argv[0], false);
+            return 0;
+        }
+
         if(strlen(argv[i]) && argv[i][0] == '-') {
             argsList.push_back(argv[i]);
         } else {
@@ -586,7 +593,7 @@ int main(int argc, char *argv[])
 
     // Quick sanity check.
     if(!numCppFiles || numOrgFiles != 1) {
-        showHelp(argv[0]);
+        showHelp(argv[0], true);
         return 1;
     }
 
