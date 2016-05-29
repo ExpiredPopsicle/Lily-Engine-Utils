@@ -55,6 +55,7 @@
 
 namespace ExPop
 {
+    /// This is incomplete. Don't use it yet.
     inline void httpGet(const std::string &url);
 
   #if EXPOP_ENABLE_TESTING
