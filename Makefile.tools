@@ -3,6 +3,7 @@ COMMON_CXXFLAGS := \
 	--std=c++11
 COMMON_LDFLAGS :=
 
+# We'll fill this up with things to clean out later.
 CLEANLIST :=
 GENERATEDLIST :=
 
@@ -29,7 +30,6 @@ NATIVE_CXXFLAGS := $(COMMON_CXXFLAGS) \
 NATIVE_LDFLAGS := $(COMMON_LDFLAGS) \
 	$(shell CXX=$(NATIVECXX) bash config.bsh --libs --enable-threads --enable-sockets)
 NATIVE_EXT :=
-
 
 # Need to add Winsock stuff to Windows builds when using Mingw, and
 # pthreads to non-Windows builds. Winsock linking will get handled by
