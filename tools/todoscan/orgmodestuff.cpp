@@ -117,9 +117,9 @@ void outputOrgFile(
 
                 // Output a prefixed, indented, wordwrapped thingy.
                 out <<
-                    strPrefixLines(
-                        strIndent(
-                            strWordWrap(
+                    stringPrefixLines(
+                        stringIndent(
+                            stringWordWrap(
                                 fixmeAddin + commentLines[j],
                                 60),
                             0,

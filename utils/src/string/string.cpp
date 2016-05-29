@@ -29,18 +29,6 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-#include <cstring>
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <cstdlib>
-using namespace std;
+// TODO: Remove this from builds.
 
-#include <cassert>
-
-#include <lilyengine/malstring.h>
-
-namespace ExPop
-{
-};
 

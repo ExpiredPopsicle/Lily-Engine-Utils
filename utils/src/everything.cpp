@@ -48,8 +48,6 @@
 
 #include "preprocess/preprocess.cpp"
 
-#include "string/base64.cpp"
-#include "string/string.cpp"
 #include "string/pooledstring.cpp"
 #include "string/simplebuffer.cpp"
 

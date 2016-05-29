@@ -36,11 +36,26 @@
 
 #pragma once
 
+#include <cassert>
+#include <iostream>
+
+#if __linux__
+#include <cstdlib>
+#include <malloc.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <iomanip>
+#endif
+
 #ifdef __linux__
 #define exPopAssert(x) ExPop::fancyAssert((x), ##x)
 #else
 #define exPopAssert(x) assert(x)
 #endif
+
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
 namespace ExPop {
 
@@ -58,4 +73,55 @@ namespace ExPop {
     }
 
 }
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop {
+
+    inline void fancyAssertFail(const char *errMsg)
+    {
+
+#if __linux__
+
+        // On Linux we may get access to a stack trace that we can
+        // just dump to a console instead of having to load it up in
+        // the debugger. Probaby only useful if we compiled with
+        // debugging symbols enabled.
+
+        const int stackLength = 256;
+        void *stackArray[stackLength];
+        char **symbols;
+        size_t size;
+
+        size = backtrace(stackArray, stackLength);
+        symbols = backtrace_symbols(stackArray, size);
+        cout << "Assertion \"" << errMsg << "\"failed. Here's the stack:" << endl;
+
+        for(unsigned int i = 0; i < size && symbols; i++) {
+            cout << setw(8) << i << ": " <<  symbols[i] << endl;
+        }
+
+        // I'm not sure if we should bother with a free() here,
+        // because in the case of a heap corruption related failure,
+        // this could make the situation even worse. We could also
+        // just want to resume in the debugger after the SIGINT, in
+        // which case we'd want heap allocations to go away.
+        free(symbols);
+
+        // Drop us into the debugger or just explode.
+        raise(SIGINT);
+
+#else
+
+        // We probably won't hit this, because on non-Linux platforms
+        // we just assert() normally.
+        cout << "Assertion \"" << errMsg << "\"failed." << endl;
+        assert(0);
+
+#endif
+
+    }
+};
 
