@@ -34,10 +34,6 @@
 #include <sstream>
 #include <vector>
 #include <cstring>
-#if EXPOP_ENABLE_THREADS
-#include <thread>
-#include <mutex>
-#endif
 using namespace std;
 
 #include <sys/stat.h>
@@ -69,7 +65,7 @@ namespace ExPop {
         // Stick in a fake mutex class and pretend if we aren't using
         // threads at all.
       #if EXPOP_ENABLE_THREADS
-        static std::mutex archivesMutex;
+        static Threads::Mutex archivesMutex;
       #else
         class FakeMutex { public: void lock() { } void unlock() { } } archivesMutex;
       #endif

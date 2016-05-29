@@ -38,7 +38,6 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <thread>
 #include <mutex>
 
 #include "hashtable.h"
@@ -183,7 +182,7 @@ namespace ExPop {
 
         /// Lock this mutex before touching any list or hash table of
         /// LoadRequests for reading or writing.
-        std::mutex loadListMutex;
+        Threads::Mutex loadListMutex;
 
         /// List of loads waiting to start. The order of this will get
         /// all jumbled up as the loading thread picks stuff out of it
@@ -207,7 +206,7 @@ namespace ExPop {
         /// die. (This happens in the destructor for AssetLoader.)
         bool loaderThreadQuit;
 
-        std::thread loaderThread;
+        Threads::Thread *loaderThread;
         friend void AssetLoader_loaderThreadFunc(void *data);
 
         /// This is set to true every time the loader thread starts
@@ -245,7 +244,7 @@ namespace ExPop {
         }
         std::cout << std::endl;
 
-        EXPOP_TEST_VALUE(!data, !!nullptr);
+        EXPOP_TEST_VALUE(!!data, true);
         EXPOP_TEST_VALUE(std::string(data, length), FileSystem::loadFileString("README.org"));
     }
   #endif

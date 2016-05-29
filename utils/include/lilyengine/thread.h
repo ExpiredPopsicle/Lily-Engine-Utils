@@ -29,4 +29,95 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-// FIXME: Remove this file.
+#pragma once
+
+#if _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
+// This thread implementation could be a lot more complete. Should
+// probably add things like semaphores and condition variables.
+
+namespace ExPop {
+
+    namespace Threads {
+
+      #if _WIN32
+        typedef HANDLE ThreadId;
+        typedef HANDLE ThreadType;
+      #else
+        typedef pthread_t ThreadId;
+        typedef pthread_t ThreadType;
+      #endif
+
+        /// Get the current thread's ID.
+        ThreadId getMyId(void);
+
+        /// Simple mutex class.
+        class Mutex {
+        public:
+
+            Mutex(const Mutex &m);
+            Mutex(void);
+            ~Mutex(void);
+
+            /// Lock this. Blocks until it's available.
+            void lock(void);
+
+            /// Unlock this.
+            void unlock(void);
+
+        private:
+
+            struct MutexPrivate;
+            MutexPrivate *mutexPrivate;
+
+            /// Keep track of whatever thread is locking this one.
+            ThreadId lockingThread;
+        };
+
+        /// Handle to a thread. More than one of these objects can
+        /// represent a single thread at a time.
+        class Thread {
+        public:
+
+            Thread(void);
+            ~Thread(void);
+
+            /// Copy an existing thread handle.
+            Thread(const Thread &t);
+
+            /// Start a function in a new thread.
+            Thread(void (*bareFunc)(void*), void *bareData);
+
+            /// Block until the thread's function returns.
+            void join(void);
+
+            /// Get the OS-specific ID for this thread.
+            ThreadId getId(void);
+
+        private:
+
+            void finishInit(void);
+
+            bool done;
+
+            struct ThreadPrivate;
+            ThreadPrivate *threadPrivate;
+            ThreadType systemThread;
+
+            // Entry point for threads.
+          #if _WIN32
+            friend DWORD __stdcall threadStarter(void *data);
+          #else
+            friend void *threadStarter(void *data);
+          #endif
+
+        };
+
+    }
+
+}
+

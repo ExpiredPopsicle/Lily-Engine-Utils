@@ -45,6 +45,8 @@
 //#include "console/console.cpp"
 #endif
 
+#include "thread/thread.cpp"
+
 #include "assetloader/assetloader.cpp"
 
 #include "sockets/sockets.cpp"

@@ -90,7 +90,7 @@ namespace ExPop
         hasBeenLoading = false;
         currentLoad = NULL;
         loaderThreadQuit = false;
-        loaderThread = std::thread(AssetLoader_loaderThreadFunc, this);
+        loaderThread = new Threads::Thread(AssetLoader_loaderThreadFunc, this);
 
       #if EXPOP_CONSOLE
         outSetPrefix("AssetLoader_thread", "AssetLoader(thread): ");
@@ -101,7 +101,8 @@ namespace ExPop
     {
         // Clean up loader thread.
         loaderThreadQuit = true;
-        loaderThread.join();
+        loaderThread->join();
+        delete loaderThread;
 
         // Clean up buffers.
         for(unsigned int i = 0; i < pendingLoads.size(); i++) {

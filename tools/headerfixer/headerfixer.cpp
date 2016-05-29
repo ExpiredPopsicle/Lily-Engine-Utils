@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
         }
 	}
 
-	for(int i = 0; i < filenames.size(); i++) {
+	for(size_t i = 0; i < filenames.size(); i++) {
 
 		string fileName = filenames[i];
 
