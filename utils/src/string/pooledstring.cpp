@@ -33,11 +33,11 @@
 #include <cassert>
 #include <iostream>
 
-#include "pooledstring.h"
+#include <lilyengine/pooledstring.h>
 using namespace std;
 
-namespace ExPop {
-
+namespace ExPop
+{
     // ----------------------------------------------------------------------
     //  PooledString::Ref
     // ----------------------------------------------------------------------

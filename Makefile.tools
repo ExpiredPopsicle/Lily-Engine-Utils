@@ -2,8 +2,6 @@ COMMON_FLAGS := \
 	-Wall \
 	--std=c++11 \
 	utils/src/everything.cpp \
-	utils/src/assert/malassert.cpp \
-	utils/src/image/image.cpp \
 	-Iutils/include \
 	-static
 

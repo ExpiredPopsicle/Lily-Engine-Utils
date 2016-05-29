@@ -36,7 +36,6 @@
 #include "malstring.h"
 #include "filesystem.h"
 #include "thread.h"
-#include "refsystem.h"
 #include "matrix.h"
 #include "angle.h"
 #include "lilyparser.h"

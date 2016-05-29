@@ -38,27 +38,32 @@
 
 #if EXPOP_THREADS
 #include "thread/thread.cpp"
+// At the moment, these two definitely still require threads.
+//#include "console/console.cpp"
+//#include "assetloader/assetloader.cpp"
 #endif
+
 #include "filesystem/archive.cpp"
 #include "filesystem/filesystem.cpp"
-// #include "console/console.cpp"
-// #include "assetloader/assetloader.cpp"
+
 #include "preprocess/preprocess.cpp"
 
-// Completely independent systems...
-
 #include "string/base64.cpp"
-// FIXME: These two stolen by DerpScript.
 #include "string/string.cpp"
-// #include "string/pooledstring.cpp"
-// #include "assert/malassert.cpp"
+#include "string/pooledstring.cpp"
+#include "string/simplebuffer.cpp"
+
+#include "assert/malassert.cpp"
+
 #include "compress/compress.cpp"
+
 #include "math/matrix.cpp"
-#include "refsystem/refsystem.cpp"
+
 #include "crypto/cryptorc4.cpp"
+
 #include "parser/parser.cpp"
 #include "parser/parserxml.cpp"
-
-#include "string/simplebuffer.cpp"
 #include "params/params.cpp"
+
+#include "image/image.cpp"
 
