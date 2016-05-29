@@ -1,8 +1,6 @@
 COMMON_CXXFLAGS := \
 	-Wall \
-	--std=c++11 \
-	$(shell bash config.bsh --libs --cxxflags)
-
+	--std=c++11
 COMMON_LDFLAGS :=
 
 CLEANLIST :=
@@ -19,13 +17,19 @@ NATIVETODOSCAN := ./todoscan_temp
 .INTERMEDIATE : $(NATIVEBUFFERGEN) $(NATIVETODOSCAN)
 
 # Flags for the target platform.
-TARGET_CXXFLAGS := $(COMMON_CXXFLAGS)
-TARGET_LDFLAGS := $(COMMON_LDFLAGS)
+TARGET_CXXFLAGS := $(COMMON_CXXFLAGS)  \
+	$(shell bash config.bsh --cxxflags --enable-threads --enable-sockets)
+TARGET_LDFLAGS := $(COMMON_LDFLAGS) \
+	$(shell bash config.bsh --libs --enable-threads --enable-sockets)
 TARGET_EXT :=
-# Flags for this platform so we can build code generators.
-NATIVE_CXXFLAGS := $(COMMON_CXXFLAGS)
-NATIVE_LDFLAGS := $(COMMON_LDFLAGS)
+
+# Flags for this (build) platform so we can build code generators.
+NATIVE_CXXFLAGS := $(COMMON_CXXFLAGS) \
+	$(shell CXX=$(NATIVECXX) bash config.bsh --cxxflags --enable-threads --enable-sockets)
+NATIVE_LDFLAGS := $(COMMON_LDFLAGS) \
+	$(shell CXX=$(NATIVECXX) bash config.bsh --libs --enable-threads --enable-sockets)
 NATIVE_EXT :=
+
 
 # Need to add Winsock stuff to Windows builds when using Mingw, and
 # pthreads to non-Windows builds. Winsock linking will get handled by
@@ -172,10 +176,7 @@ lilylibtests$(TARGET_EXT) : \
 	tools/lilylibtests/lilylibtests.cpp \
 	tools/lilylibtests/usagetext.h
 
-	$(CXX) \
-		-D EXPOP_ENABLE_SOCKETS=1 \
-		-D EXPOP_ENABLE_THREADS=1 \
-		$(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/lilylibtests/lilylibtests.cpp \
 		-o $@
 
