@@ -28,19 +28,24 @@ NATIVE_CXXFLAGS := $(COMMON_CXXFLAGS)
 NATIVE_LDFLAGS := $(COMMON_LDFLAGS)
 NATIVE_EXT :=
 
-# Need to add Winsock stuff to Windows builds when using Mingw. This
-# will get handled by a #pragma comment for Windows build in
-# Microsoft's compiler.
+# Need to add Winsock stuff to Windows builds when using Mingw, and
+# pthreads to non-Windows builds. Winsock linking will get handled by
+# a #pragma comment for Windows builds when using Microsoft's
+# compiler.
 ifneq (,$(findstring mingw,$(NATIVECXX)))
 	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS) -lws2_32
 	NATIVE_EXT := .exe
 	NATIVEBUFFERGEN := $(NATIVEBUFFERGEN)$(NATIVE_EXT)
 	NATIVETODOSCAN := $(NATIVETODOSCAN)$(NATIVE_EXT)
+else
+	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS) -pthread
 endif
 
 ifneq (,$(findstring mingw,$(CXX)))
 	TARGET_LDFLAGS := $(TARGET_LDFLAGS) -lws2_32
 	TARGET_EXT := .exe
+else
+	TARGET_LDFLAGS := $(TARGET_LDFLAGS) -pthread
 endif
 
 all : \
@@ -171,7 +176,6 @@ lilylibtests$(TARGET_EXT) : \
 	$(CXX) \
 		-D EXPOP_ENABLE_SOCKETS=1 \
 		-D EXPOP_ENABLE_THREADS=1 \
-		-pthread \
 		$(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/lilylibtests/lilylibtests.cpp \
 		-o $@

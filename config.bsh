@@ -1,33 +1,113 @@
 #!/bin/bash
 
 PATHTOME="$(realpath $(dirname "$0"))"
-USAGESTR="Usage: $0 [--libs] [--cflags] [--cxxflags]"
+# This is pretty ugly, but Bash doesn't make it easy to cram "here
+# documents" into variables.
+USAGESTR="Usage: $0 [options] [--libs] [--cflags] [--cxxflags]\n\nOptions:\n\n  --platform-windows            Force Windows-specific flags (for MinGW)\n  --platform-posix              Force POSIX-specific flags\n  --platform-emscripten         Force Emscripten-specific flags\n  --enable-sockets              Enable sockets-related features (off by default)\n  --enable-threads              Enable threading-related features (off by default)\n"
 
+# Attempt to determine platform based on the CXX environment variable.
+# If we see MinGW, then we know we're compiling for Windows. Otherwise
+# guess POSIX.
+PLATFORM="POSIX"
+if ( echo "${CXX}" | grep -i mingw >/dev/null ); then
+    PLATFORM="WINDOWS"
+fi
+if ( ( echo "${CXX}" | grep -i "emcc" >/dev/null ) || ( echo "${CXX}" | grep -i "em++" >/dev/null ) ); then
+    PLATFORM="EMSCRIPTEN"
+fi
+
+EXTRA_CXXFLAGS=""
+EXTRA_LDFLAGS=""
+
+# First parameter list search. This will determine platform, which is
+# needed in the next stage.
 for PARAM in "$@"; do
+    if [ "${PARAM}" == "--platform-windows" ]; then
+        PLATFORM="WINDOWS"
+    elif [ "${PARAM}" == "--platform-posix" ]; then
+        PLATFORM="POSIX"
+    elif [ "${PARAM}" == "--platform-emscripten" ]; then
+        PLATFORM="EMSCRIPTEN"
+    else
+        if [ "${SECONDARYPARAMS}" == "" ]; then
+            SECONDARYPARAMS="${PARAM}"
+        else
+            SECONDARYPARAMS="${SECONDARYPARAMS} ${PARAM}"
+        fi
+    fi
+done
+
+# Second parameter list search. This will add platform-specific
+# parameters needed for threads and sockets. The platform parameters
+# need to be parsed before this.
+for PARAM in ${SECONDARYPARAMS}; do
+
+    if [ "${PARAM}" == "--enable-threads" ]; then
+
+        EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -DEXPOP_ENABLE_THREADS=1"
+
+        if [ "${PLATFORM}" == "POSIX" ]; then
+            EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -pthread"
+        fi
+
+        if [ "${PLATFORM}" == "EMSCRIPTEN" ]; then
+            echo "Warning: Threading code is incompatible with Emscripten platform." 1>&2
+        fi
+
+    elif [ "${PARAM}" == "--enable-sockets" ]; then
+
+        EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -DEXPOP_ENABLE_SOCKETS=1"
+
+        if [ "${PLATFORM}" == "WINDOWS" ]; then
+            EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -lws2_32"
+        fi
+
+        if [ "${PLATFORM}" == "EMSCRIPTEN" ]; then
+            echo "Warning: Sockets code is incompatible with Emscripten platform." 1>&2
+        fi
+
+    else
+
+        if [ "${FINALPARAMS}" == "" ]; then
+            FINALPARAMS="${PARAM}"
+        else
+            FINALPARAMS="${FINALPARAMS} ${PARAM}"
+        fi
+
+    fi
+
+done
+
+# Final parameter parsing. At this point we just determine which of
+# the built-up lists the user would like to output.
+for PARAM in ${FINALPARAMS}; do
 
     if [ "${PARAM}" == "--cflags" -o "${PARAM}" == "--cxxflags" ]; then
 
         # FIXME: Make it so we only need one of these. This will
         # involve unfucking some of the #include directives in the
         # source itself.
-        echo "-I\"${PATHTOME}/utils/include\" -I\"${PATHTOME}/utils/include/lilyengine\""
+        echo "-I\"${PATHTOME}/utils/include\" -I\"${PATHTOME}/utils/include/lilyengine\" ${EXTRA_CXXFLAGS}"
 
     elif [ "${PARAM}" == "--libs" ]; then
 
-        # FIXME: If we ever go header-only, this can go away.
-        echo "\"${PATHTOME}/utils/src/everything.cpp\""
+        # FIXME: If we ever go header-only, everything.cpp can go away.
+        echo "\"${PATHTOME}/utils/src/everything.cpp\" ${EXTRA_LDFLAGS}"
 
     else
 
-        echo "${USAGESTR}" 1>&2
+        echo "Unknown parameter: ${PARAM}"
+
+        echo -e "${USAGESTR}" 1>&2
         exit 1
 
     fi
 
 done
 
+# No parameters given? Dump the usage string.
 if [ "$#" == 0 ]; then
-    echo "${USAGESTR}" 1>&2
+    echo -e "${USAGESTR}" 1>&2
     exit 1
 fi
 
