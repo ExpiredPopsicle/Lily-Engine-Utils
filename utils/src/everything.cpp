@@ -51,8 +51,6 @@
 #include "string/pooledstring.cpp"
 #include "string/simplebuffer.cpp"
 
-#include "assert/malassert.cpp"
-
 #include "compress/compress.cpp"
 
 #include "math/matrix.cpp"
