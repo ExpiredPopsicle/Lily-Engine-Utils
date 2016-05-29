@@ -32,6 +32,9 @@
 #include <malloc.h>
 #include <string>
 
+#include <lilyengine/malstring.h>
+#include <lilyengine/simplebuffer.h>
+
 namespace ExPop
 {
     SimpleBuffer::SimpleBuffer(const void *inData, size_t inLength, bool inMyOwnData)

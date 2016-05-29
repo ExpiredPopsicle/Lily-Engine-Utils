@@ -29,6 +29,12 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// This is a string library that operates on std::string and other
+// variants of std::basic_string.
+
+// std::basic_string<uint32_t> is used as a UTF-32 type here, because
+// UTF-32 is actually fixed-bytes-per-character, unline UTF-16.
+
 #pragma once
 
 #include <iostream>
@@ -38,17 +44,20 @@
 #include <cassert>
 #include <sstream>
 
-namespace ExPop {
+#include <lilyengine/testing.h>
 
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     // TODO: Make a consistent prefix for this stuff (str vs
     // string). Possibly toss it into a namespace under ExPop.
 
     /// Return true if the character is whitespace. False otherwise.
     template<typename T>
-    inline bool isWhiteSpace(T c)
-    {
-        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-    }
+    inline bool isWhiteSpace(T c);
 
     /// Simple function to see if a string starts with another string.
     /// (needle is the string we're looking for, haystack is the
@@ -56,16 +65,7 @@ namespace ExPop {
     template<typename T>
     inline bool stringStartsWith(
         const std::basic_string<T> &needle,
-        const std::basic_string<T> &haystack)
-    {
-        if(haystack.size() < needle.size()) return false;
-        for(size_t i = 0; i < needle.size(); i++) {
-            if(needle[i] != haystack[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
+        const std::basic_string<T> &haystack);
 
     /// Return true if one string ends with another string. (needle is
     /// the string we're looking for, haystack is the string we're
@@ -73,16 +73,7 @@ namespace ExPop {
     template<typename T>
     inline bool stringEndsWith(
         const std::basic_string<T> &needle,
-        const std::basic_string<T> &haystack)
-    {
-        if(haystack.size() < needle.size()) return false;
-        for(size_t i = 0; i < needle.size(); i++) {
-            if(needle[i] != haystack[haystack.size() - needle.size() + i]) {
-                return false;
-            }
-        }
-        return true;
-    }
+        const std::basic_string<T> &haystack);
 
     /// Generate tokens from a string. Stores saved tokens into the
     /// passed-in tokens parameter.
@@ -97,94 +88,12 @@ namespace ExPop {
     template<typename T>
     inline std::basic_string<T> stringEscape(
         const std::basic_string<T> &str,
-        bool replaceNewlines = true)
-    {
-        std::basic_ostringstream<T> outStr;
-
-        for(size_t i = 0; i < str.size(); i++) {
-
-            switch(str[i]) {
-
-                case '"':
-                    outStr << '\\' << '\"';
-                    break;
-
-                case '\\':
-                    outStr << '\\' << '\\';
-                    break;
-
-                case '\n':
-                    if(replaceNewlines) {
-                        outStr << '\\' << 'n';
-                    } else {
-                        outStr << str[i];
-                    }
-                    break;
-
-                case '\r':
-                    outStr << '\\' << 'r';
-                    break;
-
-                default:
-                    outStr << str[i];
-                    break;
-            }
-
-        }
-
-        return outStr.str();
-    }
+        bool replaceNewlines = true);
 
     /// Unescape a string.
     template<typename T>
     inline std::basic_string<T> stringUnescape(
-        const std::basic_string<T> &str)
-    {
-        std::basic_ostringstream<T> outStr;
-
-        for(size_t i = 0; i < str.size(); i++) {
-
-            if(str[i] == '\\') {
-
-                i++;
-
-                if(i >= str.size()) break;
-
-                switch(str[i]) {
-
-                    case '\\':
-                        outStr << '\\';
-                        break;
-
-                    case '"':
-                        outStr << '\"';
-                        break;
-
-                    case 'n':
-                        outStr << '\n';
-                        break;
-
-                    case 'r':
-                        outStr << '\r';
-                        break;
-
-                    default:
-                        // What the heck is this?
-                        outStr << str[i];
-                        break;
-
-                }
-
-            } else {
-
-                outStr << str[i];
-
-            }
-        }
-
-        return outStr.str();
-
-    }
+        const std::basic_string<T> &str);
 
     /// Escape a string by adding some XML entities. Only a few of
     /// them.
@@ -235,34 +144,7 @@ namespace ExPop {
     /// Return a string with all the trailing and leading whitespace
     /// removed.
     template<typename T>
-    std::basic_string<T> stringTrim(const std::basic_string<T> &str)
-    {
-        if(!str.size()) {
-            return std::basic_string<T>();
-        }
-
-        // Find the start (first non-whitespace character).
-        unsigned int start = 0;
-        while(start < str.size() && isWhiteSpace(str[start])) {
-            start++;
-        }
-
-        // All whitespace? Return now. Otherwise we'll end up with
-        // some serious issues when the end is the start and the start
-        // is the end.
-        if(start == str.size()) {
-            return std::basic_string<T>();
-        }
-
-        // Find the end.
-        size_t end = str.size() - 1;
-        while(isWhiteSpace(str[end]) && end != 0) {
-            end--;
-        }
-
-        // Just return the substring.
-        return str.substr(start, end - start + 1);
-    }
+    std::basic_string<T> stringTrim(const std::basic_string<T> &str);
 
     /// Returns a word-wrapped version of the input string, wrapped at
     /// the number of characters in columns.
@@ -306,6 +188,184 @@ namespace ExPop {
     inline bool stringCompareOffset(
         const std::basic_string<T> &needle,
         const std::basic_string<T> &haystack,
+        size_t haystackOffset);
+
+    /// Do a simple string replacement. Returns the modified string.
+    template<typename T>
+    inline std::basic_string<T> stringReplace(
+        const std::basic_string<T> &stringToReplace,
+        const std::basic_string<T> &replacement,
+        const std::basic_string<T> &sourceText);
+
+    /// Testing junk for the string library.
+    inline void doStringTests();
+}
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
+    template<typename T>
+    inline bool isWhiteSpace(T c)
+    {
+        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    }
+
+    template<typename T>
+    inline bool stringStartsWith(
+        const std::basic_string<T> &needle,
+        const std::basic_string<T> &haystack)
+    {
+        if(haystack.size() < needle.size()) return false;
+        for(size_t i = 0; i < needle.size(); i++) {
+            if(needle[i] != haystack[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<typename T>
+    inline bool stringEndsWith(
+        const std::basic_string<T> &needle,
+        const std::basic_string<T> &haystack)
+    {
+        if(haystack.size() < needle.size()) return false;
+        for(size_t i = 0; i < needle.size(); i++) {
+            if(needle[i] != haystack[haystack.size() - needle.size() + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<typename T>
+    inline std::basic_string<T> stringEscape(
+        const std::basic_string<T> &str,
+        bool replaceNewlines)
+    {
+        std::basic_ostringstream<T> outStr;
+
+        for(size_t i = 0; i < str.size(); i++) {
+
+            switch(str[i]) {
+
+                case '"':
+                    outStr << '\\' << '\"';
+                    break;
+
+                case '\\':
+                    outStr << '\\' << '\\';
+                    break;
+
+                case '\n':
+                    if(replaceNewlines) {
+                        outStr << '\\' << 'n';
+                    } else {
+                        outStr << str[i];
+                    }
+                    break;
+
+                case '\r':
+                    outStr << '\\' << 'r';
+                    break;
+
+                default:
+                    outStr << str[i];
+                    break;
+            }
+
+        }
+
+        return outStr.str();
+    }
+
+    template<typename T>
+    inline std::basic_string<T> stringUnescape(
+        const std::basic_string<T> &str)
+    {
+        std::basic_ostringstream<T> outStr;
+
+        for(size_t i = 0; i < str.size(); i++) {
+
+            if(str[i] == '\\') {
+
+                i++;
+
+                if(i >= str.size()) break;
+
+                switch(str[i]) {
+
+                    case '\\':
+                        outStr << '\\';
+                        break;
+
+                    case '"':
+                        outStr << '\"';
+                        break;
+
+                    case 'n':
+                        outStr << '\n';
+                        break;
+
+                    case 'r':
+                        outStr << '\r';
+                        break;
+
+                    default:
+                        // What the heck is this?
+                        outStr << str[i];
+                        break;
+
+                }
+
+            } else {
+
+                outStr << str[i];
+
+            }
+        }
+
+        return outStr.str();
+
+    }
+
+    template<typename T>
+    std::basic_string<T> stringTrim(const std::basic_string<T> &str)
+    {
+        if(!str.size()) {
+            return std::basic_string<T>();
+        }
+
+        // Find the start (first non-whitespace character).
+        unsigned int start = 0;
+        while(start < str.size() && isWhiteSpace(str[start])) {
+            start++;
+        }
+
+        // All whitespace? Return now. Otherwise we'll end up with
+        // some serious issues when the end is the start and the start
+        // is the end.
+        if(start == str.size()) {
+            return std::basic_string<T>();
+        }
+
+        // Find the end.
+        size_t end = str.size() - 1;
+        while(isWhiteSpace(str[end]) && end != 0) {
+            end--;
+        }
+
+        // Just return the substring.
+        return str.substr(start, end - start + 1);
+    }
+
+    template<typename T>
+    inline bool stringCompareOffset(
+        const std::basic_string<T> &needle,
+        const std::basic_string<T> &haystack,
         size_t haystackOffset)
     {
         // String length 0 matches anything, including a pointer to
@@ -322,7 +382,7 @@ namespace ExPop {
 
         // Offset + needle would put needle hanging off the end of the
         // haystack. Obvious failure.
-        if(haystackOffset + needle.size() >= haystack.size()) {
+        if(haystackOffset + needle.size() > haystack.size()) {
             return false;
         }
 
@@ -345,7 +405,6 @@ namespace ExPop {
         return true;
     }
 
-    /// Do a simple string replacement. Returns the modified string.
     template<typename T>
     inline std::basic_string<T> stringReplace(
         const std::basic_string<T> &stringToReplace,
@@ -375,68 +434,23 @@ namespace ExPop {
         return output;
     }
 
-
-
-    /// Simple buffer that we can dynamically expand or iterate through.
-    class SimpleBuffer {
-	public:
-
-		SimpleBuffer(void);
-		SimpleBuffer(const void *data, size_t length, bool myOwnData = true);
-		~SimpleBuffer(void);
-
-        /// Add some data onto the end. Reallocates if needed. Note:
-        /// Doesn't just double the size of the buffer. It only
-        /// allocates as much as it needs so continuously adding to
-        /// the buffer in this way can be slow.
-		void addData(const void *buffer, size_t length);
-
-        /// Just get a pointer to the start of the data.
-		const char *getData(void) const;
-
-        /// Get the current length of the data.
-		size_t getLength(void) const;
-
-        /// Reads a number of bytes equal to the bytes parameter into
-        /// the memory pointed to by dst and advances the read pointer
-        /// by that amount. Returns a pointer to the position the read
-        /// pointer ends at.
-		const char *getDataAndAdvance(void *dst, size_t bytes);
-
-        /// Moves the read pointer back to the start of the data.
-        void seekToStart(void);
-
-        int compare(const void *buffer, size_t length);
-
-        void clear(void);
-
-	private:
-
-        // If this is true, the data will be cleaned up when this goes
-        // away.
-        bool myOwnData;
-
-		char *data;
-		size_t length;
-		size_t readPtr;
-    };
-
-
-
-    inline void doStringTests()
+    inline void doStringTests(size_t &passCounter, size_t &failCounter)
     {
-        assert(stringStartsWith<char>("dick", "dickbutts"));
-        assert(stringEndsWith<char>("butts", "dickbutts"));
-        assert(!stringEndsWith<char>("dick", "dickbutts"));
-        assert(!stringStartsWith<char>("butts", "dickbutts"));
-        assert(stringUnescape<char>("foo\\n\\\\") == "foo\n\\");
-        assert("foo\\n\\\\" == stringEscape<char>("foo\n\\"));
-        assert(stringTrim<char>("  asdf") == std::string("asdf"));
-        assert(stringTrim<char>("asdf  ") == std::string("asdf"));
-        assert(stringTrim<char>("  asdf  ") == std::string("asdf"));
-        assert(stringTrim<char>("asdf") == std::string("asdf"));
-        assert(stringTrim<char>("  ") == std::string(""));
-        assert(stringTrim<char>("") == std::string(""));
+        EXPOP_TEST_VALUE(stringStartsWith<char>("dick", "dickbutts"), true);
+        EXPOP_TEST_VALUE(stringEndsWith<char>("butts", "dickbutts"), true);
+        EXPOP_TEST_VALUE(!stringEndsWith<char>("dick", "dickbutts"), true);
+        EXPOP_TEST_VALUE(!stringStartsWith<char>("butts", "dickbutts"), true);
+        EXPOP_TEST_VALUE(stringUnescape<char>("foo\\n\\\\"), "foo\n\\");
+        EXPOP_TEST_VALUE("foo\\n\\\\", stringEscape<char>("foo\n\\"));
+        EXPOP_TEST_VALUE(stringTrim<char>("  asdf"), std::string("asdf"));
+        EXPOP_TEST_VALUE(stringTrim<char>("asdf  "), std::string("asdf"));
+        EXPOP_TEST_VALUE(stringTrim<char>("  asdf  "), std::string("asdf"));
+        EXPOP_TEST_VALUE(stringTrim<char>("asdf"), std::string("asdf"));
+        EXPOP_TEST_VALUE(stringTrim<char>("  "), std::string(""));
+        EXPOP_TEST_VALUE(stringTrim<char>(""), std::string(""));
+        EXPOP_TEST_VALUE(stringReplace<char>("BUTT", "BOOB", "DICKBUTT"), "DICKBOOB");
+        EXPOP_TEST_VALUE(stringReplace<char>("DICK", "BOOB", "DICKBUTT"), "BOOBBUTT");
+        EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTT", "BOOBS", "DICKBUTT"), "BOOBS");
     }
 };
 

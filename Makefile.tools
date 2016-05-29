@@ -18,7 +18,7 @@ NATIVEBUFFERGEN := ./buffergen_temp
 NATIVETODOSCAN := ./todoscan_temp
 .INTERMEDIATE : $(NATIVEBUFFERGEN) $(NATIVETODOSCAN)
 
-all : buffergen lilyarchiver headerfixer imgbuffer todoscan
+all : buffergen lilyarchiver headerfixer imgbuffer todoscan lilylibtests
 
 # ----------------------------------------------------------------------
 # buffergen
@@ -129,6 +129,23 @@ todoscan : \
 
 CLEANLIST := $(CLEANLIST) todoscan
 GENERATEDLIST := $(GENERATEDLIST) tools/todoscan/usagetext.h
+
+# ----------------------------------------------------------------------
+# lilylibtests
+
+tools/lilylibtests/usagetext.h : $(NATIVEBUFFERGEN) tools/lilylibtests/README.txt
+	$(NATIVEBUFFERGEN)	tools/lilylibtests/README.txt usageText > $@
+
+lilylibtests : \
+	tools/lilylibtests/lilylibtests.cpp \
+	tools/lilylibtests/usagetext.h
+
+	$(CXX) $(COMMON_FLAGS) \
+		tools/lilylibtests/lilylibtests.cpp \
+		-o $@
+
+CLEANLIST := $(CLEANLIST) lilylibtests
+GENERATEDLIST := $(GENERATEDLIST) tools/lilylibtests/usagetext.h
 
 # ----------------------------------------------------------------------
 

@@ -1,0 +1,60 @@
+* Lily Engine Utils
+
+This is a library I've built up over years as I've worked on various
+side project games, game engines, image processing tools, personal
+convenience systems, and porn-gathering bots.
+
+It does a bunch of stuff from common string manipulation operations on
+std::string objects to matrix math and image manipulation. These
+different tasks may be split up into individual subsystems at one
+point, but at the moment it's just easier to include all of them and
+let the compiler figure out what you really need.
+
+The name comes from the old game project that the beginnings of this
+collection were torn from.
+
+** The two sections
+
+*** Utils
+
+The library itself is in the "utils" directory. I'm gradually working
+towards the point where you can just add "everything.cpp" to your
+C++11 or above project and not worry about any linking crap.
+
+Later versions may be header-only.
+
+Expect API breaking changes because nobody but me uses this thing
+anyway.
+
+*** Tools
+
+In the "tools" directory is a commandline tools build with the
+lilyengine library. It's some stuff I find useful for code generation,
+issue tracking, and some image processing.
+
+** License
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must
+   not claim that you wrote the original software. If you use this
+   software in a product, an acknowledgment in the product
+   documentation would be appreciated but is not required.
+
+2. Altered source versions must be plainly marked as such, and must
+   not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any source
+   distribution.
+
+** Copyright
+
+Copyright (c) 2012-2016 Clifford Jolly
+  http://expiredpopsicle.com
+  expiredpopsicle@gmail.com
