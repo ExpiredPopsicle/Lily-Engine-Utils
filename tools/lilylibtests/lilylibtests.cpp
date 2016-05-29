@@ -32,6 +32,7 @@
 #include <iostream>
 using namespace std;
 
+#define EXPOP_ENABLE_TESTING 1
 #include <lilyengine/utils.h>
 using namespace ExPop;
 
@@ -73,6 +74,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Strings");
     doStringTests(passCounter, failCounter);
+
+    showSectionHeader("Base64");
+    doBase64Tests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;

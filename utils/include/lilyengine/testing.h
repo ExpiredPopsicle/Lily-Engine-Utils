@@ -31,37 +31,45 @@
 
 // Internal testing stuff for Lily Engine Utils.
 
+#pragma once
+
 #include <iomanip>
 #include <iostream>
 #include <ostream>
+#include <sstream>
 
 #if _WIN32
 // Windows console doesn't like VT100 color codes.
 #define EXPOP_TEST_COLOR_RESET ""
 #define EXPOP_TEST_COLOR_GOOD  ""
 #define EXPOP_TEST_COLOR_BAD   ""
+#define EXPOP_TEST_COLOR_NOTICE ""
 #else
 #define EXPOP_TEST_COLOR_RESET "\033[0m"
 #define EXPOP_TEST_COLOR_GOOD  "\033[1;32m"
 #define EXPOP_TEST_COLOR_BAD   "\033[1;31;5m"
+#define EXPOP_TEST_COLOR_NOTICE "\033[1;36m"
 #endif
 
-#define EXPOP_TEST_VALUE(x, y)                                          \
-    do {                                                                \
-        bool pass = ((x) == (y));                                       \
-        std::ostringstream testingOstr;                                 \
-        testingOstr << "" << #x << " == " << #y << " ";                 \
-        std::cout << std::setw(80-4) << std::left << testingOstr.str(); \
-        if(pass) {                                                      \
-            std::cout << EXPOP_TEST_COLOR_GOOD;                         \
-            std::cout << "PASS" << std::endl;                           \
-            std::cout << EXPOP_TEST_COLOR_RESET;                        \
-            passCounter++;                                              \
-        } else {                                                        \
-            std::cout << EXPOP_TEST_COLOR_BAD;                          \
-            std::cout << "FAIL (" << (x) <<  ")" << std::endl;          \
-            std::cout << EXPOP_TEST_COLOR_RESET;                        \
-            failCounter++;                                              \
-        }                                                               \
+#define EXPOP_TEST_VALUE(x, y)                                      \
+    do {                                                            \
+        bool pass = ((x) == (y));                                   \
+        std::ostringstream testingOstr;                             \
+        testingOstr << "" << #x << " == " << #y << " ";             \
+        std::string testingStr = testingOstr.str();                 \
+        if(testingStr.size() > 70)                                  \
+            testingStr = testingStr.substr(0, 70) + "...";          \
+        testingStr = testingStr + " ";                              \
+        std::cout << std::setw(80-4) << std::left << testingStr;    \
+        if(pass) {                                                  \
+            std::cout << EXPOP_TEST_COLOR_GOOD;                     \
+            std::cout << "PASS" << std::endl;                       \
+            std::cout << EXPOP_TEST_COLOR_RESET;                    \
+            passCounter++;                                          \
+        } else {                                                    \
+            std::cout << EXPOP_TEST_COLOR_BAD;                      \
+            std::cout << "FAIL (" << (x) <<  ")" << std::endl;      \
+            std::cout << EXPOP_TEST_COLOR_RESET;                    \
+            failCounter++;                                          \
+        }                                                           \
     } while(0)
-
