@@ -35,6 +35,10 @@
 // std::basic_string<uint32_t> is used as a UTF-32 type here, because
 // UTF-32 is actually fixed-bytes-per-character, unline UTF-16.
 
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <iostream>
@@ -184,6 +188,11 @@ namespace ExPop
         const std::basic_string<T> &stringToReplace,
         const std::basic_string<T> &replacement,
         const std::basic_string<T> &sourceText);
+
+    /// tolower(), now on full strings.
+    template<typename T>
+    inline std::basic_string<T> stringToLower(
+        const std::basic_string<T> &str);
 
   #if EXPOP_ENABLE_TESTING
     /// Testing junk for the string library.
@@ -747,7 +756,11 @@ namespace ExPop
         }
 
         // Made it to the end of the string without finding anything.
-        out1 = str;
+        if(startFromEnd) {
+            out2 = str;
+        } else {
+            out1 = str;
+        }
     }
 
     inline bool stringParseUri(
@@ -1114,6 +1127,18 @@ namespace ExPop
         }
 
         return outStr.str();
+    }
+
+    template<typename T>
+    inline std::basic_string<T> stringToLower(
+        const std::basic_string<T> &str)
+    {
+        std::string ret;
+        ret = str;
+        for(size_t i = 0; i < ret.size(); i++) {
+            ret[i] = tolower(ret[i]);
+        }
+        return ret;
     }
 
   #if EXPOP_ENABLE_TESTING

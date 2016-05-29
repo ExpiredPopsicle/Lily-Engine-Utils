@@ -34,6 +34,10 @@
 // saves a little tiny bit of time from having to open the debugger to
 // deal with an assert.
 
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <cassert>

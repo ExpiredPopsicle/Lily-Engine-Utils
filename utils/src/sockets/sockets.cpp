@@ -29,10 +29,11 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+#if EXPOP_ENABLE_SOCKETS
+
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <inttypes.h>
 #include <cassert>
 using namespace std;
 
@@ -46,13 +47,17 @@ using namespace std;
 #include <winsock.h>
 #endif
 
-#include "expopsockets.h"
+#include <lilyengine/expopsockets.h>
+#include <lilyengine/malstring.h>
 
 #if _WIN32
 #define CLOSE_SYSTEM closesocket
 #define CONST_DATA_CAST(x) ((const char*)(x))
 #define DATA_CAST(x) ((char*)(x))
 typedef int ADDR_LEN_TYPE;
+#if !__GNUC__
+#pragma comment(lib, "ws2_32.lib")
+#endif
 #else
 #define CLOSE_SYSTEM close
 #define CONST_DATA_CAST(x) ((const void*)(x))
@@ -60,37 +65,51 @@ typedef int ADDR_LEN_TYPE;
 typedef unsigned int ADDR_LEN_TYPE;
 #endif
 
-namespace ExPop {
-
+namespace ExPop
+{
     // Windows keeps some stupid socket state in the background, so I
     // suppose we have to too. Derp.
     static unsigned int socketCounter = 0;
-    static bool socketsDoneInit = false;
 
-    void socketsInit(void) {
+    // static bool socketsDoneInit = false;
+
+    // void socketsInit(void)
+    // {
+    //   #if _WIN32
+    //     WSADATA wsaData = {0};
+    //     int startupResult = WSAStartup(MAKEWORD(2, 0), &wsaData);
+    //     assert(!startupResult);
+    //   #endif
+    //     socketsDoneInit = true;
+    // }
+
+    // void socketsShutdown(void)
+    // {
+    //   #if _WIN32
+    //     WSACleanup();
+    //   #endif
+    //     socketsDoneInit = false;
+    // }
+
+    void Socket::initCommon(void)
+    {
+        inputBufferFull = false;
       #if _WIN32
         WSADATA wsaData = {0};
         int startupResult = WSAStartup(MAKEWORD(2, 0), &wsaData);
         assert(!startupResult);
       #endif
-        socketsDoneInit = true;
     }
 
-    void socketsShutdown(void) {
-      #if _WIN32
-        WSACleanup();
-      #endif
-        socketsDoneInit = false;
-    }
-
-    void Socket::constructSocket(void) {
+    void Socket::constructSocket(void)
+    {
         int internalSocketType = (type == SOCKETTYPE_TCP) ? SOCK_STREAM : SOCK_DGRAM;
         fd = socket(AF_INET, internalSocketType, 0);
     }
 
-    Socket::Socket(SocketType type) {
-
-        assert(socketsDoneInit);
+    Socket::Socket(SocketType type)
+    {
+        initCommon();
 
         socketCounter++;
 
@@ -102,20 +121,28 @@ namespace ExPop {
         constructSocket();
     }
 
-    Socket::Socket(int fd) {
+    Socket::Socket(int fd)
+    {
+        initCommon();
+
         type = SOCKETTYPE_TCP;
         state = SOCKETSTATE_CONNECTED;
         this->fd = fd;
     }
 
-    Socket::~Socket(void) {
+    Socket::~Socket(void)
+    {
         CLOSE_SYSTEM(fd);
 
         socketCounter--;
+
+      #if _WIN32
+        WSACleanup();
+      #endif
     }
 
-    void Socket::disconnect(void) {
-
+    void Socket::disconnect(void)
+    {
         assert(
             state == SOCKETSTATE_CONNECTED ||
             state == SOCKETSTATE_LISTENING);
@@ -125,8 +152,8 @@ namespace ExPop {
         state = SOCKETSTATE_DISCONNECTED;
     }
 
-    bool Socket::connectTo(const std::string &hostName, uint16_t port) {
-
+    bool Socket::connectTo(const std::string &hostName, uint16_t port)
+    {
         assert(type == SOCKETTYPE_TCP);
         assert(state == SOCKETSTATE_DISCONNECTED);
 
@@ -158,8 +185,8 @@ namespace ExPop {
         return true;
     }
 
-    ssize_t Socket::sendData(const void *data, size_t length) {
-
+    ssize_t Socket::sendData(const void *data, size_t length)
+    {
         assert(state == SOCKETSTATE_CONNECTED);
 
         ssize_t ret = send(fd, CONST_DATA_CAST(data), length, 0);
@@ -170,8 +197,8 @@ namespace ExPop {
         return ret;
     }
 
-    ssize_t Socket::recvData(void *data, size_t length) {
-
+    ssize_t Socket::recvData(void *data, size_t length)
+    {
         assert(state == SOCKETSTATE_CONNECTED);
 
         ssize_t ret = recv(fd, DATA_CAST(data), length, 0);
@@ -182,8 +209,8 @@ namespace ExPop {
         return ret;
     }
 
-    bool Socket::hasData(void) {
-
+    bool Socket::hasData(void)
+    {
         assert(
             state == SOCKETSTATE_CONNECTED ||
             type == SOCKETTYPE_UDP);
@@ -211,12 +238,13 @@ namespace ExPop {
         return false;
     }
 
-    SocketState Socket::getState(void) {
+    SocketState Socket::getState(void)
+    {
         return state;
     }
 
-    bool Socket::startListening(uint16_t port) {
-
+    bool Socket::startListening(uint16_t port)
+    {
         assert(state == SOCKETSTATE_DISCONNECTED);
         assert(type == SOCKETTYPE_TCP);
 
@@ -242,8 +270,8 @@ namespace ExPop {
         return true;
     }
 
-    Socket *Socket::acceptConnection(std::string *addrStr) {
-
+    Socket *Socket::acceptConnection(std::string *addrStr)
+    {
         assert(type == SOCKETTYPE_TCP);
         assert(state == SOCKETSTATE_LISTENING);
 
@@ -269,5 +297,59 @@ namespace ExPop {
         return ret;
     }
 
+    int Socket::uflow()
+    {
+        if(inputBufferFull) {
+            inputBufferFull = false;
+            return inputBuffer;
+        }
+
+        if(getState() != SOCKETSTATE_CONNECTED) {
+            return EOF;
+        }
+
+        char buf[2] = { 0, 0 };
+        size_t dataSize = recvData(&buf, 1);
+
+        if(!dataSize) {
+            return EOF;
+        }
+
+        return buf[0];
+    }
+
+    int Socket::underflow()
+    {
+        if(inputBufferFull) {
+            return inputBuffer;
+        }
+
+        size_t dataSize = recvData(&inputBuffer, 1);
+
+        if(!dataSize) {
+            return EOF;
+        }
+
+        inputBufferFull = true;
+        return inputBuffer;
+    }
+
+    int Socket::overflow(int c)
+    {
+        if(getState() != SOCKETSTATE_CONNECTED) {
+            return EOF;
+        }
+
+        char buf = (char)c;
+        size_t dataSize = sendData(&c, 1);
+
+        if(!dataSize) {
+            return EOF;
+        }
+
+        return buf;
+    }
+
 }
 
+#endif

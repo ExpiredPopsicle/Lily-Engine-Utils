@@ -1,9 +1,10 @@
-COMMON_FLAGS := \
+COMMON_CXXFLAGS := \
 	-Wall \
 	--std=c++11 \
 	utils/src/everything.cpp \
-	-Iutils/include \
-	-static
+	-Iutils/include
+
+COMMON_LDFLAGS :=
 
 CLEANLIST :=
 GENERATEDLIST :=
@@ -18,7 +19,34 @@ NATIVEBUFFERGEN := ./buffergen_temp
 NATIVETODOSCAN := ./todoscan_temp
 .INTERMEDIATE : $(NATIVEBUFFERGEN) $(NATIVETODOSCAN)
 
-all : buffergen lilyarchiver headerfixer imgbuffer todoscan lilylibtests
+# Flags for the target platform.
+TARGET_CXXFLAGS := $(COMMON_CXXFLAGS)
+TARGET_LDFLAGS := $(COMMON_LDFLAGS)
+TARGET_EXT :=
+# Flags for this platform so we can build code generators.
+NATIVE_CXXFLAGS := $(COMMON_CXXFLAGS)
+NATIVE_LDFLAGS := $(COMMON_LDFLAGS)
+NATIVE_EXT :=
+
+# Need to add Winsock stuff to Windows builds when using Mingw. This
+# will get handled by a #pragma comment for Windows build in
+# Microsoft's compiler.
+ifneq (,$(findstring mingw,$(NATIVECXX)))
+	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS) -lws2_32
+	NATIVE_EXT := .exe
+	NATIVEBUFFERGEN := $(NATIVEBUFFERGEN)$(NATIVE_EXT)
+	NATIVETODOSCAN := $(NATIVETODOSCAN)$(NATIVE_EXT)
+endif
+
+ifneq (,$(findstring mingw,$(CXX)))
+	TARGET_LDFLAGS := $(TARGET_LDFLAGS) -lws2_32
+	TARGET_EXT := .exe
+endif
+
+all : \
+	buffergen$(TARGET_EXT) lilyarchiver$(TARGET_EXT) \
+	headerfixer$(TARGET_EXT) imgbuffer$(TARGET_EXT) \
+	todoscan$(TARGET_EXT) lilylibtests$(TARGET_EXT)
 
 # ----------------------------------------------------------------------
 # buffergen
@@ -26,7 +54,7 @@ all : buffergen lilyarchiver headerfixer imgbuffer todoscan lilylibtests
 # buffergen relies on a primitive version of buffergen to generate the
 # internal --help text buffer!
 $(NATIVEBUFFERGEN) : tools/buffergen/buffergen.cpp
-	$(NATIVECXX) $(COMMON_FLAGS) \
+	$(NATIVECXX) $(NATIVE_CXXFLAGS) $(NATIVE_LDFLAGS) \
 		-DNO_HELP_ALLOWED=1 \
 		tools/buffergen/buffergen.cpp \
 		-o $@
@@ -36,12 +64,12 @@ tools/buffergen/usagetext.h : $(NATIVEBUFFERGEN) tools/buffergen/README.txt
 		tools/buffergen/README.txt \
 		usageText > $@
 
-buffergen : tools/buffergen/buffergen.cpp tools/buffergen/usagetext.h
-	$(CXX) $(COMMON_FLAGS) \
+buffergen$(TARGET_EXT) : tools/buffergen/buffergen.cpp tools/buffergen/usagetext.h
+	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/buffergen/buffergen.cpp \
 		-o $@
 
-CLEANLIST := $(CLEANLIST) $(NATIVEBUFFERGEN) buffergen
+CLEANLIST := $(CLEANLIST) $(NATIVEBUFFERGEN) buffergen$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/buffergen/usagetext.h
 
 # ----------------------------------------------------------------------
@@ -50,15 +78,15 @@ GENERATEDLIST := $(GENERATEDLIST) tools/buffergen/usagetext.h
 tools/archiver/usagetext.h : $(NATIVEBUFFERGEN) tools/archiver/README.txt
 	$(NATIVEBUFFERGEN)	tools/archiver/README.txt usageText > $@
 
-lilyarchiver : \
+lilyarchiver$(TARGET_EXT) : \
 	tools/archiver/archiver.cpp \
 	tools/archiver/usagetext.h
 
-	$(CXX) $(COMMON_FLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/archiver/archiver.cpp \
 		-o $@
 
-CLEANLIST := $(CLEANLIST) lilyarchiver
+CLEANLIST := $(CLEANLIST) lilyarchiver$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/archiver/usagetext.h
 
 # ----------------------------------------------------------------------
@@ -70,16 +98,16 @@ tools/headerfixer/mainheader.h : $(NATIVEBUFFERGEN) tools/headerfixer/mainheader
 tools/headerfixer/usagetext.h : $(NATIVEBUFFERGEN) tools/headerfixer/README.txt
 	$(NATIVEBUFFERGEN) tools/headerfixer/README.txt usageText > $@
 
-headerfixer : \
+headerfixer$(TARGET_EXT) : \
 	tools/headerfixer/headerfixer.cpp \
 	tools/headerfixer/mainheader.h \
 	tools/headerfixer/usagetext.h
 
-	$(CXX) $(COMMON_FLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/headerfixer/headerfixer.cpp \
 		-o $@
 
-CLEANLIST := $(CLEANLIST) headerfixer
+CLEANLIST := $(CLEANLIST) headerfixer$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/headerfixer/usagetext.h
 
 # ----------------------------------------------------------------------
@@ -88,15 +116,15 @@ GENERATEDLIST := $(GENERATEDLIST) tools/headerfixer/usagetext.h
 tools/imgbuffer/usagetext.h : $(NATIVEBUFFERGEN) tools/imgbuffer/README.txt
 	$(NATIVEBUFFERGEN)	tools/imgbuffer/README.txt usageText > $@
 
-imgbuffer : \
+imgbuffer$(TARGET_EXT) : \
 	tools/imgbuffer/imgbuffer.cpp \
 	tools/imgbuffer/usagetext.h
 
-	$(CXX) $(COMMON_FLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/imgbuffer/imgbuffer.cpp \
 		-o $@
 
-CLEANLIST := $(CLEANLIST) imgbuffer
+CLEANLIST := $(CLEANLIST) imgbuffer$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/imgbuffer/usagetext.h
 
 # ----------------------------------------------------------------------
@@ -111,23 +139,23 @@ $(NATIVETODOSCAN) : \
 	tools/todoscan/todoscan.cpp \
 	tools/todoscan/usagetext.h
 
-	$(NATIVECXX) $(COMMON_FLAGS) \
+	$(NATIVECXX) $(NATIVE_CXXFLAGS) $(NATIVE_LDFLAGS) \
 		$(TODOSCAN_SOURCES) \
 		-o $@
 
 tools/todoscan/usagetext.h : $(NATIVEBUFFERGEN) tools/todoscan/README.txt
 	$(NATIVEBUFFERGEN)	tools/todoscan/README.txt usageText > $@
 
-todoscan : \
+todoscan$(TARGET_EXT) : \
 	tools/todoscan/todoscan.cpp \
 	tools/todoscan/usagetext.h
 
-	$(CXX) $(COMMON_FLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		$(TODOSCAN_SOURCES) \
 		-o $@
 
 
-CLEANLIST := $(CLEANLIST) todoscan
+CLEANLIST := $(CLEANLIST) todoscan$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/todoscan/usagetext.h
 
 # ----------------------------------------------------------------------
@@ -136,15 +164,19 @@ GENERATEDLIST := $(GENERATEDLIST) tools/todoscan/usagetext.h
 tools/lilylibtests/usagetext.h : $(NATIVEBUFFERGEN) tools/lilylibtests/README.txt
 	$(NATIVEBUFFERGEN)	tools/lilylibtests/README.txt usageText > $@
 
-lilylibtests : \
+lilylibtests$(TARGET_EXT) : \
 	tools/lilylibtests/lilylibtests.cpp \
 	tools/lilylibtests/usagetext.h
 
-	$(CXX) $(COMMON_FLAGS) \
+	$(CXX) \
+		-D EXPOP_ENABLE_SOCKETS=1 \
+		-D EXPOP_ENABLE_THREADS=1 \
+		-pthread \
+		$(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		tools/lilylibtests/lilylibtests.cpp \
 		-o $@
 
-CLEANLIST := $(CLEANLIST) lilylibtests
+CLEANLIST := $(CLEANLIST) lilylibtests$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/lilylibtests/usagetext.h
 
 # ----------------------------------------------------------------------

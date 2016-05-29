@@ -78,6 +78,12 @@ int main(int argc, char *argv[])
     showSectionHeader("Base64");
     doBase64Tests(passCounter, failCounter);
 
+    showSectionHeader("Http");
+    doHttpTests(passCounter, failCounter);
+
+    showSectionHeader("AssetLoader");
+    doAssetLoadTests(passCounter, failCounter);
+
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;
     std::cout << "Failed: " << failCounter << std::endl;

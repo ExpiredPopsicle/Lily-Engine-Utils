@@ -34,14 +34,20 @@
 // it as part of a project with the cpp files themselves unless you
 // want lots of redefined symbols all over the place.
 
-// These ones depend on or implement the thread module in some way...
+// ----------------------------------------------------------------------
 
-#if EXPOP_THREADS
-#include "thread/thread.cpp"
+// This loads all the defaults for things like threads and sockets
+// enabled or disabled.
+#include <lilyengine/config.h>
+
 // At the moment, these two definitely still require threads.
+#if EXPOP_ENABLE_THREADS
 //#include "console/console.cpp"
-//#include "assetloader/assetloader.cpp"
 #endif
+
+#include "assetloader/assetloader.cpp"
+
+#include "sockets/sockets.cpp"
 
 #include "filesystem/archive.cpp"
 #include "filesystem/filesystem.cpp"

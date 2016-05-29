@@ -31,8 +31,9 @@
 
 #pragma once
 
-// FIXME: This should be cstdint.
-#include <inttypes.h>
+#include <lilyengine/config.h>
+
+#if EXPOP_ENABLE_SOCKETS
 
 #if !_WIN32
 #include <sys/types.h>
@@ -42,13 +43,14 @@
 
 namespace ExPop {
 
-    enum SocketType {
+    enum SocketType
+    {
         SOCKETTYPE_TCP,
         SOCKETTYPE_UDP,
     };
 
-    enum SocketState {
-
+    enum SocketState
+    {
         SOCKETSTATE_DISCONNECTED,
         SOCKETSTATE_HOSTLOOKUP,
         SOCKETSTATE_CONNECTING,
@@ -57,7 +59,8 @@ namespace ExPop {
         SOCKETSTATE_LISTENING,
     };
 
-    class Socket {
+    class Socket : public streambuf
+    {
     public:
 
         Socket(SocketType type = SOCKETTYPE_TCP);
@@ -73,6 +76,9 @@ namespace ExPop {
         /// ready to accept for a listening socket).
         bool hasData(void);
 
+        /// Query the state (connected, disconnected, etc). This is
+        /// meant to let other threads watch the state of the socket,
+        /// so it is thread safe.
         SocketState getState(void);
 
         /// Returns true on success.
@@ -82,9 +88,12 @@ namespace ExPop {
         /// when done.
         Socket *acceptConnection(std::string *addrStr = NULL);
 
-        // TODO: streambuf stuff.
-
+        /// Disconnect the socket.
         void disconnect(void);
+
+        int uflow() override;
+        int underflow() override;
+        int overflow(int c = EOF) override;
 
     private:
 
@@ -103,15 +112,21 @@ namespace ExPop {
         // to be readable by other threads for simple status updates.
         SocketState state;
 
+        // System file descriptor.
         int fd;
 
+        // Some of the streambuf stuff makes us keep a one-byte buffer
+        // because they can read the stream without advancing. This is
+        // only used by the streambuf overrides. So if you peek at a
+        // byte with underflow() and then expect to read it back again
+        // with recvData(), you're going to have a bad time.
+        char inputBuffer;
+        bool inputBufferFull;
+
         void constructSocket(void);
+        void initCommon(void);
     };
-
-    /// Call this before doing anything with sockets.
-    void socketsInit(void);
-
-    /// Call this to clean up sockets.
-    void socketsShutdown(void);
 }
+
+#endif
 

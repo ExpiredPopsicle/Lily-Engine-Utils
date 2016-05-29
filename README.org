@@ -26,11 +26,43 @@ Later versions may be header-only.
 Expect API breaking changes because nobody but me uses this thing
 anyway.
 
+If #including individual headers isn't your style, you can simply
+#include <lilyengine/utils.h> and get everything.
+
+config.bsh, run from the root directory of the project, will take
+--libs and --cxxflags parameters, and spit back compiler flags needed
+to add the library to a project. This will generate absolute paths for
+header search flags, pointing them to the current Lily-Engine-Utils
+directory.
+
 *** Tools
 
 In the "tools" directory is a commandline tools build with the
 lilyengine library. It's some stuff I find useful for code generation,
 issue tracking, and some image processing.
+
+** Dependencies
+
+The library has optional dependencies on the Windows sockets library
+(ws2_32.lib, or libws2_32.a) when compiling on Windows, pthreads on
+Linux, and possibly pthreads on other Unix-like systems.
+
+Unless the relevant subsystem has been explicitly enabled, these will
+not be used, and will not cause your program to require them. Here are
+the #defines needed for each optional subsystem:
+
+|---------------------------------+----------------------|
+| Subsystem                       | Required #defines    |
+|---------------------------------+----------------------|
+| Sockets                         | EXPOP_ENABLE_SOCKETS |
+| HTTP                            | EXPOP_ENABLE_SOCKETS |
+| Threaded asset loader           | EXPOP_ENABLE_THREADS |
+| Thread-safe console             | EXPOP_ENABLE_THREADS |
+| Thread-safey for archive system | EXPOP_ENABLE_THREADS |
+|---------------------------------+----------------------|
+
+Should you enable any of these, it's up to you to fight with your
+linker. Have fun!
 
 ** License
 

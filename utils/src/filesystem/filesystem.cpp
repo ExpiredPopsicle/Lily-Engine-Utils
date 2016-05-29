@@ -34,6 +34,10 @@
 #include <sstream>
 #include <vector>
 #include <cstring>
+#if EXPOP_ENABLE_THREADS
+#include <thread>
+#include <mutex>
+#endif
 using namespace std;
 
 #include <sys/stat.h>
@@ -48,8 +52,10 @@ using namespace std;
 #include <direct.h>
 #endif
 
+#if EXPOP_CONSOLE
 #include <lilyengine/console.h>
 using namespace ExPop::Console;
+#endif
 
 #include <lilyengine/filesystem.h>
 #include <lilyengine/archive.h>
@@ -62,8 +68,8 @@ namespace ExPop {
 
         // Stick in a fake mutex class and pretend if we aren't using
         // threads at all.
-      #if EXPOP_THREADS
-        static Threads::Mutex archivesMutex;
+      #if EXPOP_ENABLE_THREADS
+        static std::mutex archivesMutex;
       #else
         class FakeMutex { public: void lock() { } void unlock() { } } archivesMutex;
       #endif

@@ -29,18 +29,25 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+#include "config.h"
+
+#if EXPOP_ENABLE_THREADS
+
 #pragma once
 
 #include <string>
 #include <vector>
+#include <iostream>
+#include <thread>
+#include <mutex>
 
-#include "console.h"
 #include "hashtable.h"
 #include "thread.h"
+#if EXPOP_ENABLE_TESTING
+#include "testing.h"
+#endif
 
 namespace ExPop {
-
-    class Thread;
 
     /// Background asset loading system.
     class AssetLoader {
@@ -176,7 +183,7 @@ namespace ExPop {
 
         /// Lock this mutex before touching any list or hash table of
         /// LoadRequests for reading or writing.
-        Threads::Mutex loadListMutex;
+        std::mutex loadListMutex;
 
         /// List of loads waiting to start. The order of this will get
         /// all jumbled up as the loading thread picks stuff out of it
@@ -200,7 +207,7 @@ namespace ExPop {
         /// die. (This happens in the destructor for AssetLoader.)
         bool loaderThreadQuit;
 
-        Threads::Thread *loaderThread;
+        std::thread loaderThread;
         friend void AssetLoader_loaderThreadFunc(void *data);
 
         /// This is set to true every time the loader thread starts
@@ -212,6 +219,36 @@ namespace ExPop {
         friend HashValue genericHashFunc(const AssetLoader::LoadRequestDef &def);
     };
 
+  #if EXPOP_ENABLE_TESTING
+    inline void doAssetLoadTests(size_t &passCounter, size_t &failCounter)
+    {
+        AssetLoader loader;
+
+        int length = 0;
+        char *data = nullptr;
+        std::cout << "Loading the readme" << std::endl;
+
+        size_t loopCount = 0;
+
+        while(true) {
+            data = loader.requestData("README.org", 100, &length);
+            if(data) {
+                break;
+            }
+
+            // Show a progress bar thingy.
+            if(loopCount % 70 == 0 && loopCount) {
+                std::cout << std::endl;
+            }
+            std::cout << ".oO0Oo"[loopCount % 6];
+            loopCount++;
+        }
+        std::cout << std::endl;
+
+        EXPOP_TEST_VALUE(!data, !!nullptr);
+        EXPOP_TEST_VALUE(std::string(data, length), FileSystem::loadFileString("README.org"));
+    }
+  #endif
 }
 
-
+#endif

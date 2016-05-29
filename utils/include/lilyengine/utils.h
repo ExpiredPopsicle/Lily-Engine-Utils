@@ -31,12 +31,12 @@
 
 #pragma once
 
+#include "config.h"
 #include "winhacks.h"
 #include "console.h"
 #include "malstring.h"
 #include "base64.h"
 #include "filesystem.h"
-#include "thread.h"
 #include "matrix.h"
 #include "angle.h"
 #include "lilyparser.h"
@@ -48,6 +48,7 @@
 #include "expopsockets.h"
 #include "params.h"
 #include "simplebuffer.h"
+#include "http.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)

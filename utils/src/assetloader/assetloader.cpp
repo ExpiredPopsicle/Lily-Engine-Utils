@@ -29,6 +29,10 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+#include <lilyengine/config.h>
+
+#if EXPOP_ENABLE_THREADS
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -38,17 +42,19 @@ using namespace std;
 #include <unistd.h>
 #endif
 
-#include "winhacks.h"
-#include "filesystem.h"
-#include "console.h"
-#include "thread.h"
-#include "assetloader.h"
+#include <lilyengine/winhacks.h>
+#include <lilyengine/filesystem.h>
+#include <lilyengine/assetloader.h>
+
+#if EXPOP_CONSOLE
+#include <lilyengine/console.h>
 using namespace ExPop::Console;
+#endif
 
-namespace ExPop {
-
-    HashValue genericHashFunc(const AssetLoader::LoadRequestDef &def) {
-
+namespace ExPop
+{
+    HashValue genericHashFunc(const AssetLoader::LoadRequestDef &def)
+    {
         // Start with the string hash.
         HashValue hash = genericHashFunc(def.fileName);
 
@@ -60,8 +66,8 @@ namespace ExPop {
         return hash;
     }
 
-    void AssetLoader_loaderThreadFunc(void *data) {
-
+    void AssetLoader_loaderThreadFunc(void *data)
+    {
         AssetLoader *loader = (AssetLoader*)data;
 
         while(!loader->loaderThreadQuit) {
@@ -78,21 +84,24 @@ namespace ExPop {
 
     }
 
-    AssetLoader::AssetLoader(void) : loadRequestsByName(256, 256, genericHashFunc) {
+    AssetLoader::AssetLoader(void) :
+        loadRequestsByName(256, 256, genericHashFunc)
+    {
         hasBeenLoading = false;
         currentLoad = NULL;
         loaderThreadQuit = false;
-        loaderThread = new Threads::Thread(AssetLoader_loaderThreadFunc, this);
+        loaderThread = std::thread(AssetLoader_loaderThreadFunc, this);
 
+      #if EXPOP_CONSOLE
         outSetPrefix("AssetLoader_thread", "AssetLoader(thread): ");
+      #endif
     }
 
-    AssetLoader::~AssetLoader(void) {
-
+    AssetLoader::~AssetLoader(void)
+    {
         // Clean up loader thread.
         loaderThreadQuit = true;
-        loaderThread->join();
-        delete loaderThread;
+        loaderThread.join();
 
         // Clean up buffers.
         for(unsigned int i = 0; i < pendingLoads.size(); i++) {
@@ -108,8 +117,8 @@ namespace ExPop {
         }
     }
 
-    bool AssetLoader::processLoadRequest(void) {
-
+    bool AssetLoader::processLoadRequest(void)
+    {
         loadListMutex.lock(); {
 
             if(pendingLoads.size()) {
@@ -140,7 +149,9 @@ namespace ExPop {
             return false;
         }
 
+      #if EXPOP_CONSOLE
         out("AssetLoader_thread") << "Loading file: " << currentLoad->fileName << endl;
+      #endif
 
         hasBeenLoading = true;
         currentLoad->started = true;
@@ -156,7 +167,9 @@ namespace ExPop {
 
         } else {
 
+          #if EXPOP_CONSOLE
             out("AssetLoader_thread") << "Loading a slice: " << currentLoad->start << " " << currentLoad->length << endl;
+          #endif
 
             // Load a slice of the file.
             currentLoad->loadedBuffer = FileSystem::loadFilePart(
@@ -168,9 +181,11 @@ namespace ExPop {
 
         }
 
+      #if EXPOP_CONSOLE
         out("AssetLoader_thread") <<
             "Done loading: " << currentLoad->fileName <<
             " (" << (currentLoad->loadedBuffer ? "SUCCESS" : "FAIL") << ")" << endl;
+      #endif
 
         currentLoad->done = true;
 
@@ -185,8 +200,8 @@ namespace ExPop {
         return true;
     }
 
-    bool AssetLoader::loading(void) {
-
+    bool AssetLoader::loading(void)
+    {
         if(hasBeenLoading) {
 
             // Loader thread thinks it was doing something.
@@ -208,8 +223,8 @@ namespace ExPop {
         const std::string &fileName,
         float priority,
         int start,
-        int length) {
-
+        int length)
+    {
         age = 0;
         done = false;
         started = false;
@@ -221,7 +236,8 @@ namespace ExPop {
         this->length = length;
     }
 
-    AssetLoader::LoadRequest::~LoadRequest(void) {
+    AssetLoader::LoadRequest::~LoadRequest(void)
+    {
         delete[] loadedBuffer;
     }
 
@@ -232,8 +248,8 @@ namespace ExPop {
         int *lengthOut,
         LoadStatus *status,
         int start,
-        int length) {
-
+        int length)
+    {
         char *ret = NULL;
         LoadRequest *request = NULL;
         LoadRequestDef def(fileName, start, length);
@@ -290,8 +306,8 @@ namespace ExPop {
 
     }
 
-    void AssetLoader::ageData(int ageAmount) {
-
+    void AssetLoader::ageData(int ageAmount)
+    {
         loadListMutex.lock(); {
 
             for(unsigned int i = 0; i < finishedLoads.size(); i++) {
@@ -302,9 +318,11 @@ namespace ExPop {
                 // with something else.
                 if(finishedLoads[i]->age > 30) {
 
+                  #if EXPOP_CONSOLE
                     out("AssetLoader_thread") << "Clearing buffer for file: " << finishedLoads[i]->fileName <<
                         "(" << finishedLoads[i]->start <<
                         ", " << finishedLoads[i]->length << ")" << endl;
+                  #endif
 
                     // This buffer is too old. Get rid of it.
                     loadRequestsByName.erase(LoadRequestDef(finishedLoads[i]->fileName, finishedLoads[i]->start, finishedLoads[i]->length));
@@ -317,7 +335,9 @@ namespace ExPop {
             }
 
         } loadListMutex.unlock();
-
     }
 
-}
+  #undef out
+};
+
+#endif
