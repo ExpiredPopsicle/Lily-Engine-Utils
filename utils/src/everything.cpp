@@ -70,4 +70,3 @@
 #include "params/params.cpp"
 
 #include "image/image.cpp"
-

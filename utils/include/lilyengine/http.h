@@ -38,6 +38,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 
 #include <lilyengine/config.h>
 #include <lilyengine/expopsockets.h>
@@ -55,8 +56,18 @@
 
 namespace ExPop
 {
+    struct HttpResponse
+    {
+        std::unordered_map<std::string, std::string> headers;
+        std::string content;
+        int statusCode;
+        bool success;
+
+        HttpResponse();
+    };
+
     /// This is incomplete. Don't use it yet.
-    inline void httpGet(const std::string &url);
+    inline HttpResponse httpGet(const std::string &url, size_t allowedRedirects = 4);
 
   #if EXPOP_ENABLE_TESTING
     inline void doHttpTests(size_t &passCounter, size_t &failCounter);
@@ -73,15 +84,24 @@ namespace ExPop
 
 namespace ExPop
 {
-    inline void httpGet(const std::string &url)
+    inline HttpResponse::HttpResponse() :
+        statusCode(0), success(false)
     {
+    }
+
+    inline HttpResponse httpGet(
+        const std::string &url,
+        size_t allowedRedirects)
+    {
+        HttpResponse ret;
+
         // Maliciously encoded URLs can do bad things, and we're
         // expecting this to be able to at least kind of recognize a
         // badly formatted URL. Let's at least reject anything that
         // has whitespace in it.
         for(size_t i = 0; i < url.size(); i++) {
             if(isWhiteSpace(url[i])) {
-                return;
+                return ret;
             }
         }
 
@@ -110,13 +130,14 @@ namespace ExPop
         if(hostPort == "") hostPort = "80";
         uint16_t port = atoi(hostPort.c_str());
 
-        // REMOVEME
-        Socket foo;
-        Socket bar;
-
         // Actually initiate the connection and create streams.
         Socket sock;
         sock.connectTo(hostName, port);
+
+        if(sock.getState() != SOCKETSTATE_CONNECTED) {
+            return ret;
+        }
+
         std::ostream out(&sock);
         std::istream in(&sock);
 
@@ -128,7 +149,6 @@ namespace ExPop
         // Get the HTTP response.
         std::string httpResponse;
         std::getline(in, httpResponse);
-        std::cout << "http response: " << httpResponse << std::endl;
         std::string httpResponseCodeStr;
         std::string httpResponseCodeText;
         std::string httpResponseCodeNumber;
@@ -167,19 +187,36 @@ namespace ExPop
             // Find a content-length header or transfer-encoding for
             // chunked encoding.
             std::string lowerType = stringToLower(headerType);
+
+            ret.headers[lowerType] = headerValue;
+
             if(lowerType == "content-length") {
+
                 contentLength = atoi(headerValue.c_str());
+
             } else if(lowerType == "transfer-encoding") {
+
                 if(stringToLower(headerValue) == "chunked") {
                     useChunked = true;
                 }
+
+            } else if(lowerType == "location" && allowedRedirects) {
+
+                // Handle all the various forms of redirect here.
+                switch(httpStatusCode) {
+                    case 300:
+                    case 301:
+                    case 302:
+                    case 303:
+                    case 307:
+                    case 308:
+                        return httpGet(headerValue, allowedRedirects - 1);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
-
-        std::cout << "content length is: " << contentLength << std::endl;
-        std::cout << "chunked encoding:  " << useChunked << std::endl;
-
-        std::string output;
 
         while(sock.getState() == SOCKETSTATE_CONNECTED) {
 
@@ -226,7 +263,7 @@ namespace ExPop
             while(sock.getState() == SOCKETSTATE_CONNECTED && contentLength) {
                 char c = sock.uflow();
                 contentLength--;
-                output.append(1, c);
+                ret.content.append(1, c);
             }
 
             if(!useChunked) {
@@ -236,16 +273,15 @@ namespace ExPop
 
         sock.disconnect();
 
-        std::cout << output << std::endl;
-        std::cout << endl;
+        ret.success = true;
+        return ret;
     }
 
   #if EXPOP_ENABLE_TESTING
     inline void doHttpTests(size_t &passCounter, size_t &failCounter)
     {
-        httpGet("http://google.com");
-        httpGet("http://butts@expiredpopsicle.com:80/index.html");
-        httpGet("http://expiredpopsicle.com");
+        EXPOP_TEST_VALUE(httpGet("http://butts@expiredpopsicle.com:80/index.html").success, true);
+        EXPOP_TEST_VALUE(httpGet("http://expiredpopsicle.com").success, true);
     }
   #endif
 }
