@@ -53,19 +53,6 @@ using namespace ExPop::Console;
 
 namespace ExPop
 {
-    HashValue genericHashFunc(const AssetLoader::LoadRequestDef &def)
-    {
-        // Start with the string hash.
-        HashValue hash = genericHashFunc(def.fileName);
-
-        // Apply some really quick and dirty change to the hash based
-        // on the only other values that are different.
-        hash ^= def.start;
-        hash ^= def.length;
-
-        return hash;
-    }
-
     void AssetLoader_loaderThreadFunc(void *data)
     {
         AssetLoader *loader = (AssetLoader*)data;

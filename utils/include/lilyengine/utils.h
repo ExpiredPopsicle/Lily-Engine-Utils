@@ -40,7 +40,6 @@
 #include "matrix.h"
 #include "angle.h"
 #include "lilyparser.h"
-#include "hashtable.h"
 #include "assetloader.h"
 #include "preprocess.h"
 #include "image.h"

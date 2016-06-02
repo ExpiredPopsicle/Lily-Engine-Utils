@@ -187,42 +187,6 @@ private:
 
 #define TIME_SECTION(name) TimerBlock timerBlock(name)
 
-inline void doHashTableTests(size_t &passCounter, size_t &failCounter)
-{
-    // std::chrono::time_point<std::chrono::high_resolution_clock> startTime = std::chrono::high_resolution_clock::now();
-    // // Assume I did something cool here.
-    // std::chrono::time_point<std::chrono::high_resolution_clock> endTime = std::chrono::high_resolution_clock::now();
-    // std::chrono::nanoseconds t = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
-    // std::cout << t.count() << std::endl;
-
-    {
-        TIME_SECTION("std::map        ");
-        std::map<unsigned int, unsigned int> theMap;
-        srand(0);
-        for(size_t i = 0; i < 16 * 1024 * 1024; i++) {
-            theMap[rand() % 2048] = rand();
-        }
-    }
-
-    {
-        TIME_SECTION("std::unorded_map");
-        std::unordered_map<unsigned int, unsigned int> theMap;
-        srand(0);
-        for(size_t i = 0; i < 16 * 1024 * 1024; i++) {
-            theMap[rand() % 2048] = rand();
-        }
-    }
-
-    {
-        TIME_SECTION("ExPop::HashTable");
-        ExPop::HashTable<unsigned int, unsigned int> theMap;
-        srand(0);
-        for(size_t i = 0; i < 16 * 1024 * 1024; i++) {
-            theMap[rand() % 2048] = rand();
-        }
-    }
-}
-
 // ----------------------------------------------------------------------
 // Testing 'framework'
 // ----------------------------------------------------------------------
@@ -279,9 +243,6 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Angle");
     doAngleTests(passCounter, failCounter);
-
-    showSectionHeader("HashTable");
-    doHashTableTests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;

@@ -230,8 +230,6 @@ namespace ExPop {
         /// runs an iteration without doing anything. No locking is
         /// done on this.
         bool hasBeenLoading;
-
-        friend HashValue genericHashFunc(const AssetLoader::LoadRequestDef &def);
     };
 }
 
