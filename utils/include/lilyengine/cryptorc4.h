@@ -59,11 +59,7 @@ namespace ExPop
         CryptoRC4();
         ~CryptoRC4();
 
-        /// Set the key and initialize the state array. This can
-        /// supposedly be called multiple times to slightly mitigate
-        /// some weaknesses in RC4. (Ciphersaber 2 runs this 20
-        /// times.) The key is not stored in memory. Still insecure as
-        /// hell and you shouldn't use it.
+        /// Set the key and initialize the state array.
         void setKey(const void *keyBytes, size_t keyLen);
 
         /// Simpler std::string version for extra terrible security.
@@ -136,6 +132,9 @@ namespace ExPop
         b = tmp;
     }
 
+    // FIXME: Calling this multiple times will not correctly add to
+    // the key, because we don't keep track of the j variable between
+    // runs.
     inline void CryptoRC4::setKey(const void *keyBytes, size_t keyLen)
     {
         unsigned int j = 0;
