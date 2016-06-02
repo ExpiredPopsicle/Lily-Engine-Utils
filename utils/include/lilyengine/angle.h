@@ -51,8 +51,8 @@
 // Declarations and documentation
 // ----------------------------------------------------------------------
 
-namespace ExPop {
-
+namespace ExPop
+{
     /// Angle class. Keeps everything nicely in the 0-360 degree
     /// range. Also handles interpolation so you can always
     /// interpolate across the smallest possible arc.
