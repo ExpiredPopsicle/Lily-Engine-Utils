@@ -29,12 +29,33 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// This implementation definitely predates C++11's introduction of
+// std::unorded_map. Some other subsystems (AssetLoader) still depend
+// on it. It'll probably go away once those are updated to use
+// std::unorded_map.
+
+// It has a needlessly complicated mechanism that attempts to preserve
+// cache locality for smaller hash tables while maintaining the fast
+// addition and removal of one of the buckets-of-linked-lists
+// implementations. Profiled against std::map, this turned out to be
+// very fast. It has never been tested against std::unorded_map. It
+// could use some testing with cachegrind too to test those data
+// locality ideas.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <vector>
 
-namespace ExPop {
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
+namespace ExPop
+{
     typedef unsigned int HashValue;
 
     // Some simple hash functions. These will be plugged into the hash
@@ -44,7 +65,8 @@ namespace ExPop {
     // split up data in the hash table.
 
     /// String hash.
-    inline HashValue genericHashFunc(const std::string &str) {
+    inline HashValue genericHashFunc(const std::string &str)
+    {
         HashValue hash = 0;
         for(unsigned int i = 0; i < str.size(); i++) {
             hash = str[i] + (hash << 6) + (hash << 16) - hash;
@@ -54,7 +76,8 @@ namespace ExPop {
 
     /// Given that HashValues are really just unsigned ints, this just
     /// returns the unsigned int.
-    inline HashValue genericHashFunc(const unsigned int &i) {
+    inline HashValue genericHashFunc(const unsigned int &i)\
+    {
         return i;
     }
 
@@ -73,7 +96,8 @@ namespace ExPop {
     /// operator=() defined. KeyType must also have operator<()
     /// defined.
     template<class KeyType, class ValueType>
-    class HashTable {
+    class HashTable
+    {
     public:
 
         /// Hash function for whatever data type we're using.
@@ -162,7 +186,8 @@ namespace ExPop {
         HashFunction hashFunc;
 
         /// Single slot in a bucket.
-        class HashTableSlot {
+        class HashTableSlot
+        {
         public:
             HashTableSlot *next;
             HashValue hashVal;
@@ -172,7 +197,8 @@ namespace ExPop {
 
         /// Single bucket. Hash value to get to this is determined by
         /// its position allBuckets.
-        class HashTableBucket {
+        class HashTableBucket
+        {
         public:
             HashTableSlot *slots;
 
@@ -245,20 +271,24 @@ namespace ExPop {
 
     };
 
-    // ----------------------------------------------------------------------
-    //   HashTable implementation
-    // ----------------------------------------------------------------------
+}
 
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     template<class KeyType, class ValueType>
     HashTable<KeyType, ValueType>::HashTable(unsigned int slots, unsigned int buckets,
-              HashFunction hashFunc) {
-
+        HashFunction hashFunc)
+    {
         init(slots, buckets, hashFunc);
     }
 
     template<class KeyType, class ValueType>
-    HashTable<KeyType, ValueType>::HashTable(const HashTable &otherTable) {
-
+    HashTable<KeyType, ValueType>::HashTable(const HashTable &otherTable)
+    {
         // Copy initial sizes from the other table.
         init(otherTable->numSlots,
              otherTable->numBuckets,
@@ -269,14 +299,15 @@ namespace ExPop {
     }
 
     template<class KeyType, class ValueType>
-    HashTable<KeyType, ValueType>::~HashTable(void) {
+    HashTable<KeyType, ValueType>::~HashTable(void)
+    {
         deinit();
     }
 
     template<class KeyType, class ValueType>
     void HashTable<KeyType, ValueType>::copyFromOtherTable(
-        const HashTable &otherTable, bool overwrite) {
-
+        const HashTable &otherTable, bool overwrite)
+    {
         // FIXME: There's definitely faster ways to do this. But this
         // was the quick to-implement-way.
 
@@ -293,8 +324,8 @@ namespace ExPop {
 
     template<class KeyType, class ValueType>
     HashTable<KeyType, ValueType> &HashTable<KeyType, ValueType>::operator=(
-        const HashTable &otherTable) {
-
+        const HashTable &otherTable)
+    {
         deinit();
 
         init(otherTable->numSlots,
@@ -311,8 +342,8 @@ namespace ExPop {
         const KeyType &key,
         const ValueType &val,
         bool overwrite,
-        bool clearSlot) {
-
+        bool clearSlot)
+    {
         HashTableSlot **lastBackPointer = NULL;
         bool matchFound = false;
         HashValue hash = 0;
@@ -330,8 +361,8 @@ namespace ExPop {
     template<class KeyType, class ValueType>
     bool HashTable<KeyType, ValueType>::getValue(
         const KeyType &key,
-        ValueType *outVal) {
-
+        ValueType *outVal)
+    {
         bool exactMatch = false;
         HashTableSlot *slot = findSlot(key, NULL, &exactMatch);
         if(exactMatch) {
@@ -344,8 +375,8 @@ namespace ExPop {
 
     template<class KeyType, class ValueType>
     void HashTable<KeyType, ValueType>::erase(
-        const KeyType &key) {
-
+        const KeyType &key)
+    {
         HashTableSlot **lastBackPointer = NULL;
         bool matchFound = false;
         HashValue hash = 0;
@@ -361,8 +392,8 @@ namespace ExPop {
 
     template<class KeyType, class ValueType>
     ValueType &HashTable<KeyType, ValueType>::operator[](
-        const KeyType &key) {
-
+        const KeyType &key)
+    {
         HashTableSlot **lastBackPointer = NULL;
         bool matchFound = false;
         HashValue hash = 0;
@@ -393,13 +424,12 @@ namespace ExPop {
         assert(outSlot);
 
         return outSlot->value;
-
     }
 
     template<class KeyType, class ValueType>
     void HashTable<KeyType, ValueType>::dumpKeys(
-        std::vector<KeyType> &keys) const {
-
+        std::vector<KeyType> &keys) const
+    {
         for(unsigned int i = 0; i < numBuckets; i++) {
             for(HashTableSlot *slot = allBuckets[i].slots; slot; slot = slot->next) {
 
@@ -409,14 +439,15 @@ namespace ExPop {
     }
 
     template<class KeyType, class ValueType>
-    unsigned int HashTable<KeyType, ValueType>::size(void) const {
+    unsigned int HashTable<KeyType, ValueType>::size(void) const
+    {
         return numSlots - numFreeSlots;
     }
 
     template<class KeyType, class ValueType>
     unsigned int HashTable<KeyType, ValueType>::count(
-        const KeyType &key) const {
-
+        const KeyType &key) const
+    {
         bool matchFound = false;
         HashTableSlot *currentSlot = findSlot(key, NULL, &matchFound, NULL);
         return matchFound;
@@ -424,8 +455,8 @@ namespace ExPop {
 
     template<class KeyType, class ValueType>
     void HashTable<KeyType, ValueType>::freeASlot(
-        HashTableSlot *slot) {
-
+        HashTableSlot *slot)
+    {
         freeSlots[numFreeSlots] = slot;
 
         // FIXME: This is probably a terrible way of resetting
@@ -442,8 +473,8 @@ namespace ExPop {
         HashValue hash,
         const KeyType &key,
         const ValueType &val,
-        HashTable::HashTableSlot ***lastBackPointer) {
-
+        HashTable::HashTableSlot ***lastBackPointer)
+    {
         if(!numFreeSlots) {
 
             // Ran out of room so we need to expand storage
@@ -521,8 +552,8 @@ namespace ExPop {
         const KeyType &key,
         HashTableSlot ***prevBackPointer,
         bool *exactMatchFound,
-        HashValue *hashValueReturn) const {
-
+        HashValue *hashValueReturn) const
+    {
         // Figure out which bucket we're going to stick this in.
         HashValue hash = hashFunc(key);
 
@@ -597,8 +628,8 @@ namespace ExPop {
     template<class KeyType, class ValueType>
     void HashTable<KeyType, ValueType>::init(
         unsigned int slots, unsigned int buckets,
-        HashFunction hashFunc) {
-
+        HashFunction hashFunc)
+    {
         numBuckets = buckets;
         numSlots = slots;
 
@@ -618,7 +649,8 @@ namespace ExPop {
     }
 
     template<class KeyType, class ValueType>
-    void HashTable<KeyType, ValueType>::deinit(void) {
+    void HashTable<KeyType, ValueType>::deinit(void)
+    {
         delete[] allSlots;
         delete[] allBuckets;
         delete[] freeSlots;
@@ -634,8 +666,8 @@ namespace ExPop {
         const KeyType &key,
         const ValueType *val,
         bool matchFound,
-        HashTableSlot **finalOutputSlot) {
-
+        HashTableSlot **finalOutputSlot)
+    {
         HashTableSlot *newSlot = NULL;
 
         if(!currentSlot) {
@@ -706,8 +738,8 @@ namespace ExPop {
     }
 
     template<class KeyType, class ValueType>
-    void HashTable<KeyType, ValueType>::clear(void) {
-
+    void HashTable<KeyType, ValueType>::clear(void)
+    {
         // This is probably cheating, but whatever.
         deinit();
         init(numSlots,
@@ -716,5 +748,5 @@ namespace ExPop {
     }
 
 
-};
+}
 

@@ -84,8 +84,7 @@ namespace ExPop
 
     }
 
-    AssetLoader::AssetLoader(void) :
-        loadRequestsByName(256, 256, genericHashFunc)
+    AssetLoader::AssetLoader(void)
     {
         hasBeenLoading = false;
         currentLoad = NULL;
@@ -259,7 +258,10 @@ namespace ExPop
 
             // First see if we're already loading this, or if it's in the
             // list of finished stuff.
-            if(loadRequestsByName.getValue(def, &request)) {
+            auto itr = loadRequestsByName.find(def);
+            if(itr != loadRequestsByName.end()) {
+
+                request = itr->second;
 
                 // It already exists somewhere. Refresh the age regardless
                 // of what state it's in.
@@ -293,7 +295,7 @@ namespace ExPop
                 // It's not in the list yet. Create it and add it to the
                 // hash table and the list of pending loads.
                 request = new LoadRequest(fileName, priority, start, length);
-                loadRequestsByName.setValue(def, request, true, false);
+                loadRequestsByName[def] = request;
                 pendingLoads.push_back(request);
                 if(status) {
                     *status = LOADSTATUS_WAITING;
@@ -326,7 +328,12 @@ namespace ExPop
                   #endif
 
                     // This buffer is too old. Get rid of it.
-                    loadRequestsByName.erase(LoadRequestDef(finishedLoads[i]->fileName, finishedLoads[i]->start, finishedLoads[i]->length));
+                    loadRequestsByName.erase(
+                        LoadRequestDef(
+                            finishedLoads[i]->fileName,
+                            finishedLoads[i]->start,
+                            finishedLoads[i]->length));
+
                     delete finishedLoads[i];
                     finishedLoads[i] = finishedLoads[finishedLoads.size() - 1];
                     finishedLoads.erase(finishedLoads.end() - 1);

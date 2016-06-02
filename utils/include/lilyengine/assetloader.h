@@ -39,6 +39,7 @@
 #include <vector>
 #include <iostream>
 #include <mutex>
+#include <unordered_map>
 
 #include "hashtable.h"
 #include "thread.h"
@@ -132,7 +133,8 @@ namespace ExPop {
             int start;
             int length;
 
-            inline LoadRequestDef(void) {
+            inline LoadRequestDef(void)
+            {
                 start = -1;
                 length = -1;
             }
@@ -140,22 +142,23 @@ namespace ExPop {
             inline LoadRequestDef(
                 std::string fileName,
                 int start,
-                int length) {
-
+                int length)
+            {
                 this->fileName = fileName;
                 this->start = start;
                 this->length = length;
             }
 
-            inline bool operator==(const LoadRequestDef &otherDef) {
+            inline bool operator==(const LoadRequestDef &otherDef) const
+            {
                 return
                     start == otherDef.start &&
                     length == otherDef.length &&
                     fileName == otherDef.fileName;
             }
 
-            inline bool operator<(const LoadRequestDef &otherDef) {
-
+            inline bool operator<(const LoadRequestDef &otherDef) const
+            {
                 if(fileName < otherDef.fileName) return true;
                 if(fileName > otherDef.fileName) return false;
 
@@ -195,9 +198,25 @@ namespace ExPop {
         /// change it outside of the loader thread.
         LoadRequest *currentLoad;
 
+        struct LoadRequestHash
+        {
+            size_t operator()(const AssetLoader::LoadRequestDef &def) const
+            {
+                // Start with the string hash.
+                size_t hash = std::hash<std::string>{}(def.fileName);
+
+                // Apply some really quick and dirty change to the hash based
+                // on the only other values that are different.
+                hash ^= def.start;
+                hash ^= def.length;
+
+                return hash;
+            }
+        };
+
         /// Hash table of load requests so we can quickly get to them
         /// by name.
-        HashTable<LoadRequestDef, LoadRequest*> loadRequestsByName;
+        std::unordered_map<LoadRequestDef, LoadRequest*, LoadRequestHash> loadRequestsByName;
 
         /// Set this to true when we want the loader thread to
         /// die. (This happens in the destructor for AssetLoader.)
