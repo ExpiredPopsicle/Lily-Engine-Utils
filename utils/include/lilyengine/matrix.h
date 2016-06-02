@@ -29,12 +29,23 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// I wrote a matrix class. I know there are tons of them out there,
+// but this one is mine. Should do most of the usual stuff. Helper
+// functions exist for constructing frustum matrices, rotation
+// matrices, scaling matrices, and translation matrices.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
-#include "mathdefs.h"
-
-// Turn this stuff on for some extra bounds checking.
+// We do some bounds checking by default with matrices. This can be
+// disabled for an extra little speed boost, but you should always
+// test with it enabled.
+#ifndef EXPOP_MATRIX_CHECKS
 #define EXPOP_MATRIX_CHECKS 1
+#endif
 #if EXPOP_MATRIX_CHECKS
 #include <cassert>
 #define EXPOP_MATRIX_ASSERT(x) assert(x)
@@ -42,18 +53,23 @@
 #define EXPOP_MATRIX_ASSERT(x)
 #endif
 
+#define EXPOP_MATRIX_ASSERT_STATIC(x) static_assert(x, "Bad matrix operation")
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-namespace ExPop {
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
+namespace ExPop
+{
     /// Matrix/Vector class. All template-tastic so we can use it for
-    /// whatever with a single set of code instead of the old way,
-    /// which had completely separate classes for Vector2D, Vector3D,
-    /// and Matrix4x4 (and all used the same scalar type).
+    /// whatever with a single set of code.
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    class Matrix {
+    class Matrix
+    {
     public:
 
         /// This is for convenience so we don't have to keep typing
@@ -66,8 +82,8 @@ namespace ExPop {
         // ----------------------------------------------------------------------
 
         // This must be the ONLY DATA MEMBER.
-        union {
-
+        union
+        {
             /// Actual data goes here.
             MatScalar data[ROWS * COLS];
         };
@@ -79,6 +95,7 @@ namespace ExPop {
         inline MatScalar &x(void);
         inline MatScalar &y(void);
         inline MatScalar &z(void);
+        inline MatScalar &w(void);
 
         /// data is a public member, so you don't really have to use
         /// this, but you should because we can turn on error checking
@@ -239,35 +256,89 @@ namespace ExPop {
     typedef Matrix<float, 4, 1> FVec4;
     typedef Matrix<float, 4, 1> FColor4;
 
-    // Implementation follows...
-    // ----------------------------------------------------------------------
+    // Utility/helper functions.
 
+    /// Make a 4x4 float perspective matrix. (Recommended to use
+    /// makeFrustumMatrix instead!)
+    inline FMatrix4x4 makePerspectiveMatrix(
+        float fovY,
+        float aspectRatio,
+        float zNear,
+        float zFar);
+
+    /// Make a 4x4 float frustum matrix.
+    inline FMatrix4x4 makeFrustumMatrix(
+        float left,
+        float right,
+        float bottom,
+        float top,
+        float nearDist,
+        float farDist);
+
+    /// Make a 4x4 float translation matrix.
+    inline FMatrix4x4 makeTranslationMatrix(const FVec3 &t);
+
+    /// Make a 4x4 float rotation matrix.
+    inline FMatrix4x4 makeRotationMatrix(const FVec3 &axis, float angle);
+
+    /// Make a 3x3 float rotation matrix around the Z axis.
+    inline FMatrix3x3 make2DRotationMatrix(float angle);
+
+    /// Make a 4x4 float scaling matrix.
+    inline FMatrix4x4 makeScaleMatrix(const FVec3 &scale);
+
+    /// std::ostream output.
+    template <typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline std::ostream &operator<<(std::ostream &out, const Matrix<MatScalar, ROWS, COLS> &mat);
+
+    /// std::istream input.
+    template <typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline std::istream &operator>>(std::istream &in, Matrix<MatScalar, ROWS, COLS> &mat);
+}
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     // x()
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::x(void) {
-        assert(ROWS * COLS > 0);
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::x(void)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS > 0);
         return data[0];
     }
 
     // y()
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::y(void) {
-        assert(ROWS * COLS > 1);
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::y(void)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS > 1);
         return data[1];
     }
 
     // z()
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::z(void) {
-        assert(ROWS * COLS > 2);
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::w(void)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS > 2);
         return data[2];
+    }
+
+    // w()
+    template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
+    inline MatScalar &Matrix<MatScalar, ROWS, COLS>::z(void)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS > 3);
+        return data[3];
     }
 
     // operator[]
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline MatScalar &Matrix<MatScalar, ROWS, COLS>::operator[](
-        unsigned int index) {
-
+        unsigned int index)
+    {
         EXPOP_MATRIX_ASSERT(index < ROWS * COLS);
         return data[index];
     }
@@ -275,8 +346,8 @@ namespace ExPop {
     // operator[], const version
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline const MatScalar &Matrix<MatScalar, ROWS, COLS>::operator[](
-        unsigned int index) const {
-
+        unsigned int index) const
+    {
         EXPOP_MATRIX_ASSERT(index < ROWS * COLS);
         return data[index];
     }
@@ -285,8 +356,8 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline MatScalar &Matrix<MatScalar, ROWS, COLS>::get(
         unsigned int row,
-        unsigned int col) {
-
+        unsigned int col)
+    {
         EXPOP_MATRIX_ASSERT(row < ROWS && col < COLS);
         return data[row + (col * ROWS)];
     }
@@ -295,8 +366,8 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline const MatScalar &Matrix<MatScalar, ROWS, COLS>::getConst(
         unsigned int row,
-        unsigned int col) const {
-
+        unsigned int col) const
+    {
         EXPOP_MATRIX_ASSERT(row < ROWS && col < COLS);
         return data[row + (col * ROWS)];
     }
@@ -305,15 +376,15 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline MatScalar &Matrix<MatScalar, ROWS, COLS>::operator()(
         unsigned int row,
-        unsigned int col) {
-
+        unsigned int col)
+    {
         return get(row, col);
     }
 
     // Matrix()
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(void) {
-
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(void)
+    {
         unsigned int index = 0;
 
         for(unsigned int col = 0; col < COLS; col++) {
@@ -331,8 +402,8 @@ namespace ExPop {
 
     // Matrix(array)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(const MatScalar inData[ROWS * COLS]) {
-
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(const MatScalar inData[ROWS * COLS])
+    {
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
             for(unsigned int row = 0; row < ROWS; row++) {
@@ -344,8 +415,8 @@ namespace ExPop {
 
     // Matrix(otherMatrix)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(const MyType &mat) {
-
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(const MyType &mat)
+    {
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
             for(unsigned int row = 0; row < ROWS; row++) {
@@ -360,8 +431,8 @@ namespace ExPop {
     inline Matrix<MatScalar, ROWS, COLS>::Matrix(
         const MatScalar *otherMatrixData,
         unsigned int otherMatrixRows,
-        unsigned int otherMatrixCols) {
-
+        unsigned int otherMatrixCols)
+    {
         unsigned int index = 0;
 
         for(unsigned int col = 0; col < COLS; col++) {
@@ -383,8 +454,8 @@ namespace ExPop {
 
     // Matrix(scalar)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar v) {
-
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar v)
+    {
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
             for(unsigned int row = 0; row < ROWS; row++) {
@@ -396,18 +467,18 @@ namespace ExPop {
 
     // Matrix(x, y)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y) {
-
-        assert(ROWS * COLS == 2);
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS == 2);
         data[0] = x;
         data[1] = y;
     }
 
     // Matrix(x, y, z)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y, MatScalar z) {
-
-        assert(ROWS * COLS == 3);
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y, MatScalar z)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS == 3);
         data[0] = x;
         data[1] = y;
         data[2] = z;
@@ -415,9 +486,9 @@ namespace ExPop {
 
     // Matrix(x, y, z, w)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y, MatScalar z, MatScalar w) {
-
-        assert(ROWS * COLS == 4);
+    inline Matrix<MatScalar, ROWS, COLS>::Matrix(MatScalar x, MatScalar y, MatScalar z, MatScalar w)
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS == 4);
         data[0] = x;
         data[1] = y;
         data[2] = z;
@@ -426,8 +497,8 @@ namespace ExPop {
 
     // transpose
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, COLS, ROWS> Matrix<MatScalar, ROWS, COLS>::transpose() const {
-
+    inline Matrix<MatScalar, COLS, ROWS> Matrix<MatScalar, ROWS, COLS>::transpose() const
+    {
         MyType out;
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
@@ -444,8 +515,8 @@ namespace ExPop {
     inline void Matrix<MatScalar, ROWS, COLS>::subtractRow(
         unsigned int rowNum1,
         unsigned int rowNum2,
-        MatScalar d) {
-
+        MatScalar d)
+    {
         for(unsigned int i = 0; i < COLS; i++) {
             get(rowNum1, i) -= get(rowNum2, i) * d;
         }
@@ -455,8 +526,8 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline void Matrix<MatScalar, ROWS, COLS>::divideRow(
         unsigned int rowNum,
-        MatScalar d) {
-
+        MatScalar d)
+    {
         for(unsigned int i = 0; i < COLS; i++) {
             get(rowNum, i) /= d;
         }
@@ -466,10 +537,9 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     inline void Matrix<MatScalar, ROWS, COLS>::swapRows(
         unsigned int rowNum1,
-        unsigned int rowNum2) {
-
+        unsigned int rowNum2)
+    {
         for(unsigned int i = 0; i < COLS; i++) {
-
             MatScalar tmp = get(rowNum1, i);
             get(rowNum1, i) = get(rowNum2, i);
             get(rowNum2, i) = tmp;
@@ -478,9 +548,9 @@ namespace ExPop {
 
     // inverse
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::inverse() const {
-
-        assert(ROWS == COLS);
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::inverse() const
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS == COLS);
 
         MyType out;
 
@@ -551,7 +621,8 @@ namespace ExPop {
 
     // debugDump
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline void Matrix<MatScalar, ROWS, COLS>::debugDump(void) const {
+    inline void Matrix<MatScalar, ROWS, COLS>::debugDump(void) const
+    {
         std::cout << "Matrix dump (" << ROWS << "x" << COLS << "):" << std::endl;
         int index = 0;
         for(unsigned int row = 0; row < ROWS; row++) {
@@ -565,7 +636,8 @@ namespace ExPop {
 
     // operator+
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator+(const MyType &other) const {
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator+(const MyType &other) const
+    {
         MyType out;
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
@@ -579,7 +651,8 @@ namespace ExPop {
 
     // operator+=
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator+=(const MyType &other) {
+    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator+=(const MyType &other)
+    {
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
             for(unsigned int row = 0; row < ROWS; row++) {
@@ -592,7 +665,8 @@ namespace ExPop {
 
     // operator-
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator-(const MyType &other) const {
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator-(const MyType &other) const
+    {
         MyType out;
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
@@ -606,7 +680,8 @@ namespace ExPop {
 
     // operator-=
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator-=(const MyType &other) {
+    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator-=(const MyType &other)
+    {
         int index = 0;
         for(unsigned int col = 0; col < COLS; col++) {
             for(unsigned int row = 0; row < ROWS; row++) {
@@ -619,9 +694,9 @@ namespace ExPop {
 
     // operator*
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator*(const MyType &otherMat) const {
-
-        assert(ROWS == COLS);
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator*(const MyType &otherMat) const
+    {
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS == COLS);
 
         MyType output(MatScalar(0));
         int index = 0;
@@ -645,10 +720,10 @@ namespace ExPop {
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
     template<unsigned int otherRows, unsigned int otherCols>
     inline Matrix<MatScalar, ROWS, otherCols> Matrix<MatScalar, ROWS, COLS>::multiply(
-        const Matrix<MatScalar, otherRows, otherCols> &otherMat) const {
-
+        const Matrix<MatScalar, otherRows, otherCols> &otherMat) const
+    {
         // COLS and otherRows MUST be the same!
-        assert(COLS == otherRows);
+        EXPOP_MATRIX_ASSERT_STATIC(COLS == otherRows);
 
         Matrix<MatScalar, ROWS, otherCols> output(0.0f);
 
@@ -675,8 +750,8 @@ namespace ExPop {
 
     // operator*(s)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator*(MatScalar s) const {
-
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator*(MatScalar s) const
+    {
         MyType v;
         unsigned int arraySize = ROWS * COLS;
 
@@ -688,7 +763,8 @@ namespace ExPop {
 
     // operator*=(s)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator*=(MatScalar s) {
+    inline const Matrix<MatScalar, ROWS, COLS> &Matrix<MatScalar, ROWS, COLS>::operator*=(MatScalar s)
+    {
         unsigned int arraySize = ROWS * COLS;
         for(unsigned int i = 0; i < arraySize; i++) {
             data[i] = data[i] * s;
@@ -698,8 +774,8 @@ namespace ExPop {
 
     // operator/(s)
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator/(MatScalar s) const {
-
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::operator/(MatScalar s) const
+    {
         MyType v;
         unsigned int arraySize = ROWS * COLS;
 
@@ -711,14 +787,15 @@ namespace ExPop {
 
     // magnitude
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline MatScalar Matrix<MatScalar, ROWS, COLS>::magnitude(void) const {
+    inline MatScalar Matrix<MatScalar, ROWS, COLS>::magnitude(void) const
+    {
         return std::sqrt(magnitudeSquared());
     }
 
     // magnitudeSquared
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline MatScalar Matrix<MatScalar, ROWS, COLS>::magnitudeSquared(void) const {
-
+    inline MatScalar Matrix<MatScalar, ROWS, COLS>::magnitudeSquared(void) const
+    {
         unsigned int arraySize = ROWS * COLS;
         MatScalar outVal(0);
         for(unsigned int i = 0; i < arraySize; i++) {
@@ -730,14 +807,15 @@ namespace ExPop {
 
     // normalize
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::normalize(void) const {
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::normalize(void) const
+    {
         return (*this) / magnitude();
     }
 
     // dot
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline MatScalar Matrix<MatScalar, ROWS, COLS>::dot(const MyType &otherMat) const {
-
+    inline MatScalar Matrix<MatScalar, ROWS, COLS>::dot(const MyType &otherMat) const
+    {
         unsigned int arraySize = ROWS * COLS;
         MatScalar outVal(0);
 
@@ -749,8 +827,8 @@ namespace ExPop {
 
     // isZero
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline bool Matrix<MatScalar, ROWS, COLS>::isZero(void) const {
-
+    inline bool Matrix<MatScalar, ROWS, COLS>::isZero(void) const
+    {
         unsigned int arraySize = ROWS * COLS;
         MatScalar zeroTest(0);
 
@@ -762,8 +840,8 @@ namespace ExPop {
 
     // operator==
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline bool Matrix<MatScalar, ROWS, COLS>::operator==(const MyType &otherMat) const {
-
+    inline bool Matrix<MatScalar, ROWS, COLS>::operator==(const MyType &otherMat) const
+    {
         unsigned int arraySize = ROWS * COLS;
 
         for(unsigned int i = 0; i < arraySize; i++) {
@@ -774,16 +852,17 @@ namespace ExPop {
 
     // operator!=
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline bool Matrix<MatScalar, ROWS, COLS>::operator!=(const MyType &otherMat) const {
+    inline bool Matrix<MatScalar, ROWS, COLS>::operator!=(const MyType &otherMat) const
+    {
         return !(operator==(otherMat));
     }
 
     // crossProduct
     template<typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::crossProduct(const MyType &v) const {
-
+    inline Matrix<MatScalar, ROWS, COLS> Matrix<MatScalar, ROWS, COLS>::crossProduct(const MyType &v) const
+    {
         // 3D Vectors only.
-        assert(ROWS * COLS == 3);
+        EXPOP_MATRIX_ASSERT_STATIC(ROWS * COLS == 3);
 
         MyType out;
         out.data[0] =  data[1]   * v.data[2] - data[2]   *  v.data[1];
@@ -807,13 +886,12 @@ namespace ExPop {
 
     // Utility/helper functions...
 
-    /// Make a 4x4 float perspective matrix.
     inline FMatrix4x4 makePerspectiveMatrix(
         float fovY,
         float aspectRatio,
         float zNear,
-        float zFar) {
-
+        float zFar)
+    {
         fovY *= 3.14159 / 360.0;
 
         float tmp1 = std::cos(fovY) / std::sin(fovY);
@@ -832,15 +910,14 @@ namespace ExPop {
 
     }
 
-    /// Make a 4x4 float frustum matrix.
     inline FMatrix4x4 makeFrustumMatrix(
         float left,
         float right,
         float bottom,
         float top,
         float nearDist,
-        float farDist) {
-
+        float farDist)
+    {
         FMatrix4x4 mat;
 
         mat.get(0, 0) =
@@ -858,9 +935,8 @@ namespace ExPop {
         return mat;
     }
 
-    /// Make a 4x4 float translation matrix.
-    inline FMatrix4x4 makeTranslationMatrix(const FVec3 &t) {
-
+    inline FMatrix4x4 makeTranslationMatrix(const FVec3 &t)
+    {
         FMatrix4x4 mat;
         mat(0, 3) = t.data[0];
         mat(1, 3) = t.data[1];
@@ -868,9 +944,8 @@ namespace ExPop {
         return mat;
     }
 
-    /// Make a 4x4 float rotation matrix.
-    inline FMatrix4x4 makeRotationMatrix(const FVec3 &axis, float angle) {
-
+    inline FMatrix4x4 makeRotationMatrix(const FVec3 &axis, float angle)
+    {
         float c = std::cos(angle);
         float s = std::sin(angle);
         float t = 1 - c;
@@ -892,9 +967,8 @@ namespace ExPop {
         return mat;
     }
 
-    /// Make a 3x3 float rotation matrix around the Z axis.
-    inline FMatrix3x3 make2DRotationMatrix(float angle) {
-
+    inline FMatrix3x3 make2DRotationMatrix(float angle)
+    {
         float c = std::cos(angle);
         float s = std::sin(angle);
 
@@ -911,9 +985,8 @@ namespace ExPop {
         return mat;
     }
 
-    /// Make a 4x4 float scaling matrix.
-    inline FMatrix4x4 makeScaleMatrix(const FVec3 &scale) {
-
+    inline FMatrix4x4 makeScaleMatrix(const FVec3 &scale)
+    {
         FMatrix4x4 mat;
 
         mat(0, 0) = scale.data[0];
@@ -923,10 +996,10 @@ namespace ExPop {
         return mat;
     }
 
-    /// std::ostream output.
+    // std::ostream output.
     template <typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline std::ostream &operator<<(std::ostream &out, const Matrix<MatScalar, ROWS, COLS> &mat) {
-
+    inline std::ostream &operator<<(std::ostream &out, const Matrix<MatScalar, ROWS, COLS> &mat)
+    {
         unsigned int arraySize = ROWS * COLS;
         for(unsigned int i = 0; i < arraySize; i++) {
             out << mat.data[i];
@@ -937,10 +1010,10 @@ namespace ExPop {
         return out;
     }
 
-    /// std::istream input.
+    // std::istream input.
     template <typename MatScalar, unsigned int ROWS, unsigned int COLS>
-    inline std::istream &operator>>(std::istream &in, Matrix<MatScalar, ROWS, COLS> &mat) {
-
+    inline std::istream &operator>>(std::istream &in, Matrix<MatScalar, ROWS, COLS> &mat)
+    {
         unsigned int arraySize = ROWS * COLS;
         for(unsigned int i = 0; i < arraySize; i++) {
             in >> mat.data[i];

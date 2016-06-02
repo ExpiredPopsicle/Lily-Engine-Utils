@@ -42,6 +42,9 @@ using namespace std;
 using namespace ExPop::Console;
 using namespace ExPop;
 
+// FIXME: Make this a function.
+#define IS_POW2(x) (!((x) & ((x) - 1)))
+
 namespace ExPop {
 
     namespace Gfx {

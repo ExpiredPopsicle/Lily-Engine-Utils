@@ -32,10 +32,5 @@
 #ifndef MATHDEFS_H
 #define MATHDEFS_H
 
-// This is the type that all scalar values in 2D and 3D vectors will
-// use. So, each individual axis is represented by one of these.
-#define VEC_SCALAR float
-
-#define IS_POW2(x) (!((x) & ((x) - 1)))
 
 #endif
