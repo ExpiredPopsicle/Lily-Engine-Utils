@@ -72,6 +72,10 @@ int main(int argc, char *argv[])
     size_t passCounter = 0;
     size_t failCounter = 0;
 
+    showSectionHeader("Testing system tests");
+    EXPOP_TEST_VALUE(true, true);
+    EXPOP_TEST_VALUE(false, false);
+
     showSectionHeader("Strings");
     doStringTests(passCounter, failCounter);
 
@@ -84,10 +88,19 @@ int main(int argc, char *argv[])
     showSectionHeader("AssetLoader");
     doAssetLoadTests(passCounter, failCounter);
 
+    showSectionHeader("Angle");
+    doAngleTests(passCounter, failCounter);
+
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;
     std::cout << "Failed: " << failCounter << std::endl;
     cout << std::endl;
+
+    if(failCounter) {
+        return 1;
+    }
+
+    return 0;
 }
 
 

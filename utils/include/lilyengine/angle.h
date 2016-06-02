@@ -29,9 +29,27 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// I got sick of dealing with interpolation between two angles across
+// their shortest arc, and kept writing the same ugly chunk of code
+// over and over again. So here's an implementation of an angle type
+// that reduces angles to the 0-360 degree range, and allows
+// interpolation across the shortest arc.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <sstream>
+
+#if EXPOP_ENABLE_TESTING
+#include <lilyengine/testing.h>
+#endif
+
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
 namespace ExPop {
 
@@ -42,17 +60,28 @@ namespace ExPop {
     {
     public:
 
+        /// Basic constructor initializes angle to zero degrees.
         Angle(void);
+
+        /// Take an angle in degrees as a constructor.
         Angle(float degrees);
 
+        // Note: Default copy constructors are fine here.
+
+        /// Get angle as degrees.
         float getDegrees(void) const;
+
+        /// Get angle as radians (converts).
         float getRadians(void) const;
 
+        /// Set angle as degrees.
         void setDegrees(float degrees);
+
+        /// Set angle as radians (converts).
         void setRadians(float radians);
 
-        // TODO: Implement operator overloading so we more easily do
-        // simple math with angles.
+        // TODO: Implement operator overloading so we can more easily
+        // do simple math with angles.
 
     private:
 
@@ -61,8 +90,22 @@ namespace ExPop {
         float angleDegrees;
     };
 
-    Angle interpAngle(const Angle &a, const Angle &b, float alpha);
+    /// Interpolate angles.
+    inline Angle interpAngle(const Angle &a, const Angle &b, float alpha);
 
+    /// Output an angle to an ostream (as degrees).
+    inline std::ostream &operator<<(std::ostream &out, const Angle &angle);
+
+    /// Read an angle from an ostream (as degrees).
+    inline std::istream &operator>>(std::istream &in, Angle &angle);
+}
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     inline std::ostream &operator<<(std::ostream &out, const Angle &angle)
     {
         out << angle.getDegrees();
@@ -76,5 +119,81 @@ namespace ExPop {
         angle.setDegrees(degrees);
         return in;
     }
+
+    inline Angle::Angle(void)
+    {
+        angleDegrees = 0.0f;
+    }
+
+    inline Angle::Angle(float degrees)
+    {
+        setDegrees(degrees);
+    }
+
+    inline float Angle::getDegrees(void) const
+    {
+        return angleDegrees;
+    }
+
+    inline float Angle::getRadians(void) const
+    {
+        return angleDegrees * 3.14159f/180.0f;
+    }
+
+    inline void Angle::setDegrees(float degrees)
+    {
+        angleDegrees = degrees;
+
+        if(angleDegrees >= 360.0f) {
+            angleDegrees -= floor(angleDegrees / 360.0f) * 360.0f;
+        }
+
+        if(angleDegrees < 0.0f) {
+            angleDegrees = angleDegrees + fabs(floor(angleDegrees/360.0f) * 360.0f);
+        }
+
+        if(angleDegrees == -0.0f) {
+            angleDegrees = 0.0f;
+        }
+    }
+
+    inline void Angle::setRadians(float radians)
+    {
+        setDegrees(radians * 180.0f/3.14159f);
+    }
+
+    inline Angle interpAngle(const Angle &a, const Angle &b, float alpha)
+    {
+        float degrees0 = a.getDegrees();
+        float degrees1 = b.getDegrees();
+
+        // Find an offset to degrees1 to bring it closer to degrees0
+        // by wrapping around.
+        if(fabs((degrees1 + 360) - degrees0) <
+           fabs(degrees1 - degrees0)) {
+            degrees1 += 360;
+        }
+        if(fabs((degrees1 - 360) - degrees0) <=
+           fabs(degrees1 - degrees0)) {
+            degrees1 -= 360;
+        }
+
+        // Now we can linearly interpolate, and rely on the angle set
+        // in the constructor to properly wrap around.
+        return Angle(degrees0 * (1.0f - alpha) + degrees1 * alpha);
+    }
+
+  #if EXPOP_ENABLE_TESTING
+    inline void doAngleTests(size_t &passCounter, size_t &failCounter)
+    {
+        // Comparing floats for equality like this is generally a bad
+        // idea, but I think it'll be okay here.
+        EXPOP_TEST_VALUE(Angle(360.0f).getDegrees(), 0.0f);
+        EXPOP_TEST_VALUE(Angle(361.0f).getDegrees(), 1.0f);
+        EXPOP_TEST_VALUE(Angle(-1.0f).getDegrees(), 359.0f);
+        EXPOP_TEST_VALUE(Angle(-361.0f).getDegrees(), 359.0f);
+        EXPOP_TEST_VALUE(interpAngle(Angle(-360.0f), Angle(1.0f), 0.5f).getDegrees(), 0.5f);
+    }
+  #endif
 
 }
