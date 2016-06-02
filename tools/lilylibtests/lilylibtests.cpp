@@ -29,14 +29,143 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// Internal testing stuff for Lily Engine Utils.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
+#include <iomanip>
 #include <iostream>
+#include <ostream>
+#include <sstream>
 using namespace std;
 
-#define EXPOP_ENABLE_TESTING 1
 #include <lilyengine/utils.h>
 using namespace ExPop;
 
 #include "usagetext.h"
+
+// ----------------------------------------------------------------------
+// #defines needed to do all the tests
+// ----------------------------------------------------------------------
+
+#if _WIN32
+// Windows console doesn't like VT100 color codes.
+#define EXPOP_TEST_COLOR_RESET ""
+#define EXPOP_TEST_COLOR_GOOD  ""
+#define EXPOP_TEST_COLOR_BAD   ""
+#define EXPOP_TEST_COLOR_NOTICE ""
+#else
+#define EXPOP_TEST_COLOR_RESET "\033[0m"
+#define EXPOP_TEST_COLOR_GOOD  "\033[1;32m"
+#define EXPOP_TEST_COLOR_BAD   "\033[1;31;5m"
+#define EXPOP_TEST_COLOR_NOTICE "\033[1;36m"
+#endif
+
+#define EXPOP_TEST_VALUE(x, y)                                      \
+    do {                                                            \
+        bool pass = ((x) == (y));                                   \
+        std::ostringstream testingOstr;                             \
+        testingOstr << "" << #x << " == " << #y << " ";             \
+        std::string testingStr = testingOstr.str();                 \
+        if(testingStr.size() > 70)                                  \
+            testingStr = testingStr.substr(0, 70) + "...";          \
+        testingStr = testingStr + " ";                              \
+        std::cout << std::setw(80-4) << std::left << testingStr;    \
+        if(pass) {                                                  \
+            std::cout << EXPOP_TEST_COLOR_GOOD;                     \
+            std::cout << "PASS" << std::endl;                       \
+            std::cout << EXPOP_TEST_COLOR_RESET;                    \
+            passCounter++;                                          \
+        } else {                                                    \
+            std::cout << EXPOP_TEST_COLOR_BAD;                      \
+            std::cout << "FAIL (" << (x) <<  ")" << std::endl;      \
+            std::cout << EXPOP_TEST_COLOR_RESET;                    \
+            failCounter++;                                          \
+        }                                                           \
+    } while(0)
+
+// ----------------------------------------------------------------------
+// Actual tests
+// ----------------------------------------------------------------------
+
+inline void doAngleTests(size_t &passCounter, size_t &failCounter)
+{
+    // Comparing floats for equality like this is generally a bad
+    // idea, but I think it'll be okay here.
+    EXPOP_TEST_VALUE(Angle(360.0f).getDegrees(), 0.0f);
+    EXPOP_TEST_VALUE(Angle(361.0f).getDegrees(), 1.0f);
+    EXPOP_TEST_VALUE(Angle(-1.0f).getDegrees(), 359.0f);
+    EXPOP_TEST_VALUE(Angle(-361.0f).getDegrees(), 359.0f);
+    EXPOP_TEST_VALUE(interpAngle(Angle(-360.0f), Angle(1.0f), 0.5f).getDegrees(), 0.5f);
+}
+
+inline void doAssetLoadTests(size_t &passCounter, size_t &failCounter)
+{
+    AssetLoader loader;
+
+    int length = 0;
+    char *data = nullptr;
+    std::cout << "Loading the readme" << std::endl;
+
+    size_t loopCount = 0;
+
+    while(true) {
+        data = loader.requestData("README.org", 100, &length);
+        if(data) {
+            break;
+        }
+
+        // Show a progress bar thingy.
+        if(loopCount % 70 == 0 && loopCount) {
+            std::cout << std::endl;
+        }
+        std::cout << ".oO0Oo"[loopCount % 6];
+        loopCount++;
+    }
+    std::cout << std::endl;
+
+    EXPOP_TEST_VALUE(!!data, true);
+    EXPOP_TEST_VALUE(std::string(data, length), FileSystem::loadFileString("README.org"));
+}
+
+inline void doBase64Tests(size_t &passCounter, size_t &failCounter)
+{
+    EXPOP_TEST_VALUE(stringBase64EncodeString("butts"), "YnV0dHM=");
+    EXPOP_TEST_VALUE(stringBase64EncodeString("ASDFGBC"), "QVNERkdCQw==");
+    EXPOP_TEST_VALUE(stringBase64EncodeString(std::string("\0\0\0\0\0\0\0\0", 8)), "AAAAAAAAAAA=");
+}
+
+inline void doHttpTests(size_t &passCounter, size_t &failCounter)
+{
+    EXPOP_TEST_VALUE(httpGet("http://butts@expiredpopsicle.com:80/index.html").success, true);
+    EXPOP_TEST_VALUE(httpGet("http://expiredpopsicle.com").success, true);
+}
+
+inline void doStringTests(size_t &passCounter, size_t &failCounter)
+{
+    EXPOP_TEST_VALUE(stringStartsWith<char>("dick", "dickbutts"), true);
+    EXPOP_TEST_VALUE(stringEndsWith<char>("butts", "dickbutts"), true);
+    EXPOP_TEST_VALUE(!stringEndsWith<char>("dick", "dickbutts"), true);
+    EXPOP_TEST_VALUE(!stringStartsWith<char>("butts", "dickbutts"), true);
+    EXPOP_TEST_VALUE(stringUnescape<char>("foo\\n\\\\"), "foo\n\\");
+    EXPOP_TEST_VALUE("foo\\n\\\\", stringEscape<char>("foo\n\\"));
+    EXPOP_TEST_VALUE(stringTrim<char>("  asdf"), std::string("asdf"));
+    EXPOP_TEST_VALUE(stringTrim<char>("asdf  "), std::string("asdf"));
+    EXPOP_TEST_VALUE(stringTrim<char>("  asdf  "), std::string("asdf"));
+    EXPOP_TEST_VALUE(stringTrim<char>("asdf"), std::string("asdf"));
+    EXPOP_TEST_VALUE(stringTrim<char>("  "), std::string(""));
+    EXPOP_TEST_VALUE(stringTrim<char>(""), std::string(""));
+    EXPOP_TEST_VALUE(stringReplace<char>("BUTT", "BOOB", "DICKBUTT"), "DICKBOOB");
+    EXPOP_TEST_VALUE(stringReplace<char>("DICK", "BOOB", "DICKBUTT"), "BOOBBUTT");
+    EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTT", "BOOBS", "DICKBUTT"), "BOOBS");
+    EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTTASDF", "BOOBS", "DICKBUTT"), "DICKBUTT");
+}
+
+// ----------------------------------------------------------------------
+// Testing 'framework'
+// ----------------------------------------------------------------------
 
 void showHelp(const char *argv0, bool error)
 {

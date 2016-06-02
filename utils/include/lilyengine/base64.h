@@ -39,10 +39,6 @@
 
 #include <string>
 
-#if EXPOP_ENABLE_TESTING
-#include <lilyengine/testing.h>
-#endif
-
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------
@@ -66,11 +62,6 @@ namespace ExPop
     /// Encode a string to a base64 string. Convenience function for
     /// text data.
     inline std::string stringBase64EncodeString(const std::string &str);
-
-  #if EXPOP_ENABLE_TESTING
-    /// Run tests.
-    inline void doBase64Tests(size_t &passCounter, size_t &failCounter);
-  #endif
 };
 
 // ----------------------------------------------------------------------
@@ -243,14 +234,5 @@ namespace ExPop
     {
         return stringBase64Encode(str.c_str(), str.size());
     }
-
-  #if EXPOP_ENABLE_TESTING
-    inline void doBase64Tests(size_t &passCounter, size_t &failCounter)
-    {
-        EXPOP_TEST_VALUE(stringBase64EncodeString("butts"), "YnV0dHM=");
-        EXPOP_TEST_VALUE(stringBase64EncodeString("ASDFGBC"), "QVNERkdCQw==");
-        EXPOP_TEST_VALUE(stringBase64EncodeString(std::string("\0\0\0\0\0\0\0\0", 8)), "AAAAAAAAAAA=");
-    }
-  #endif
-};
+}
 

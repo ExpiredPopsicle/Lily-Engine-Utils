@@ -43,10 +43,6 @@
 
 #include <sstream>
 
-#if EXPOP_ENABLE_TESTING
-#include <lilyengine/testing.h>
-#endif
-
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------
@@ -182,18 +178,4 @@ namespace ExPop
         // in the constructor to properly wrap around.
         return Angle(degrees0 * (1.0f - alpha) + degrees1 * alpha);
     }
-
-  #if EXPOP_ENABLE_TESTING
-    inline void doAngleTests(size_t &passCounter, size_t &failCounter)
-    {
-        // Comparing floats for equality like this is generally a bad
-        // idea, but I think it'll be okay here.
-        EXPOP_TEST_VALUE(Angle(360.0f).getDegrees(), 0.0f);
-        EXPOP_TEST_VALUE(Angle(361.0f).getDegrees(), 1.0f);
-        EXPOP_TEST_VALUE(Angle(-1.0f).getDegrees(), 359.0f);
-        EXPOP_TEST_VALUE(Angle(-361.0f).getDegrees(), 359.0f);
-        EXPOP_TEST_VALUE(interpAngle(Angle(-360.0f), Angle(1.0f), 0.5f).getDegrees(), 0.5f);
-    }
-  #endif
-
 }

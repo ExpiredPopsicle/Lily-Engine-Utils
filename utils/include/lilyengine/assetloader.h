@@ -42,9 +42,6 @@
 
 #include "hashtable.h"
 #include "thread.h"
-#if EXPOP_ENABLE_TESTING
-#include "testing.h"
-#endif
 
 namespace ExPop {
 
@@ -217,37 +214,6 @@ namespace ExPop {
 
         friend HashValue genericHashFunc(const AssetLoader::LoadRequestDef &def);
     };
-
-  #if EXPOP_ENABLE_TESTING
-    inline void doAssetLoadTests(size_t &passCounter, size_t &failCounter)
-    {
-        AssetLoader loader;
-
-        int length = 0;
-        char *data = nullptr;
-        std::cout << "Loading the readme" << std::endl;
-
-        size_t loopCount = 0;
-
-        while(true) {
-            data = loader.requestData("README.org", 100, &length);
-            if(data) {
-                break;
-            }
-
-            // Show a progress bar thingy.
-            if(loopCount % 70 == 0 && loopCount) {
-                std::cout << std::endl;
-            }
-            std::cout << ".oO0Oo"[loopCount % 6];
-            loopCount++;
-        }
-        std::cout << std::endl;
-
-        EXPOP_TEST_VALUE(!!data, true);
-        EXPOP_TEST_VALUE(std::string(data, length), FileSystem::loadFileString("README.org"));
-    }
-  #endif
 }
 
 #endif

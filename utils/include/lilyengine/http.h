@@ -44,10 +44,6 @@
 #include <lilyengine/expopsockets.h>
 #include <lilyengine/malstring.h>
 
-#if EXPOP_ENABLE_TESTING
-#include <lilyengine/testing.h>
-#endif
-
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------
@@ -68,10 +64,6 @@ namespace ExPop
 
     /// This is incomplete. Don't use it yet.
     inline HttpResponse httpGet(const std::string &url, size_t allowedRedirects = 4);
-
-  #if EXPOP_ENABLE_TESTING
-    inline void doHttpTests(size_t &passCounter, size_t &failCounter);
-  #endif
 }
 
 #endif
@@ -276,14 +268,6 @@ namespace ExPop
         ret.success = true;
         return ret;
     }
-
-  #if EXPOP_ENABLE_TESTING
-    inline void doHttpTests(size_t &passCounter, size_t &failCounter)
-    {
-        EXPOP_TEST_VALUE(httpGet("http://butts@expiredpopsicle.com:80/index.html").success, true);
-        EXPOP_TEST_VALUE(httpGet("http://expiredpopsicle.com").success, true);
-    }
-  #endif
 }
 
 #endif

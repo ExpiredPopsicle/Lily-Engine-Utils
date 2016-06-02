@@ -49,10 +49,6 @@
 #include <sstream>
 #include <cstring>
 
-#if EXPOP_ENABLE_TESTING
-#include <lilyengine/testing.h>
-#endif
-
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------
@@ -193,11 +189,6 @@ namespace ExPop
     template<typename T>
     inline std::basic_string<T> stringToLower(
         const std::basic_string<T> &str);
-
-  #if EXPOP_ENABLE_TESTING
-    /// Testing junk for the string library.
-    inline void doStringTests();
-  #endif
 }
 
 // ----------------------------------------------------------------------
@@ -1140,27 +1131,5 @@ namespace ExPop
         }
         return ret;
     }
-
-  #if EXPOP_ENABLE_TESTING
-    inline void doStringTests(size_t &passCounter, size_t &failCounter)
-    {
-        EXPOP_TEST_VALUE(stringStartsWith<char>("dick", "dickbutts"), true);
-        EXPOP_TEST_VALUE(stringEndsWith<char>("butts", "dickbutts"), true);
-        EXPOP_TEST_VALUE(!stringEndsWith<char>("dick", "dickbutts"), true);
-        EXPOP_TEST_VALUE(!stringStartsWith<char>("butts", "dickbutts"), true);
-        EXPOP_TEST_VALUE(stringUnescape<char>("foo\\n\\\\"), "foo\n\\");
-        EXPOP_TEST_VALUE("foo\\n\\\\", stringEscape<char>("foo\n\\"));
-        EXPOP_TEST_VALUE(stringTrim<char>("  asdf"), std::string("asdf"));
-        EXPOP_TEST_VALUE(stringTrim<char>("asdf  "), std::string("asdf"));
-        EXPOP_TEST_VALUE(stringTrim<char>("  asdf  "), std::string("asdf"));
-        EXPOP_TEST_VALUE(stringTrim<char>("asdf"), std::string("asdf"));
-        EXPOP_TEST_VALUE(stringTrim<char>("  "), std::string(""));
-        EXPOP_TEST_VALUE(stringTrim<char>(""), std::string(""));
-        EXPOP_TEST_VALUE(stringReplace<char>("BUTT", "BOOB", "DICKBUTT"), "DICKBOOB");
-        EXPOP_TEST_VALUE(stringReplace<char>("DICK", "BOOB", "DICKBUTT"), "BOOBBUTT");
-        EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTT", "BOOBS", "DICKBUTT"), "BOOBS");
-        EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTTASDF", "BOOBS", "DICKBUTT"), "DICKBUTT");
-    }
-  #endif
-};
+}
 
