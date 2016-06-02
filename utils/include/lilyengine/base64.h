@@ -62,7 +62,7 @@ namespace ExPop
     /// Encode a string to a base64 string. Convenience function for
     /// text data.
     inline std::string stringBase64EncodeString(const std::string &str);
-};
+}
 
 // ----------------------------------------------------------------------
 // Implementation

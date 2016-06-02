@@ -61,8 +61,6 @@
 
 #include "compress/compress.cpp"
 
-#include "crypto/cryptorc4.cpp"
-
 #include "parser/parser.cpp"
 #include "parser/parserxml.cpp"
 #include "params/params.cpp"

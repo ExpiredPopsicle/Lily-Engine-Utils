@@ -136,6 +136,7 @@ inline void doBase64Tests(size_t &passCounter, size_t &failCounter)
     EXPOP_TEST_VALUE(stringBase64EncodeString("butts"), "YnV0dHM=");
     EXPOP_TEST_VALUE(stringBase64EncodeString("ASDFGBC"), "QVNERkdCQw==");
     EXPOP_TEST_VALUE(stringBase64EncodeString(std::string("\0\0\0\0\0\0\0\0", 8)), "AAAAAAAAAAA=");
+    EXPOP_TEST_VALUE(stringBase64EncodeString(std::string("herpy derpy derp")), "aGVycHkgZGVycHkgZGVycA==");
 }
 
 inline void doHttpTests(size_t &passCounter, size_t &failCounter)
@@ -162,6 +163,46 @@ inline void doStringTests(size_t &passCounter, size_t &failCounter)
     EXPOP_TEST_VALUE(stringReplace<char>("DICK", "BOOB", "DICKBUTT"), "BOOBBUTT");
     EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTT", "BOOBS", "DICKBUTT"), "BOOBS");
     EXPOP_TEST_VALUE(stringReplace<char>("DICKBUTTASDF", "BOOBS", "DICKBUTT"), "DICKBUTT");
+}
+
+inline void doRC4Tests(size_t &passCounter, size_t &failCounter)
+{
+    {
+        // This is a small example from the CipherSaber page, but
+        // split up so we have the initialization vector already as
+        // part of the key.
+        static const unsigned char cstest1[] = {
+            'a', 's', 'd', 'f', 'g',
+            0x6f, 0x6d, 0x0b, 0xab, 0xf3, 0xaa, 0x67, 0x19, 0x03, 0x15,
+        };
+
+        // And the actual ciphertext.
+        unsigned char cstest2[] = {
+            0x30, 0xed, 0xb6, 0x77, 0xca, 0x74, 0xe0, 0x08, 0x9d, 0xd0,
+            0xe7, 0xb8, 0x85, 0x43, 0x56, 0xbb, 0x14, 0x48, 0xe3, 0x7c,
+            0xdb, 0xef, 0xe7, 0xf3, 0xa8, 0x4f, 0x4f, 0x5f, 0xb3, 0xfd, 0
+        };
+
+        ExPop::CryptoRC4 rc4;
+        rc4.setKey(cstest1, 15);
+        rc4.encrypt(cstest2, sizeof(cstest2) - 1);
+        EXPOP_TEST_VALUE(std::string((char*)cstest2), std::string("This is a test of CipherSaber."));
+    }
+
+    {
+        ExPop::CryptoRC4 rc4;
+        rc4.setKey("dickbutt");
+
+        std::string base = "herpy derpy derp";
+        std::string encrypted = stringBase64EncodeString(rc4.encrypt(base));
+
+        rc4 = CryptoRC4();
+        rc4.setKey("dickbutt");
+        std::string decrypted = rc4.encrypt(stringBase64DecodeString(encrypted));
+
+        EXPOP_TEST_VALUE(decrypted, base);
+        EXPOP_TEST_VALUE(encrypted, "ZlX9S9jQTFeMnmaTshss4Q==");
+    }
 }
 
 class TimerBlock
@@ -243,6 +284,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Angle");
     doAngleTests(passCounter, failCounter);
+
+    showSectionHeader("RC4");
+    doRC4Tests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;
