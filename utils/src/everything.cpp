@@ -61,8 +61,6 @@
 
 #include "compress/compress.cpp"
 
-#include "math/matrix.cpp"
-
 #include "crypto/cryptorc4.cpp"
 
 #include "parser/parser.cpp"
