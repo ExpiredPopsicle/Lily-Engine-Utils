@@ -48,7 +48,6 @@
 #include "preprocess/preprocess.cpp"
 
 #include "string/pooledstring.cpp"
-#include "string/simplebuffer.cpp"
 
 #include "parser/parser.cpp"
 #include "parser/parserxml.cpp"
