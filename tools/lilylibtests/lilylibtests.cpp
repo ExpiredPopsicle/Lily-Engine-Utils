@@ -42,6 +42,10 @@
 #include <chrono>
 using namespace std;
 
+#if !_WIN32
+#include <unistd.h>
+#endif
+#include <lilyengine/winhacks.h>
 #include <lilyengine/utils.h>
 using namespace ExPop;
 
@@ -205,6 +209,60 @@ inline void doRC4Tests(size_t &passCounter, size_t &failCounter)
     }
 }
 
+struct ThreadTestData
+{
+    ExPop::Threads::ThreadId id;
+    size_t *passCounter;
+    size_t *failCounter;
+    bool goAhead;
+};
+
+void doThreadTests_thread(void *data)
+{
+    ThreadTestData *testData = (ThreadTestData*)data;
+
+    ExPop::Threads::ThreadId thisId = ExPop::Threads::getMyId();
+    size_t &passCounter = *testData->passCounter;
+    size_t &failCounter = *testData->failCounter;
+
+    while(!testData->goAhead) {
+    }
+
+  #if _WIN32
+    std::cout << "[Thread  ] Current thread ID: " << GetCurrentThreadId() << std::endl;
+    #endif
+
+    cout << "[Thread] This ID:  " << thisId << std::endl;
+    cout << "[Thread] Other ID: " << testData->id << std::endl;
+
+    EXPOP_TEST_VALUE(thisId != testData->id, true);
+}
+
+inline void doThreadTests(size_t &passCounter, size_t &failCounter)
+{
+    ExPop::Threads::ThreadId thisId = ExPop::Threads::getMyId();
+
+    ThreadTestData testData;
+    testData.id = thisId;
+    testData.passCounter = &passCounter;
+    testData.failCounter = &failCounter;
+    testData.goAhead = false;
+
+    ExPop::Threads::Thread t(doThreadTests_thread, &testData);
+    usleep(1000);
+
+    #if _WIN32
+    std::cout << "[Main  ] Current thread ID: " << GetCurrentThreadId() << std::endl;
+    #endif
+
+    cout << "[Main  ] This ID:  " << thisId << std::endl;
+    cout << "[Main  ] Other ID: " << t.getId() << std::endl;
+    EXPOP_TEST_VALUE(t.getId() != thisId, true);
+
+    testData.goAhead = true;
+    t.join();
+}
+
 class TimerBlock
 {
 public:
@@ -287,6 +345,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("RC4");
     doRC4Tests(passCounter, failCounter);
+
+    showSectionHeader("Thread");
+    doThreadTests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;
