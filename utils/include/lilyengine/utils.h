@@ -45,7 +45,6 @@
 #include "cellarray.h"
 #include "expopsockets.h"
 #include "params.h"
-#include "simplebuffer.h"
 #include "http.h"
 #include "cryptorc4.h"
 #include "compress.h"
