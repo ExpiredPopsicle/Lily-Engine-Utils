@@ -54,7 +54,6 @@
 
 #include "parser/parser.cpp"
 #include "parser/parserxml.cpp"
-#include "params/params.cpp"
 
 #include "image/image.cpp"
 
