@@ -40,11 +40,6 @@
 // enabled or disabled.
 #include <lilyengine/config.h>
 
-// At the moment, these two definitely still require threads.
-#if EXPOP_ENABLE_THREADS
-//#include "console/console.cpp"
-#endif
-
 #include "thread/thread.cpp"
 
 #include "assetloader/assetloader.cpp"
@@ -66,3 +61,4 @@
 #include "params/params.cpp"
 
 #include "image/image.cpp"
+

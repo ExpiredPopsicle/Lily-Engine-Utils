@@ -33,7 +33,6 @@
 
 #include "config.h"
 #include "winhacks.h"
-#include "console.h"
 #include "malstring.h"
 #include "base64.h"
 #include "filesystem.h"
