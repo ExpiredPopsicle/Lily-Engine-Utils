@@ -40,8 +40,6 @@
 // enabled or disabled.
 #include <lilyengine/config.h>
 
-#include "thread/thread.cpp"
-
 #include "assetloader/assetloader.cpp"
 
 #include "sockets/sockets.cpp"

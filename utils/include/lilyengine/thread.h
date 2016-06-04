@@ -52,6 +52,8 @@
 
 #pragma once
 
+#include "config.h"
+
 #include <vector>
 #include <iostream>
 #include <cstring>
@@ -68,6 +70,7 @@
 // Declarations and documentation
 // ----------------------------------------------------------------------
 
+#if EXPOP_ENABLE_THREADS
 namespace ExPop
 {
     namespace Threads
@@ -151,11 +154,13 @@ namespace ExPop
         };
     }
 }
+#endif
 
 // ----------------------------------------------------------------------
 // Implementation
 // ----------------------------------------------------------------------
 
+#if EXPOP_ENABLE_THREADS
 namespace ExPop
 {
     namespace Threads
@@ -385,4 +390,5 @@ namespace ExPop
         }
     }
 }
+#endif
 
