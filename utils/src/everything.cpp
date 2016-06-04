@@ -42,8 +42,6 @@
 
 #include "assetloader/assetloader.cpp"
 
-#include "sockets/sockets.cpp"
-
 #include "filesystem/archive.cpp"
 #include "filesystem/filesystem.cpp"
 
