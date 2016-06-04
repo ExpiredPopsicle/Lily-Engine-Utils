@@ -54,6 +54,8 @@
 
 #include "config.h"
 
+#if EXPOP_ENABLE_THREADS
+
 #include <vector>
 #include <iostream>
 #include <cstring>
@@ -64,6 +66,8 @@
 #include <process.h>
 #else
 #include <pthread.h>
+#endif
+
 #endif
 
 // ----------------------------------------------------------------------

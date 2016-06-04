@@ -29,6 +29,13 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// FIXME: This is incomplete. We still don't have support for UDP
+// sockets, for example.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <lilyengine/config.h>
@@ -36,13 +43,29 @@
 #if EXPOP_ENABLE_SOCKETS
 
 #if !_WIN32
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <netdb.h>
+#include <unistd.h>
+#else
+#include <windows.h>
+#include <winsock.h>
 #endif
 
 #include <string>
+#include <sstream>
+#include <iostream>
+#include <cassert>
 
-namespace ExPop {
+#endif
 
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
+
+#if EXPOP_ENABLE_SOCKETS
+namespace ExPop
+{
     enum SocketType
     {
         SOCKETTYPE_TCP,
@@ -59,7 +82,12 @@ namespace ExPop {
         SOCKETSTATE_LISTENING,
     };
 
-    class Socket : public streambuf
+    /// Socket type. Overrides streambuf so we can make an ostream out
+    /// of it for extra laziness in our text-only communications.
+    /// Sockets don't have background state or shared data aside from
+    /// whatever the OS tracks, so it's safe to have multiple Socket
+    /// instances across multiple threads.
+    class Socket : public std::streambuf
     {
     public:
 
@@ -67,9 +95,15 @@ namespace ExPop {
 
         ~Socket(void);
 
+        /// Connect. FIXME: Does a hostname lookup that will block
+        /// until it completes. Currently recommend multi-threaded
+        /// approach if this is unacceptable.
         bool connectTo(const std::string &hostName, uint16_t port);
 
+        /// Send data.
         ssize_t sendData(const void *data, size_t length);
+
+        /// Get data.
         ssize_t recvData(void *data, size_t length);
 
         /// Returns true if data is available (or connections are
@@ -91,6 +125,7 @@ namespace ExPop {
         /// Disconnect the socket.
         void disconnect(void);
 
+        // streambuf overrides.
         int uflow() override;
         int underflow() override;
         int overflow(int c = EOF) override;
@@ -126,6 +161,292 @@ namespace ExPop {
         void constructSocket(void);
         void initCommon(void);
     };
+}
+
+#endif
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+#if EXPOP_ENABLE_SOCKETS
+
+namespace ExPop
+{
+    // We need to handle some minor OS API differences between POSIX
+    // sockets and Windows sockets.
+  #if _WIN32
+    inline void socketsCloseOSSpecfic(int x) { closesocket(x); }
+    inline const char *socketsConstDataCast(const void *x) { return (const char*)(x); }
+    inline char *socketsDataCast(void *x) { return (char*)(x); }
+    typedef int SocketsAddrLen;
+  #if !__GNUC__
+    // Under Visual Studio, we can just have the lib linked here, I
+    // guess.
+  #pragma comment(lib, "ws2_32.lib")
+  #endif
+  #else
+    inline void socketsCloseOSSpecfic(int x) { close(x); }
+    inline const void *socketsConstDataCast(const void *x) { return (const void*)(x); }
+    inline void *socketsDataCast(void *x) { return (void*)(x); }
+    typedef unsigned int SocketsAddrLen;
+  #endif
+
+    inline void Socket::initCommon(void)
+    {
+        inputBufferFull = false;
+      #if _WIN32
+        WSADATA wsaData = {0};
+        int startupResult = WSAStartup(MAKEWORD(2, 0), &wsaData);
+        assert(!startupResult);
+      #endif
+    }
+
+    inline void Socket::constructSocket(void)
+    {
+        int internalSocketType = (type == SOCKETTYPE_TCP) ? SOCK_STREAM : SOCK_DGRAM;
+        fd = socket(AF_INET, internalSocketType, 0);
+    }
+
+    inline Socket::Socket(SocketType type)
+    {
+        initCommon();
+
+        // FIXME: Implement UDP.
+        assert(type == SOCKETTYPE_TCP);
+
+        this->type = type;
+        state = SOCKETSTATE_DISCONNECTED;
+        constructSocket();
+    }
+
+    inline Socket::Socket(int fd)
+    {
+        initCommon();
+
+        type = SOCKETTYPE_TCP;
+        state = SOCKETSTATE_CONNECTED;
+        this->fd = fd;
+    }
+
+    inline Socket::~Socket(void)
+    {
+        socketsCloseOSSpecfic(fd);
+
+      #if _WIN32
+        WSACleanup();
+      #endif
+    }
+
+    inline void Socket::disconnect(void)
+    {
+        assert(
+            state == SOCKETSTATE_CONNECTED ||
+            state == SOCKETSTATE_LISTENING);
+
+        socketsCloseOSSpecfic(fd);
+        constructSocket();
+        state = SOCKETSTATE_DISCONNECTED;
+    }
+
+    inline bool Socket::connectTo(const std::string &hostName, uint16_t port)
+    {
+        assert(type == SOCKETTYPE_TCP);
+        assert(state == SOCKETSTATE_DISCONNECTED);
+
+        state = SOCKETSTATE_HOSTLOOKUP;
+
+        // This blocks.
+        hostent *host = gethostbyname(hostName.c_str());
+
+        if(!host) {
+            return false;
+        }
+
+        sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+
+        // FIXME: This probably only works correctly for IPv4 stuff.
+        addr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
+
+        // The call to connect() blocks.
+        state = SOCKETSTATE_CONNECTING;
+        int connectStatus = connect(fd, (sockaddr*)&addr, sizeof(addr));
+        state = connectStatus ? SOCKETSTATE_DISCONNECTED : SOCKETSTATE_CONNECTED;
+
+        if(state == SOCKETSTATE_DISCONNECTED) {
+            return false;
+        }
+
+        return true;
+    }
+
+    inline ssize_t Socket::sendData(const void *data, size_t length)
+    {
+        assert(state == SOCKETSTATE_CONNECTED);
+
+        ssize_t ret = send(fd, socketsConstDataCast(data), length, 0);
+        if(ret == 0 || ret == -1) {
+            disconnect();
+        }
+
+        return ret;
+    }
+
+    inline ssize_t Socket::recvData(void *data, size_t length)
+    {
+        assert(state == SOCKETSTATE_CONNECTED);
+
+        ssize_t ret = recv(fd, socketsDataCast(data), length, 0);
+        if(ret == 0 || ret == -1) {
+            disconnect();
+        }
+
+        return ret;
+    }
+
+    inline bool Socket::hasData(void)
+    {
+        assert(
+            state == SOCKETSTATE_CONNECTED ||
+            type == SOCKETTYPE_UDP);
+
+        fd_set readFs;
+        timeval tv;
+
+        FD_ZERO(&readFs);
+        FD_SET(fd, &readFs);
+
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        int ret = select(fd + 1, &readFs, NULL, NULL, &tv);
+
+        if(ret == -1) {
+            disconnect();
+            return false;
+        }
+
+        if(FD_ISSET(fd, &readFs)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    inline SocketState Socket::getState(void)
+    {
+        return state;
+    }
+
+    inline bool Socket::startListening(uint16_t port)
+    {
+        assert(state == SOCKETSTATE_DISCONNECTED);
+        assert(type == SOCKETTYPE_TCP);
+
+        sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        addr.sin_port = htons(port);
+
+        if(bind(fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
+            // Something already on this port?
+            state = SOCKETSTATE_DISCONNECTED;
+            return false;
+        }
+
+        if(listen(fd, 4) < 0) {
+            // The bind() succeeded but the listen() failed, leaving it in
+            // a weird state, so just reset.
+            disconnect();
+            return false;
+        }
+
+        state = SOCKETSTATE_LISTENING;
+        return true;
+    }
+
+    inline Socket *Socket::acceptConnection(std::string *addrStr)
+    {
+        assert(type == SOCKETTYPE_TCP);
+        assert(state == SOCKETSTATE_LISTENING);
+
+        sockaddr_in addr;
+        SocketsAddrLen addrLen = sizeof(addr);
+        Socket *ret = new Socket(accept(fd, (sockaddr*)&addr, &addrLen));
+
+        if(addrStr) {
+
+            // FIXME? This might have endian issues.
+            std::ostringstream addrStrOut;
+            addrStrOut <<
+                (unsigned int)((unsigned char*)&addr.sin_addr.s_addr)[0] << "." <<
+                (unsigned int)((unsigned char*)&addr.sin_addr.s_addr)[1] << "." <<
+                (unsigned int)((unsigned char*)&addr.sin_addr.s_addr)[2] << "." <<
+                (unsigned int)((unsigned char*)&addr.sin_addr.s_addr)[3];
+            *addrStr = addrStrOut.str();
+        }
+
+        ret->type = SOCKETTYPE_TCP;
+        ret->state = SOCKETSTATE_CONNECTED;
+
+        return ret;
+    }
+
+    inline int Socket::uflow()
+    {
+        if(inputBufferFull) {
+            inputBufferFull = false;
+            return inputBuffer;
+        }
+
+        if(getState() != SOCKETSTATE_CONNECTED) {
+            return EOF;
+        }
+
+        char buf[2] = { 0, 0 };
+        size_t dataSize = recvData(&buf, 1);
+
+        if(!dataSize) {
+            return EOF;
+        }
+
+        return buf[0];
+    }
+
+    inline int Socket::underflow()
+    {
+        if(inputBufferFull) {
+            return inputBuffer;
+        }
+
+        size_t dataSize = recvData(&inputBuffer, 1);
+
+        if(!dataSize) {
+            return EOF;
+        }
+
+        inputBufferFull = true;
+        return inputBuffer;
+    }
+
+    inline int Socket::overflow(int c)
+    {
+        if(getState() != SOCKETSTATE_CONNECTED) {
+            return EOF;
+        }
+
+        char buf = (char)c;
+        size_t dataSize = sendData(&c, 1);
+
+        if(!dataSize) {
+            return EOF;
+        }
+
+        return buf;
+    }
+
 }
 
 #endif

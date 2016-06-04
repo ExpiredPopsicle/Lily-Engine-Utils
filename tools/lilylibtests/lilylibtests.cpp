@@ -229,8 +229,8 @@ void doThreadTests_thread(void *data)
     }
 
   #if _WIN32
-    std::cout << "[Thread  ] Current thread ID: " << GetCurrentThreadId() << std::endl;
-    #endif
+    std::cout << "[Thread] Current thread ID: " << GetCurrentThreadId() << std::endl;
+  #endif
 
     cout << "[Thread] This ID:  " << thisId << std::endl;
     cout << "[Thread] Other ID: " << testData->id << std::endl;

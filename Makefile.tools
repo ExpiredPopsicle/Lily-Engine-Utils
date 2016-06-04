@@ -36,19 +36,19 @@ NATIVE_EXT :=
 # a #pragma comment for Windows builds when using Microsoft's
 # compiler.
 ifneq (,$(findstring mingw,$(NATIVECXX)))
-	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS) -lws2_32 -static
+	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS) -static
 	NATIVE_EXT := .exe
 	NATIVEBUFFERGEN := $(NATIVEBUFFERGEN)$(NATIVE_EXT)
 	NATIVETODOSCAN := $(NATIVETODOSCAN)$(NATIVE_EXT)
 else
-	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS) -pthread
+	NATIVE_LDFLAGS := $(NATIVE_LDFLAGS)
 endif
 
 ifneq (,$(findstring mingw,$(CXX)))
-	TARGET_LDFLAGS := $(TARGET_LDFLAGS) -lws2_32 -static
+	TARGET_LDFLAGS := $(TARGET_LDFLAGS) -static
 	TARGET_EXT := .exe
 else
-	TARGET_LDFLAGS := $(TARGET_LDFLAGS) -pthread
+	TARGET_LDFLAGS := $(TARGET_LDFLAGS)
 endif
 
 all : \
@@ -176,8 +176,8 @@ lilylibtests$(TARGET_EXT) : \
 	tools/lilylibtests/lilylibtests.cpp \
 	tools/lilylibtests/usagetext.h
 
-	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
-		tools/lilylibtests/lilylibtests.cpp \
+	$(CXX) tools/lilylibtests/lilylibtests.cpp \
+		$(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) lilylibtests$(TARGET_EXT)
