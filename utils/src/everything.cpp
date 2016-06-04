@@ -50,8 +50,6 @@
 #include "string/pooledstring.cpp"
 #include "string/simplebuffer.cpp"
 
-#include "compress/compress.cpp"
-
 #include "parser/parser.cpp"
 #include "parser/parserxml.cpp"
 

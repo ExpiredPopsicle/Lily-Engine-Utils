@@ -48,6 +48,7 @@
 #include "simplebuffer.h"
 #include "http.h"
 #include "cryptorc4.h"
+#include "compress.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)

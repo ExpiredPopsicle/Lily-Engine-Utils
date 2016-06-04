@@ -263,6 +263,28 @@ inline void doThreadTests(size_t &passCounter, size_t &failCounter)
     t.join();
 }
 
+inline void doCompressTests(size_t &passCounter, size_t &failCounter)
+{
+    std::string fileData = FileSystem::loadFileString("README.org");
+    unsigned int len = 0;
+    char *compressedData = compressRLE(&fileData[0], fileData.size(), &len, 1);
+
+    std::cout << "Original size:   " << fileData.size() << std::endl;
+    std::cout << "Compressed size: " << len << std::endl;
+    EXPOP_TEST_VALUE(len < fileData.size(), true);
+
+    unsigned int len2 = 0;
+    char *uncompressedData = decompressRLE(compressedData, len, &len2, 1);
+    EXPOP_TEST_VALUE(len2, fileData.size());
+
+    EXPOP_TEST_VALUE(strncmp(&fileData[0], uncompressedData, MIN(fileData.size(), len2)), 0);
+
+    delete[] uncompressedData;
+    delete[] compressedData;
+}
+
+// ----------------------------------------------------------------------
+
 class TimerBlock
 {
 public:
@@ -348,6 +370,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Thread");
     doThreadTests(passCounter, failCounter);
+
+    showSectionHeader("Compression");
+    doCompressTests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;
