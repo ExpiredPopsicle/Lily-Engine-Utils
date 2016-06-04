@@ -1,43 +1,4 @@
-#Compilation products
 *.o
-*.Po
-libLilyEngineUtils.a
-#Autotools products
-aclocal.m4
-autom4te.cache
-autoscan.log
-configure
-configure.scan
-config.h
-config.h.in
-config.log
-config.status
-Makefile
-Makefile.in
-stamp-h1
-#Autotools scripts (get with autoreconf -i)
-depcomp
-install-sh
-missing
-
-
-# All this stuff is from the main engine's crazy build system and
-# random clutter from building/running the main engine project.
-
-# Object files
-*.win32.o
-*.mac.o
-*.linux.o
 *.dep
-
-# Compiled libs
-lib*.win32.lib
-lib*.mac.a
-lib*.linux.a
 TAGS
-
-* Compiled binaries
-*.win32.exe
-*.mac
-*.linux
 
