@@ -40,8 +40,6 @@
 // enabled or disabled.
 #include <lilyengine/config.h>
 
-#include "assetloader/assetloader.cpp"
-
 #include "filesystem/archive.cpp"
 #include "filesystem/filesystem.cpp"
 

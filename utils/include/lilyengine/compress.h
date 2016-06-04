@@ -79,11 +79,10 @@ namespace ExPop
 // Implementation
 // ----------------------------------------------------------------------
 
-
 namespace ExPop
 {
     const size_t compressLengthBits = 15;
-    const size_t MAXCHUNKLENGTH = (1 << (compressLengthBits - 1));
+    const size_t compressMaxChunkLength = (1 << (compressLengthBits - 1));
 
     // This goes at the beginning of the whole compressed block of data.
     struct CompressHeader
@@ -150,7 +149,7 @@ namespace ExPop
         unsigned int scratchAllocatedLength =
             (sizeof(CompressHeader) +
              inLength +
-             ((groupSize * inLength / (MAXCHUNKLENGTH-1)) + 1) * sizeof(CompressChunkHeader));
+             ((groupSize * inLength / (compressMaxChunkLength-1)) + 1) * sizeof(CompressChunkHeader));
 
         //scratchAllocatedLength *= 4;
         //scratchAllocatedLength *= groupSize;
@@ -194,7 +193,7 @@ namespace ExPop
                     pos += groupSize;
                     header->length++;
 
-                    if(header->length >= (MAXCHUNKLENGTH-1)) {
+                    if(header->length >= (compressMaxChunkLength-1)) {
 
                         // Reached the max length we can express.
                         break;
@@ -226,7 +225,7 @@ namespace ExPop
 
                     header->length++;
 
-                    if(header->length >= (MAXCHUNKLENGTH-1)) {
+                    if(header->length >= (compressMaxChunkLength-1)) {
 
                         // Reached the max length we can express.
                         break;
