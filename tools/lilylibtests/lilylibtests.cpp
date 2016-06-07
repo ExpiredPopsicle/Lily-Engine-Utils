@@ -283,6 +283,29 @@ inline void doCompressTests(size_t &passCounter, size_t &failCounter)
     delete[] compressedData;
 }
 
+inline void doPreprocessorTests(size_t &passCounter, size_t &failCounter)
+{
+    PreprocessorState state;
+    state.definedSymbols["DICK"] = "1";
+    state.definedSymbols["BUTT"] = "0";
+
+    EXPOP_TEST_VALUE(
+        preprocess(
+            "faketest.txt",
+            "#if DICK\ndick\n#else\nbutt\n#endif\n#if BUTT\nbutt\n#else\ndick\n#endif\n",
+            state),
+        "dick\ndick\n");
+    EXPOP_TEST_VALUE(state.hadError, false);
+
+    EXPOP_TEST_VALUE(
+        preprocess(
+            "faketest.txt",
+            "#endif",
+            state), "");
+
+    EXPOP_TEST_VALUE(state.hadError, true);
+}
+
 // ----------------------------------------------------------------------
 
 class TimerBlock
@@ -373,6 +396,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Compression");
     doCompressTests(passCounter, failCounter);
+
+    showSectionHeader("Preprocessor");
+    doPreprocessorTests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;
