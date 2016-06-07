@@ -1,3 +1,0 @@
-This program just generates some code to handle setting up various
-OpenGL calls in the LilyEngineGraphics library. Having it running is a
-prerequisite to building LilyEngineGraphics.
