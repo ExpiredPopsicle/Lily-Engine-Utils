@@ -29,17 +29,38 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// C/C++ style preprocessor. This is mainly for shaders. Does not
+// support expressions in your #ifs. Does support "#pragma once".
+// Supports extra non-standard tags "#ppenable" and "#ppdisable" to
+// pass-through preprocessor tags.
+
+// Do not use on untrusted code, unless you want the user to '#include
+// "/etc/shadow"'.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
+#include <iostream>
 #include <ostream>
 #include <vector>
 #include <string>
 #include <map>
 
-namespace ExPop {
+#include <lilyengine/malstring.h>
+#include <lilyengine/filesystem.h>
 
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     /// Input to the preprocessor, and manager of state inside of it.
-    class PreprocessorState {
+    class PreprocessorState
+    {
     public:
 
         PreprocessorState(void);
@@ -95,47 +116,370 @@ namespace ExPop {
 
     /// Run the preprocessor on a given string and return the
     /// processed string. fileName is for tracking errors and
-    /// includes. Does not actually open the file on its own.
+    /// includes. Does not actually open the file on its own. Do not
+    /// run on untrusted code!
     std::string preprocess(
         const std::string &fileName,
         const std::string &inStr,
         PreprocessorState &inState);
 
-
-
-
-    /// THIS IS THE OLD VERSION. DON'T USE THIS UNLESS YOU HAVE A GOOD
-    /// REASON TO.
-
-    /// Handle some simple (not compliant) C preprocessor style
-    /// directives. Currently parses #include directives.
-
-    /// allFileNames is a list of strings that will be filled with the
-    ///   names of all the files that were eventually included.
-
-    /// fileName is the name of the current file (for the purposes of
-    ///   dealing with #includes and errors).
-
-    /// input is the string to be processed.
-
-    /// output is the string to fill with the processed data.
-
-    /// inputConstants is an optional vector of strings indicating
-    ///   #defines to stick at the top of the processed output.
-
-    /// errorStream is an output stream to send errors to. If it is
-    ///   left as NULL, it won't output errors.
-
-    void simplePreprocess(
-        std::vector<std::string> &allFileNames,
-        const std::string &fileName,
-        const std::vector<std::string> &input,
-        std::vector<std::string> &output,
-        const std::vector<std::string> *inputConstants = NULL,
-        std::ostream *errorStream = NULL,
-        int recursionLevel = 0,
-        const std::vector<std::string> *includePaths = NULL);
-
-
 }
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
+    const size_t RECURSION_LIMIT = 64;
+    const size_t MAX_SYMBOL_LOOKUPS_FOR_IF = 64;
+
+    inline PreprocessorState::PreprocessorState(void)
+    {
+        recursionCount = 0;
+        hadError = false;
+        annotateIncludes = false;
+        loadFileCallback = ExPop::FileSystem::loadFileString;
+    }
+
+    inline std::string convertQuotedPath(const std::string &in)
+    {
+        if(in.size() < 2) return "";
+
+        string workStr;
+
+        if((in[0] == '"' && in[in.size()-1] == '"') ||
+           (in[0] == '<' && in[in.size()-1] == '>')) {
+            workStr = stringUnescape(in.substr(1, in.size() - 2));
+        } else {
+            workStr = in;
+        }
+
+        return workStr;
+    }
+
+    inline std::string cppItoa(int i)
+    {
+        ostringstream ostr;
+        ostr << i;
+        return ostr.str();
+    }
+
+  #define EXPOP_PP_CHECK_OR_ERROR(y, x) {                                        \
+        if(!(y)) {                                                      \
+            inState.hadError = true;                                    \
+            inState.errorText = inState.errorText + fileName + ":" + cppItoa(i) + " " + (x) + "\n"; \
+            return "";                                                  \
+        }                                                               \
+    }
+
+    /// This function is explicitly NOT safe to run untrusted code
+    /// because there are no limits to the paths used on #include
+    /// directives.
+    inline std::string preprocess(
+        const std::string &fileName,
+        const std::string &inStr,
+        PreprocessorState &inState)
+    {
+        // Set this file in the list of files we've already been to, but
+        // keep a record of whether or not it was already in the list so
+        // that we can bail out if we see a #pragma once.
+        string fixedName = FileSystem::fixFileName(fileName);
+        bool wasAlreadyInList = inState.fileList.count(fixedName) ? inState.fileList[fixedName] : false;
+        inState.fileList[fixedName] = true;
+
+        ostringstream ostr;
+
+        vector<string> inLines;
+        stringTokenize(inStr, "\n", inLines, true);
+
+        // Number of #endifs we're expecting after passed tests in #if,
+        // #ifdef, or #ifndef blocks.
+        int nestedPassedIfs = 0;
+
+        // Number of #endifs we need to see before we'll go back to
+        // actually outputting stuff.
+        int nestedFailedIfs = 0;
+
+        // If this is disabled, just pass through everything, in case some
+        // other preprocessor will run on code after this and we shouldn't
+        // handle preprocessor junk bound for that. I'm looking at you,
+        // GLSL.
+        bool ppEnabled = true;
+
+        for(unsigned int i = 0; i < inLines.size(); i++) {
+
+            // Try to quickly find out if this line starts with a #.
+            bool startsWithHash = false;
+            unsigned int skipWhitespace = 0;
+            while(skipWhitespace < inLines[i].size()) {
+                if(isWhiteSpace(inLines[i][skipWhitespace])) {
+                    skipWhitespace++;
+                } else {
+                    if(inLines[i][skipWhitespace] == '#') {
+                        startsWithHash = true;
+                    }
+                    break;
+                }
+            }
+
+            if(startsWithHash) {
+
+                vector<string> tokens;
+                stringTokenize(inLines[i], " \t", tokens, false);
+
+                if(tokens.size()) {
+
+                    if(tokens[0] == "#pragma" && ppEnabled) {
+
+                        EXPOP_PP_CHECK_OR_ERROR(tokens.size() >= 2, "Bad #pragma.");
+
+                        string pragmaType = tokens[1];
+
+                        if(pragmaType == "once") {
+                            if(wasAlreadyInList) {
+                                if(inState.annotateIncludes) {
+                                    return "// --- Skipping " + fixedName + " due to #pragma once.\n";
+                                }
+                                return "";
+                            }
+                        }
+
+                    } else if(tokens[0] == "#define" && ppEnabled) {
+
+                        if(!nestedFailedIfs) {
+
+                            string symbol;
+                            string value;
+
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                tokens.size() == 2 || tokens.size() == 3,
+                                "Bad #define.");
+
+                            symbol = tokens[1];
+                            if(tokens.size() >= 3) {
+                                value = tokens[2];
+                            }
+
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                !inState.definedSymbols.count(symbol),
+                                "#define for something that's already defined: \"" + symbol + "\".");
+
+                            inState.definedSymbols[symbol] = value;
+                        }
+
+                    } else if(tokens[0] == "#undef" && ppEnabled) {
+
+                        if(!nestedFailedIfs) {
+
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                tokens.size() >= 2,
+                                "Bad #undef");
+
+                            string symbol;
+                            symbol = tokens[1];
+
+                            // TODO: Include the symbol in this error.
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                inState.definedSymbols.count(symbol),
+                                "#undef for symbol that doesn't exist: \"" + symbol + "\".");
+
+                            inState.definedSymbols.erase(symbol);
+                        }
+
+                    } else if(tokens[0] == "#include" && ppEnabled) {
+
+                        EXPOP_PP_CHECK_OR_ERROR(tokens.size() == 2, "Bad #include");
+
+                        if(!nestedFailedIfs) {
+
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                inState.recursionCount < RECURSION_LIMIT,
+                                "Too many levels of #include recursion.");
+
+                            string currentFilePath = FileSystem::getParentName(fileName);
+                            if(!currentFilePath.size()) {
+                                currentFilePath = ".";
+                            }
+
+                            string name = convertQuotedPath(tokens[1]);
+                            std::string buf;
+                            string fullName;
+
+                            // First try loading from the same directory.
+                            fullName = FileSystem::fixFileName(currentFilePath + "/" + name);
+                            buf = inState.loadFileCallback(fullName);
+
+                            if(!buf.size()) {
+
+                                // Failed to load from current directory.
+                                // Try include paths.
+                                for(unsigned int i = 0; i < inState.includePaths.size(); i++) {
+                                    fullName = FileSystem::fixFileName(inState.includePaths[i] + "/" + name);
+                                    buf = inState.loadFileCallback(fullName);
+                                    if(buf.size()) break;
+                                }
+                            }
+
+                            // TODO: Get the name in there somewhere after
+                            // I change this from just being asserts.
+                            EXPOP_PP_CHECK_OR_ERROR(buf.size(), "Could not open include file");
+
+                            inState.recursionCount++;
+                            string includedBuf = preprocess(fullName, buf, inState);
+                            inState.recursionCount--;
+
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                !inState.hadError,
+                                "Error in included file: " + fullName);
+
+                            // TODO: Error handling for recursive call.
+
+                            if(inState.annotateIncludes) {
+                                ostr << "// --- Begin include: " << fullName << endl;
+                            }
+
+                            ostr << includedBuf; // << endl;
+
+                            if(inState.annotateIncludes) {
+                                ostr << "// --- End include: " << fullName << endl;
+                            }
+
+                        }
+
+                    } else if((tokens[0] == "#ifdef" || tokens[0] == "#ifndef" || tokens[0] == "#if") && ppEnabled) {
+
+                        // Use the same code for #ifdef and #ifndef. Just
+                        // flip the action if it's #ifndef instead of
+                        // #ifdef.
+                        bool flipResult = false;
+                        if(tokens[0] == "#ifndef") {
+                            flipResult = true;
+                        }
+
+                        if(nestedFailedIfs) {
+
+                            // If we're already inside a failed if
+                            // block, just increment the number of
+                            // #endifs we need to see in order to get
+                            // out of it.
+                            nestedFailedIfs++;
+
+                        } else {
+
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                tokens.size() == 2,
+                                "Bad #ifdef or #if");
+
+                            string symbol = tokens[1];
+                            bool result;
+
+                            if(tokens[0] == "#if") {
+
+                                // If we want to support actual
+                                // expressions some day, this would be
+                                // the place to do it. But right now
+                                // we only support single symbol
+                                // lookups.
+
+                                string curSymbol = symbol;
+                                size_t numLookups = 0;
+
+                                // Keep looking up symbols until we find
+                                // something that's not a symbol.
+                                while(inState.definedSymbols.count(curSymbol)) {
+                                    curSymbol = inState.definedSymbols[curSymbol];
+                                    numLookups++;
+                                    EXPOP_PP_CHECK_OR_ERROR(
+                                        numLookups < MAX_SYMBOL_LOOKUPS_FOR_IF,
+                                        "Too many lookups for symbol evaluation: \"" + symbol + "\".");
+                                }
+
+                                // Whatever this last thing is,
+                                // convert it to an int. If it's
+                                // nonzero, then the result is true.
+                                int intVal = 0;
+                                if(curSymbol.size()) {
+                                    istringstream inStr(curSymbol);
+                                    inStr >> intVal;
+                                }
+                                result = intVal;
+
+                            } else {
+
+                                result = inState.definedSymbols.count(symbol);
+
+                            }
+
+                            if(flipResult ? !result : result) {
+                                nestedPassedIfs++;
+                            } else {
+                                nestedFailedIfs++;
+                            }
+                        }
+
+                    } else if(tokens[0] == "#else" && ppEnabled) {
+
+                        EXPOP_PP_CHECK_OR_ERROR(
+                            nestedFailedIfs || nestedPassedIfs,
+                            "Cannot use #else outside of a conditional block.");
+
+                        if(nestedFailedIfs == 1) {
+                            nestedFailedIfs--;
+                            nestedPassedIfs++;
+                        } else if(nestedPassedIfs) {
+                            nestedPassedIfs--;
+                            nestedFailedIfs++;
+                        }
+
+                    } else if(tokens[0] == "#endif" && ppEnabled) {
+
+                        EXPOP_PP_CHECK_OR_ERROR(
+                            nestedFailedIfs || nestedPassedIfs,
+                            "Cannot use #endif without a conditional block.");
+
+                        if(nestedFailedIfs) {
+                            nestedFailedIfs--;
+                        } else {
+                            nestedPassedIfs--;
+                        }
+
+                    } else if(tokens[0] == "#ppenable") {
+
+                        // Enable preprocessor.
+                        if(!nestedFailedIfs) {
+                            ppEnabled = true;
+                        }
+
+                    } else if(tokens[0] == "#ppdisable") {
+
+                        // Disable preprocessor.
+                        if(!nestedFailedIfs) {
+                            ppEnabled = false;
+                        }
+
+                    } else {
+                        if(!nestedFailedIfs) {
+                            ostr << inLines[i] << endl;
+                        }
+                    }
+
+                } else {
+                    ostr << endl;
+                }
+
+            } else {
+
+                // Didn't start with a # sign at all.
+                if(!nestedFailedIfs) {
+                    ostr << inLines[i] << endl;
+                }
+            }
+        }
+
+        return ostr.str();
+    }
+}
+
+
 
