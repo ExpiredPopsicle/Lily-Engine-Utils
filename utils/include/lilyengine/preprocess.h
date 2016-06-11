@@ -165,7 +165,7 @@ namespace ExPop
         return ostr.str();
     }
 
-  #define EXPOP_PP_CHECK_OR_ERROR(y, x) {                                        \
+  #define EXPOP_PP_CHECK_OR_ERROR(y, x) {                               \
         if(!(y)) {                                                      \
             inState.hadError = true;                                    \
             inState.errorText = inState.errorText + fileName + ":" + cppItoa(i) + " " + (x) + "\n"; \
