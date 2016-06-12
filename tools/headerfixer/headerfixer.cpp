@@ -166,7 +166,8 @@ int main(int argc, char *argv[])
 
     std::string headerFilename;
     std::vector<std::string> filenames;
-    bool stripMode;
+    bool stripMode = false;
+    bool noHashBang = false;
 
     for(size_t i = 0; i < params.size(); i++) {
         if(params[i].name == "help") {
@@ -181,6 +182,8 @@ int main(int argc, char *argv[])
             linePrefix = params[i].value;
         } else if(params[i].name == "strip") {
             stripMode = true;
+        } else if(params[i].name == "nohashbang") {
+            noHashBang = true;
         } else {
             if(!params[i].name.size()) {
                 filenames.push_back(params[i].value);
@@ -204,6 +207,18 @@ int main(int argc, char *argv[])
         headerLines = loadLinesFromFile(headerFilename);
     }
 
+    // Attempt to detect hashbangs in the header, because this will
+    // result in headers that are difficult to strip out or alter
+    // later, as we automatically ignore hashbangs.
+    if(headerLines.size() && !noHashBang) {
+        if(stringStartsWith<char>("#!", headerLines[0])) {
+            cerr << "Header file contains a hashbang (#!) line." << endl;
+            cerr << "This will result in confusion when attempting to alter a header." << endl;
+            cerr << "Aborting." << endl;
+            return 1;
+        }
+    }
+
 	ostringstream headerConvertedStr;
 
 	for(unsigned int j = 0; j < headerLines.size(); j++) {
@@ -222,7 +237,7 @@ int main(int argc, char *argv[])
 		string fileName = filenames[i];
 
 		if(!FileSystem::fileExists(fileName)) {
-			cout << "File " << fileName << " does not exist!" << endl;
+			cerr << "File " << fileName << " does not exist!" << endl;
 			return 1;
 		}
 
@@ -231,6 +246,17 @@ int main(int argc, char *argv[])
         ostringstream outputStr;
 
         vector<string> fileLines = loadLinesFromFile(fileName);
+
+        // For the sake of running this tool on scripts of various
+        // sorts, make sure we preserve the hashbang, which must
+        // precede our header.
+        std::string hashBangLine;
+        if(fileLines.size() > 0 && !noHashBang) {
+            if(stringStartsWith<char>("#!", fileLines[0])) {
+                hashBangLine = fileLines[0];
+                fileLines.erase(fileLines.begin());
+            }
+        }
 
         stripOldHeader(fileLines);
 
@@ -250,6 +276,11 @@ int main(int argc, char *argv[])
         }
 
         string finalOut = outputStr.str();
+
+        // Reinstate hashbang line.
+        if(hashBangLine.size() && !noHashBang) {
+            finalOut = hashBangLine + "\n" + finalOut;
+        }
 
         //FileSystem::renameFile(fileName, fileName + ".bak");
         FileSystem::saveFile(fileName, finalOut.c_str(), finalOut.size(), false);

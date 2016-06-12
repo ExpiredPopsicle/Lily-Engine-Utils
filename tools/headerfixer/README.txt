@@ -19,5 +19,7 @@ Options:
                     search for the old header. Use --strip to remove
                     an old one before attempting to alter a prefix.
   --strip           Strip all headers.
+  --nohashbang      Disable special handling of hashbang lines ("#!").
+                    This will probably break shell scripts.
 
 Report bugs to expiredpopsicle@gmail.com
