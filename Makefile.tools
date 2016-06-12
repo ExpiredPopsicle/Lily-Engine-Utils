@@ -67,14 +67,23 @@ $(NATIVEBUFFERGEN) : tools/buffergen/buffergen.cpp
 		-DNO_HELP_ALLOWED=1 \
 		tools/buffergen/buffergen.cpp \
 		-o $@
+
 # We'll re-use this macro a bunch for generating the --help usage text
-# for other tools.
+# for other tools. Apparently this all breaks if you have actual
+# indentation because Make sucks.
+ifeq ("$(REGEN_USAGE_HEADERS)","1")
 define generateUsageTextFromREADME
 tools/$1/usagetext.h : $(NATIVEBUFFERGEN) tools/$1/README.txt;
 	$(NATIVEBUFFERGEN) \
-		tools/$1/README.txt \
-		usageText > tools/$1/usagetext.h;
+	tools/$1/README.txt \
+	usageText > tools/$1/usagetext.h;
 endef
+else
+define generateUsageTextFromREADME
+tools/$1/usagetext.h : tools/$1/README.txt;
+	echo "Skipping usage text regeneration.";
+endef
+endif
 
 $(call generateUsageTextFromREADME,buffergen)
 
