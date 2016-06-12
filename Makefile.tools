@@ -56,6 +56,7 @@ all : \
 	headerfixer$(TARGET_EXT) imgbuffer$(TARGET_EXT) \
 	todoscan$(TARGET_EXT) lilylibtests$(TARGET_EXT)
 
+
 # ----------------------------------------------------------------------
 # buffergen
 
@@ -66,11 +67,16 @@ $(NATIVEBUFFERGEN) : tools/buffergen/buffergen.cpp
 		-DNO_HELP_ALLOWED=1 \
 		tools/buffergen/buffergen.cpp \
 		-o $@
-
-tools/buffergen/usagetext.h : $(NATIVEBUFFERGEN) tools/buffergen/README.txt
+# We'll re-use this macro a bunch for generating the --help usage text
+# for other tools.
+define generateUsageTextFromREADME
+tools/$1/usagetext.h : $(NATIVEBUFFERGEN) tools/$1/README.txt;
 	$(NATIVEBUFFERGEN) \
-		tools/buffergen/README.txt \
-		usageText > $@
+		tools/$1/README.txt \
+		usageText > tools/$1/usagetext.h;
+endef
+
+$(call generateUsageTextFromREADME,buffergen)
 
 buffergen$(TARGET_EXT) : tools/buffergen/buffergen.cpp tools/buffergen/usagetext.h
 	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
@@ -83,8 +89,7 @@ GENERATEDLIST := $(GENERATEDLIST) tools/buffergen/usagetext.h
 # ----------------------------------------------------------------------
 # lilyarchiver
 
-tools/archiver/usagetext.h : $(NATIVEBUFFERGEN) tools/archiver/README.txt
-	$(NATIVEBUFFERGEN)	tools/archiver/README.txt usageText > $@
+$(call generateUsageTextFromREADME,archiver)
 
 lilyarchiver$(TARGET_EXT) : \
 	tools/archiver/archiver.cpp \
@@ -103,8 +108,7 @@ GENERATEDLIST := $(GENERATEDLIST) tools/archiver/usagetext.h
 tools/headerfixer/mainheader.h : $(NATIVEBUFFERGEN) tools/headerfixer/mainheader.txt
 	$(NATIVEBUFFERGEN) tools/headerfixer/mainheader.txt mainHeader > $@
 
-tools/headerfixer/usagetext.h : $(NATIVEBUFFERGEN) tools/headerfixer/README.txt
-	$(NATIVEBUFFERGEN) tools/headerfixer/README.txt usageText > $@
+$(call generateUsageTextFromREADME,headerfixer)
 
 headerfixer$(TARGET_EXT) : \
 	tools/headerfixer/headerfixer.cpp \
@@ -121,8 +125,7 @@ GENERATEDLIST := $(GENERATEDLIST) tools/headerfixer/usagetext.h
 # ----------------------------------------------------------------------
 # imgbuffer
 
-tools/imgbuffer/usagetext.h : $(NATIVEBUFFERGEN) tools/imgbuffer/README.txt
-	$(NATIVEBUFFERGEN)	tools/imgbuffer/README.txt usageText > $@
+$(call generateUsageTextFromREADME,imgbuffer)
 
 imgbuffer$(TARGET_EXT) : \
 	tools/imgbuffer/imgbuffer.cpp \
@@ -151,8 +154,7 @@ $(NATIVETODOSCAN) : \
 		$(TODOSCAN_SOURCES) \
 		-o $@
 
-tools/todoscan/usagetext.h : $(NATIVEBUFFERGEN) tools/todoscan/README.txt
-	$(NATIVEBUFFERGEN)	tools/todoscan/README.txt usageText > $@
+$(call generateUsageTextFromREADME,todoscan)
 
 todoscan$(TARGET_EXT) : \
 	tools/todoscan/todoscan.cpp \
@@ -169,8 +171,7 @@ GENERATEDLIST := $(GENERATEDLIST) tools/todoscan/usagetext.h
 # ----------------------------------------------------------------------
 # lilylibtests
 
-tools/lilylibtests/usagetext.h : $(NATIVEBUFFERGEN) tools/lilylibtests/README.txt
-	$(NATIVEBUFFERGEN)	tools/lilylibtests/README.txt usageText > $@
+$(call generateUsageTextFromREADME,lilylibtests)
 
 lilylibtests$(TARGET_EXT) : \
 	tools/lilylibtests/lilylibtests.cpp \
