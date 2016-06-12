@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# This script is mainly for iterating on tools under Linux while
+# cross-compiling to Windows! If you just want to build for Windows
+# normally, you can use the Makefile.tools file under your favorite
+# fake POSIX Widnows environment like Cygwin or MSYS.
+
+# Dependency tracking is a pain in the ass and this library and all
+# the tools are tiny, so I tend to iterate by just cleaning and
+# rebuilding every time.
+
+# This script does a Windows 64 cross-compile, and expects you to have
+# Mingw-w64 installed in whatever way Debian normally installs it
+# (because that's what I use). Recommended that you have WINE
+# installed for some fake testing too.
+
+# ----------------------------------------------------------------------
+
+# It's a build script. Abort on errors.
+set -e
+
+# FIXME: This doesn't work on Mac because of the lack of 'realpath'.
+# Disappointing like the lack of compute shader support in their GL.
+cd "$(realpath $(dirname "$0"))/.."
+
+# Clean
+make -f Makefile.tools clean
+CXX=x86_64-w64-mingw32-c++ make -f Makefile.tools clean
+
+# Build
+make -f Makefile.tools -j16
+CXX=x86_64-w64-mingw32-c++ make -f Makefile.tools -j16
+
+# Run native tests
+./lilylibtests
+
+# Run Windows tests
+#wine64 lilylibtests.exe
