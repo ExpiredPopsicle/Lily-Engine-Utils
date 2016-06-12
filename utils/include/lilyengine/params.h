@@ -71,6 +71,9 @@
 // +Mal | I'm going to copy+paste this conversation into my program as a
 //      | comment now that I think I've covered everything.
 
+// TODO: Replace std::cerr use with some sort of customizable error
+// output.
+
 // ----------------------------------------------------------------------
 // Needed headers
 // ----------------------------------------------------------------------
@@ -193,7 +196,7 @@ namespace ExPop
             // This is pretty inefficient, but I don't think anyone
             // will ever have a command line big enough for it to
             // matter.
-            string param = vecParams[0];
+            std::string param = vecParams[0];
             vecParams.erase(vecParams.begin());
 
             if(param.size() && param[0] == '-' && !doneWithSpecialParameters) {
@@ -239,7 +242,7 @@ namespace ExPop
                         }
 
                         if(outputParam.value.size() && !needsParameter) {
-                            cerr << "Too many parameters for --" << outputParam.name << endl;
+                            std::cerr << "Too many parameters for --" << outputParam.name << std::endl;
                             parseError = true;
                         }
 
@@ -254,7 +257,7 @@ namespace ExPop
                                     outputParam.value = vecParams[0];
                                     vecParams.erase(vecParams.begin());
                                 } else {
-                                    cerr << "Missing parameter for --" << outputParam.name << endl;
+                                    std::cerr << "Missing parameter for --" << outputParam.name << std::endl;
                                     parseError = true;
                                 }
                             }
@@ -267,7 +270,7 @@ namespace ExPop
 
                     // Short-form paramter(s).
 
-                    string shortParams = param.substr(1, param.size() - 1);
+                    std::string shortParams = param.substr(1, param.size() - 1);
 
                     for(size_t i = 0; i < shortParams.size(); i++) {
                         char tmp[2] = { shortParams[i], 0 };
@@ -299,7 +302,7 @@ namespace ExPop
                                     outputParam.value = vecParams[0];
                                     vecParams.erase(vecParams.begin());
                                 } else {
-                                    cerr << "Missing parameter for -" << outputParam.name << endl;
+                                    std::cerr << "Missing parameter for -" << outputParam.name << std::endl;
                                     parseError = true;
                                 }
 

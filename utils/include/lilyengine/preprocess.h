@@ -146,7 +146,7 @@ namespace ExPop
     {
         if(in.size() < 2) return "";
 
-        string workStr;
+        std::string workStr;
 
         if((in[0] == '"' && in[in.size()-1] == '"') ||
            (in[0] == '<' && in[in.size()-1] == '>')) {
@@ -160,7 +160,7 @@ namespace ExPop
 
     inline std::string cppItoa(int i)
     {
-        ostringstream ostr;
+        std::ostringstream ostr;
         ostr << i;
         return ostr.str();
     }
@@ -184,13 +184,13 @@ namespace ExPop
         // Set this file in the list of files we've already been to, but
         // keep a record of whether or not it was already in the list so
         // that we can bail out if we see a #pragma once.
-        string fixedName = FileSystem::fixFileName(fileName);
+        std::string fixedName = FileSystem::fixFileName(fileName);
         bool wasAlreadyInList = inState.fileList.count(fixedName) ? inState.fileList[fixedName] : false;
         inState.fileList[fixedName] = true;
 
-        ostringstream ostr;
+        std::ostringstream ostr;
 
-        vector<string> inLines;
+        std::vector<std::string> inLines;
         stringTokenize(inStr, "\n", inLines, true);
 
         // Number of #endifs we're expecting after passed tests in #if,
@@ -225,7 +225,7 @@ namespace ExPop
 
             if(startsWithHash) {
 
-                vector<string> tokens;
+                std::vector<std::string> tokens;
                 stringTokenize(inLines[i], " \t", tokens, false);
 
                 if(tokens.size()) {
@@ -234,7 +234,7 @@ namespace ExPop
 
                         EXPOP_PP_CHECK_OR_ERROR(tokens.size() >= 2, "Bad #pragma.");
 
-                        string pragmaType = tokens[1];
+                        std::string pragmaType = tokens[1];
 
                         if(pragmaType == "once") {
                             if(wasAlreadyInList) {
@@ -249,8 +249,8 @@ namespace ExPop
 
                         if(!nestedFailedIfs) {
 
-                            string symbol;
-                            string value;
+                            std::string symbol;
+                            std::string value;
 
                             EXPOP_PP_CHECK_OR_ERROR(
                                 tokens.size() == 2 || tokens.size() == 3,
@@ -276,7 +276,7 @@ namespace ExPop
                                 tokens.size() >= 2,
                                 "Bad #undef");
 
-                            string symbol;
+                            std::string symbol;
                             symbol = tokens[1];
 
                             // TODO: Include the symbol in this error.
@@ -297,14 +297,14 @@ namespace ExPop
                                 inState.recursionCount < RECURSION_LIMIT,
                                 "Too many levels of #include recursion.");
 
-                            string currentFilePath = FileSystem::getParentName(fileName);
+                            std::string currentFilePath = FileSystem::getParentName(fileName);
                             if(!currentFilePath.size()) {
                                 currentFilePath = ".";
                             }
 
-                            string name = convertQuotedPath(tokens[1]);
+                            std::string name = convertQuotedPath(tokens[1]);
                             std::string buf;
-                            string fullName;
+                            std::string fullName;
 
                             // First try loading from the same directory.
                             fullName = FileSystem::fixFileName(currentFilePath + "/" + name);
@@ -326,7 +326,7 @@ namespace ExPop
                             EXPOP_PP_CHECK_OR_ERROR(buf.size(), "Could not open include file");
 
                             inState.recursionCount++;
-                            string includedBuf = preprocess(fullName, buf, inState);
+                            std::string includedBuf = preprocess(fullName, buf, inState);
                             inState.recursionCount--;
 
                             EXPOP_PP_CHECK_OR_ERROR(
@@ -336,13 +336,13 @@ namespace ExPop
                             // TODO: Error handling for recursive call.
 
                             if(inState.annotateIncludes) {
-                                ostr << "// --- Begin include: " << fullName << endl;
+                                ostr << "// --- Begin include: " << fullName << std::endl;
                             }
 
-                            ostr << includedBuf; // << endl;
+                            ostr << includedBuf; // << std::endl;
 
                             if(inState.annotateIncludes) {
-                                ostr << "// --- End include: " << fullName << endl;
+                                ostr << "// --- End include: " << fullName << std::endl;
                             }
 
                         }
@@ -371,7 +371,7 @@ namespace ExPop
                                 tokens.size() == 2,
                                 "Bad #ifdef or #if");
 
-                            string symbol = tokens[1];
+                            std::string symbol = tokens[1];
                             bool result;
 
                             if(tokens[0] == "#if") {
@@ -382,7 +382,7 @@ namespace ExPop
                                 // we only support single symbol
                                 // lookups.
 
-                                string curSymbol = symbol;
+                                std::string curSymbol = symbol;
                                 size_t numLookups = 0;
 
                                 // Keep looking up symbols until we find
@@ -400,7 +400,7 @@ namespace ExPop
                                 // nonzero, then the result is true.
                                 int intVal = 0;
                                 if(curSymbol.size()) {
-                                    istringstream inStr(curSymbol);
+                                    std::istringstream inStr(curSymbol);
                                     inStr >> intVal;
                                 }
                                 result = intVal;
@@ -460,19 +460,19 @@ namespace ExPop
 
                     } else {
                         if(!nestedFailedIfs) {
-                            ostr << inLines[i] << endl;
+                            ostr << inLines[i] << std::endl;
                         }
                     }
 
                 } else {
-                    ostr << endl;
+                    ostr << std::endl;
                 }
 
             } else {
 
                 // Didn't start with a # sign at all.
                 if(!nestedFailedIfs) {
-                    ostr << inLines[i] << endl;
+                    ostr << inLines[i] << std::endl;
                 }
             }
         }
