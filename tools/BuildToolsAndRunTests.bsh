@@ -11,8 +11,8 @@
 
 # This script does a Windows 64 cross-compile, and expects you to have
 # Mingw-w64 installed in whatever way Debian normally installs it
-# (because that's what I use). Recommended that you have WINE
-# installed for some fake testing too.
+# (because that's what I use). You need to have WINE installed for
+# some fake testing too.
 
 # ----------------------------------------------------------------------
 
@@ -21,7 +21,8 @@ set -e
 
 # FIXME: This doesn't work on Mac because of the lack of 'realpath'.
 # Disappointing like the lack of compute shader support in their GL.
-cd "$(realpath $(dirname "$0"))/.."
+FULLPATH="$(realpath $(dirname "$0"))/.."
+cd "${FULLPATH}"
 
 # Clean
 make -f Makefile.tools clean
@@ -32,7 +33,10 @@ make -f Makefile.tools -j16
 CXX=x86_64-w64-mingw32-c++ make -f Makefile.tools -j16
 
 # Run native tests
-./lilylibtests
+./lilylibtests > TestResults_Native.txt
 
 # Run Windows tests
-#wine64 lilylibtests.exe
+WINEPREFIX="${FULLPATH}/wine64_lilylibtests" wine64 lilylibtests.exe > TestResults_Windows.txt
+
+cat TestResults_Windows.txt
+cat TestResults_Native.txt

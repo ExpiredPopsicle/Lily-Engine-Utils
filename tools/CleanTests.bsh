@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# FIXME: This doesn't work on Mac because of the lack of 'realpath'.
+# Disappointing like the lack of compute shader support in their GL.
+FULLPATH="$(realpath $(dirname "$0"))/.."
+cd "${FULLPATH}"
+
+# Clean up WINE junk.
+rm -rf "${FULLPATH}/wine64_lilylibtests"
+
+rm TestResults_Native.txt
+rm TestResults_Windows.txt
+
+# Normal clean
+make -f Makefile.tools clean
+CXX=x86_64-w64-mingw32-c++ make -f Makefile.tools clean
