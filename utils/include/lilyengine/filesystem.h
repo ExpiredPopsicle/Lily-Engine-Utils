@@ -29,53 +29,68 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-// TODO: Replace WIN32 with something more generic for 64-bit Windows
-// builds to work.
+// Filesystem access module.
 
 // TODO: Check this:
 // http://www.reddit.com/r/gamedev/comments/s7y83/saving_configuration_files_savegame_data_etc_on/
 
-// TODO: Get path to binary.
-//   windows: GetModuleFileName
-//   unix: ???
+// TODO: Get path to binary. windows: GetModuleFileName unix: ???
 
-// TODO: Maybe a thing to get the data directory, as it's been configured.
+// TODO: Maybe a thing to get the data directory, as it's been
+// configured.
+
+// TODO: Symlink detection on Windows?
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
 
 #pragma once
 
-#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
+#include <cstring>
+#include <string>
 
-namespace ExPop {
+#include <lilyengine/filesystem.h>
+#include <lilyengine/malstring.h>
+#include <lilyengine/thread.h>
 
-    namespace FileSystem {
+#if !_WIN32
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#else
+#include <windows.h>
+#include <direct.h>
+#endif
 
-        /** @brief Get all the files and subdirectories in a directory.
-         * @param directory The directory to scan.
-         * @param names A place to stick the file names.
-         * @return true if successful, false otherwise.
-         * */
+#include <sys/stat.h>
+#include <stdio.h>
+
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
+    namespace FileSystem
+    {
+        /// Get all the files and subdirectories in a directory.
+        /// Returns true on success and false on failure.
         bool getAllFiles(const std::string &directory, std::vector<std::string> &names);
 
-        /** @brief Get all the subdirectories in a directory.
-         * @param directory The directory to scan.
-         * @param names A place to stick the file names.
-         * @return true if successful, false otherwise.
-         * */
+        /// Get all the subdirectories in a directory. Returns true if
+        /// successful, false otherwise.
         bool getSubdirectories(const std::string &directory, std::vector<std::string> &names);
 
-        /** @brief Get all the non-directory files in a directory.
-         * @param directory The directory to scan.
-         * @param names A place to stick the file names.
-         * @return true if successful, false otherwise.
-         * */
+        /// Get all the non-directory files in a directory. Returns
+        /// true if successful, false otherwise.
         bool getNondirectories(const std::string &directory, std::vector<std::string> &names);
 
-        /** @brief Determine if a file exists.
-         * @param fileName The name of the file to check.
-         * @param skipArchives True to not check archives.
-         * @return true if it exists.
-         * */
+        /// Determine if a file exists. Returns true if it exists.
         bool fileExists(const std::string &fileName, bool skipArchives = false);
 
         /// Get a file timestamp as the number of seconds since the
@@ -83,10 +98,8 @@ namespace ExPop {
         /// because timestamps aren't stored in archives.
         unsigned int fileChangedTimeStamp(const std::string &fileName);
 
-        /** @brief Determine if a file is a directory.
-         * @param fileName The name of the file to check.
-         * @return true if it is a directory.
-         * */
+        /// Determine if a file is a directory. Returns true if it is
+        /// a directory.
         bool isDir(const std::string &fileName, bool skipArchives = false);
 
         /// Determine if a file is a symbolic link. (Always returns false
@@ -101,69 +114,40 @@ namespace ExPop {
         /// Get flags for a file (archived, non-archived, etc).
         unsigned int getFileFlags(const std::string &fileName);
 
-        /** @brief Get the name of the parent directory to the path.
-         * @param dirPath The path to the file or directory, including it.
-         * @return The name of the parent directory, or "" if it's at the highest level.
-         * */
+        /// Get the name of the parent directory to the path. Returns
+        /// the name of the parent directory, or "" if it's at the
+        /// highest level.
         std::string getParentName(const std::string &dirPath);
 
         /// Get the name of the file without the directory.
         std::string getBaseName(const std::string &path);
 
-        /** @brief Recursively make directories to create a given path.
-         * @param dirPath The path to construct.
-         * @return true if successful, false otherwise.
-         * */
+        /// Recursively make directories to create a given path.
+        /// Returns true if successful, false otherwise.
         bool makePath(const std::string &dirPath);
 
-        /** @brief Recursively make directories so that the given file can be saved.
-         * @param fileName The file name, with full path.
-         * @return true if successful, false otherwise.
-         * */
-        bool makePathForSave(const std::string &fileName);
-
-        /** @brief Renames (moves) a file.
-         * @param src The old (source) file name.
-         * @param dst The new (destination) file name.
-         * @return true if successful, false otherwise.
-         * */
+        /// Renames (moves) a file. Returns true if successful, false
+        /// otherwise. This will probably NOT work to transfer things
+        /// from one filesystem to another.
         bool renameFile(const std::string &src, const std::string &dst);
 
-        /** @brief Deletes a file (including empty directories).
-         * @param fileName The file to delete.
-         * @return true if successful, false otherwise.
-         * */
+        /// Deletes a file (including empty directories). Returns true
+        /// if successful, false otherwise.
         bool deleteFile(const std::string &fileName);
 
-        /** @brief Deletes a file or directory and all files or directories inside.
-         * @param fileName The file to delete.
-         * @return true if successful, false otherwise.
-         * */
+        /// Deletes a file or directory and all files or directories
+        /// inside. Returns true if successful, false otherwise. May
+        /// partially complete (some files removed).
         bool recursiveDelete(const std::string &fileName);
 
-        /** @brief Copies a file.
-         * @param src The old (source) file name.
-         * @param dst The new (destination) file name.
-         * @return true if successful, false otherwise.
-         * */
+        /// Copies a file. Returns true if successful, false
+        /// otherwise.
         bool copyFile(const std::string &src, const std::string &dst);
 
-        /** @brief Copies an entire tree of files and directories.
-         * @param src The old (source) file name.
-         * @param dst The new (destination) file name.
-         * @return true if successful, false otherwise.
-         * */
+        /// Copies an entire tree of files and directories. Return
+        /// true if successful, false otherwise. May partially
+        /// complete.
         bool recursiveCopy(const std::string &src, const std::string &dst);
-
-        /** @brief Takes out the first part of a path.
-         * Used for taking out the "games/<game name>/" part of a path, if
-         * it's there.
-         * @param path The path to start with.
-         * @param whatToRemove The string to remove from the start.
-         * @return The string with the part removed, or just the string if
-         *   that part wasn't there to be removed.
-         * */
-        std::string stripDataPath(const std::string &path, const std::string &whatToRemove);
 
         /// Get the size of a file in bytes.
         int getFileSize(const std::string &fileName);
@@ -205,7 +189,10 @@ namespace ExPop {
         /// Filter a list of files by extension. The filtered list is ADDED
         /// to outputList. extension is a comma or space separated list of
         /// extensions to include. Don't include the '.' in the extensions.
-        void filterFileListByType(const std::string &extension, const std::vector<std::string> &inputList, std::vector<std::string> &outputList);
+        void filterFileListByType(
+            const std::string &extension,
+            const std::vector<std::string> &inputList,
+            std::vector<std::string> &outputList);
 
         /// Get the current working directory. Note that this will NOT
         /// add a leading slash at the end unless it is the root
@@ -214,3 +201,10 @@ namespace ExPop {
         std::string getCwd(void);
     }
 }
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+// TODO: Actually put the implementation here.
+

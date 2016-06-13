@@ -29,39 +29,15 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <cstring>
+#include <lilyengine/filesystem.h>
+
+#include <string>
 using namespace std;
 
-#include <sys/stat.h>
-#include <stdio.h>
-
-#if !_WIN32
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#else
-#include <windows.h>
-#include <direct.h>
-#endif
-
-#if EXPOP_CONSOLE
-#include <lilyengine/console.h>
-using namespace ExPop::Console;
-#endif
-
-#include <lilyengine/filesystem.h>
-#include <lilyengine/archive.h>
-#include <lilyengine/malstring.h>
-#include <lilyengine/thread.h>
-
-namespace ExPop {
-
-    namespace FileSystem {
-
+namespace ExPop
+{
+    namespace FileSystem
+    {
         // Stick in a fake mutex class and pretend if we aren't using
         // threads at all.
       #if EXPOP_ENABLE_THREADS
@@ -72,8 +48,16 @@ namespace ExPop {
 
         static vector<Archive*> searchArchives;
 
-        bool getAllFiles(const std::string &directory, std::vector<std::string> &names) {
+        // Justification for ugly global data hack here: The
+        // filesystem itself is kind of a global resource, so the
+        // archives system "overlay" onto it should be too.
+        inline std::vector<Archive*> &getSearchArchives()
+        {
+            return searchArchives;
+        }
 
+        bool getAllFiles(const std::string &directory, std::vector<std::string> &names)
+        {
             std::map<std::string, bool> allFiles;
 
           #if !_WIN32
@@ -133,8 +117,8 @@ namespace ExPop {
 
             archivesMutex.lock();
 
-            for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                searchArchives[i]->getFileListForDir(fixedName, archivedFiles);
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                getSearchArchives()[i]->getFileListForDir(fixedName, archivedFiles);
             }
 
             archivesMutex.unlock();
@@ -153,7 +137,8 @@ namespace ExPop {
 
         }
 
-        bool getSubdirectories(const std::string &directory, std::vector<std::string> &names) {
+        bool getSubdirectories(const std::string &directory, std::vector<std::string> &names)
+        {
             vector<string> allNames;
             if(!getAllFiles(directory, allNames)) return false;
 
@@ -166,7 +151,8 @@ namespace ExPop {
             return true;
         }
 
-        bool getNondirectories(const std::string &directory, std::vector<std::string> &names) {
+        bool getNondirectories(const std::string &directory, std::vector<std::string> &names)\
+        {
             vector<string> allNames;
             if(!getAllFiles(directory, allNames)) return false;
 
@@ -179,13 +165,8 @@ namespace ExPop {
             return true;
         }
 
-        // Windows doesn't define some fstat stuff we need...
-#ifndef S_ISDIR
-#define S_ISDIR(d) (((d) & S_IFMT) == S_IFDIR)
-#endif
-
-        bool fileExists(const std::string &fileName, bool skipArchives) {
-
+        bool fileExists(const std::string &fileName, bool skipArchives)
+        {
             struct stat fileStat;
             if(!stat(fileName.c_str(), &fileStat)) {
                 return true;
@@ -197,8 +178,8 @@ namespace ExPop {
 
                 // Couldn't find it on the filesystem. Try archives.
                 string fixedName = fixFileName(fileName);
-                for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                    if(searchArchives[i]->getFileExists(fixedName) || searchArchives[i]->getDirExists(fixedName)) {
+                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                    if(getSearchArchives()[i]->getFileExists(fixedName) || getSearchArchives()[i]->getDirExists(fixedName)) {
                         archivesMutex.unlock();
                         return true;
                     }
@@ -210,21 +191,18 @@ namespace ExPop {
             return false;
         }
 
-        unsigned int fileChangedTimeStamp(const std::string &fileName) {
-
+        unsigned int fileChangedTimeStamp(const std::string &fileName)
+        {
             struct stat fileStat;
             if(stat(fileName.c_str(), &fileStat) == -1) {
-              #if EXPOP_CONSOLE
-                // out("error") << "Could not stat " << fileName << endl;
-              #endif
                 return 0;
             }
 
             return fileStat.st_mtime;
         }
 
-        bool isSymLink(const std::string &fileName) {
-
+        bool isSymLink(const std::string &fileName)
+        {
           #if _WIN32
             // TODO: Now that Windows actually supports symbolic
             // links, we should make this check more accurate. Maybe
@@ -243,15 +221,26 @@ namespace ExPop {
 
         }
 
+        // Windows doesn't seem to have the S_ISDIR macro.
+        template<typename T>
+        inline bool isDirOSFlag(T d)
+        {
+          #ifdef S_ISDIR
+            return S_ISDIR(d);
+          #else
+            return (((d) & S_IFMT) == S_IFDIR);
+          #endif
+        }
 
-        bool isDir(const std::string &fileName, bool skipArchives) {
+        bool isDir(const std::string &fileName, bool skipArchives)
+        {
             if(fileName.size() == 0 || fileName == string(".")) {
                 return true;
             }
 
             struct stat fileStat;
             if(!stat(fileName.c_str(), &fileStat)) {
-                if(S_ISDIR(fileStat.st_mode)) {
+                if(isDirOSFlag(fileStat.st_mode)) {
                     return true;
                 }
             }
@@ -262,8 +251,8 @@ namespace ExPop {
 
                 // Couldn't find it on the filesystem. Try archives.
                 string fixedName = fixFileName(fileName);
-                for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                    if(searchArchives[i]->getDirExists(fixedName)) {
+                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                    if(getSearchArchives()[i]->getDirExists(fixedName)) {
                         archivesMutex.unlock();
                         return true;
                     }
@@ -275,7 +264,8 @@ namespace ExPop {
             return false;
         }
 
-        std::string getParentName(const std::string &dirPath) {
+        std::string getParentName(const std::string &dirPath)
+        {
             string dp(dirPath);
 
             int i;
@@ -293,8 +283,8 @@ namespace ExPop {
             return "";
         }
 
-        std::string getBaseName(const std::string &path) {
-
+        std::string getBaseName(const std::string &path)
+        {
             string dir = getParentName(path);
             string base = path.c_str() + dir.size();
 
@@ -304,8 +294,8 @@ namespace ExPop {
             return base;
         }
 
-        bool makePath(const std::string &dirPath) {
-
+        bool makePath(const std::string &dirPath)
+        {
             if(isDir(dirPath, true)) {
 
                 // Directory already created.
@@ -336,23 +326,20 @@ namespace ExPop {
             }
         }
 
-        bool makePathForSave(const std::string &fileName) {
-            // TODO: Make this cooperate with archives. (Maybe)
-            return makePath(getParentName(fileName));
-        }
-
-        bool renameFile(const std::string &src, const std::string &dst) {
+        bool renameFile(const std::string &src, const std::string &dst)
+        {
             // TODO: Make this cooperate with archives. (Maybe)
             return(!rename(src.c_str(), dst.c_str()));
         }
 
-        bool deleteFile(const std::string &fileName) {
+        bool deleteFile(const std::string &fileName)
+        {
             // TODO: Make this cooperate with archives. (Maybe)
             return !remove(fileName.c_str());
         }
 
-        bool recursiveDelete(const std::string &fileName) {
-
+        bool recursiveDelete(const std::string &fileName)
+        {
             // remove() handles both directories and files?
             // TODO: Investigate further, otherwise leave if(){} block here.
             // TODO: Make this cooperate with archives. (Maybe)
@@ -363,9 +350,6 @@ namespace ExPop {
 
                 for(unsigned int i = 0; i < names.size(); i++) {
                     if(!recursiveDelete(fileName + string("/") + names[i])) {
-                      #if EXPOP_CONSOLE
-                        out("error") << "Recursive delete of \"" << fileName + string("/") + names[i] << "\" failed" << endl;
-                      #endif
                         return false;
                     }
                 }
@@ -375,8 +359,8 @@ namespace ExPop {
             return deleteFile(fileName);
         }
 
-        bool copyFile(const std::string &src, const std::string &dst) {
-
+        bool copyFile(const std::string &src, const std::string &dst)
+        {
             // TODO: Make this cooperate with archives. (Maybe only copying OUT of a file)
 
             ifstream inFile(src.c_str(), ios::in | ios::binary);
@@ -393,8 +377,8 @@ namespace ExPop {
             return true;
         }
 
-        bool recursiveCopy(const std::string &src, const std::string &dst) {
-
+        bool recursiveCopy(const std::string &src, const std::string &dst)
+        {
             // TODO: Make this cooperate with archives. (Maybe)
 
             if(isDir(src)) {
@@ -416,17 +400,8 @@ namespace ExPop {
             }
         }
 
-        string stripDataPath(const std::string &path, const std::string &whatToRemove) {
-            int removeSize = whatToRemove.size();
-
-            if(path.substr(0, removeSize) == whatToRemove) {
-                return path.substr(removeSize);
-            }
-            return path;
-        }
-
-        int getFileSize(const std::string &fileName) {
-
+        int getFileSize(const std::string &fileName)
+        {
             // TODO: Should this be replaced with opening the file, seeking
             //   to the end, then recording the position?
 
@@ -441,9 +416,9 @@ namespace ExPop {
                 archivesMutex.lock();
 
                 // Couldn't find it on the filesystem. Try archives.
-                for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                    if(searchArchives[i]->getFileExists(fileName)) {
-                        bool ret = searchArchives[i]->getFileSize(fileName);
+                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                    if(getSearchArchives()[i]->getFileExists(fileName)) {
+                        bool ret = getSearchArchives()[i]->getFileSize(fileName);
                         archivesMutex.unlock();
                         return ret;
                     }
@@ -455,8 +430,8 @@ namespace ExPop {
             }
         }
 
-        char *loadFile(const std::string &fileName, int *length, bool addNullTerminator) {
-
+        char *loadFile(const std::string &fileName, int *length, bool addNullTerminator)
+        {
             // Get the file size from file system or archive.
             *length = getFileSize(fileName);
 
@@ -481,9 +456,9 @@ namespace ExPop {
                 archivesMutex.lock();
 
                 // Couldn't load from filesystem. Try archives.
-                for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                    if(searchArchives[i]->getFileExists(fileName)) {
-                        char *ret = searchArchives[i]->loadFile(fileName, length, addNullTerminator);
+                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                    if(getSearchArchives()[i]->getFileExists(fileName)) {
+                        char *ret = getSearchArchives()[i]->loadFile(fileName, length, addNullTerminator);
                         archivesMutex.unlock();
                         return ret;
                     }
@@ -505,7 +480,8 @@ namespace ExPop {
 
         }
 
-        std::string loadFileString(const std::string &fileName) {
+        std::string loadFileString(const std::string &fileName)
+        {
             int bufLen = 0;
             char *buf = loadFile(fileName, &bufLen, false);
             if(!buf) {
@@ -516,8 +492,8 @@ namespace ExPop {
             return ret;
         }
 
-        char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart) {
-
+        char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart)
+        {
             int realLength = getFileSize(fileName);
             if(realLength <= 0) {
                 return NULL;
@@ -539,9 +515,9 @@ namespace ExPop {
                 archivesMutex.lock();
 
                 // Couldn't load from filesystem. Try archives.
-                for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                    if(searchArchives[i]->getFileExists(fileName)) {
-                        char *ret = searchArchives[i]->loadFilePart(fileName, lengthToRead, offsetFromStart);
+                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                    if(getSearchArchives()[i]->getFileExists(fileName)) {
+                        char *ret = getSearchArchives()[i]->loadFilePart(fileName, lengthToRead, offsetFromStart);
                         archivesMutex.unlock();
                         return ret;
                     }
@@ -558,8 +534,8 @@ namespace ExPop {
 
         }
 
-        int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree) {
-
+        int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree)
+        {
             if(mkDirTree) {
                 string parentName = getParentName(fileName);
                 if(parentName.size()) {
@@ -585,8 +561,8 @@ namespace ExPop {
             return 0;
         }
 
-        void addArchiveForSearch(const std::string &archiveFileName) {
-
+        void addArchiveForSearch(const std::string &archiveFileName)
+        {
             archivesMutex.lock();
 
             // We'll be comparing filenames, so store a fixed version that
@@ -594,8 +570,8 @@ namespace ExPop {
             string fixedFileName = fixFileName(archiveFileName);
 
             // Bail out if it's already in there.
-            for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                if(searchArchives[i]->getMyFileName() == fixedFileName) {
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                if(getSearchArchives()[i]->getMyFileName() == fixedFileName) {
 
                     archivesMutex.unlock();
                     return;
@@ -608,28 +584,25 @@ namespace ExPop {
 
                 // Hmm... that didn't go well. Not a fatal error, though.
                 delete newArch;
-              #if EXPOP_CONSOLE
-                out("error") << "Failed to open archive file \"" << archiveFileName << "\"" << endl;
-              #endif
 
             } else {
 
                 // Add the new archive.
-                searchArchives.push_back(newArch);
+                getSearchArchives().push_back(newArch);
             }
 
             archivesMutex.unlock();
 
         }
 
-        void removeArchiveForSearch(const std::string &archiveFileName) {
-
+        void removeArchiveForSearch(const std::string &archiveFileName)
+        {
             archivesMutex.lock();
 
-            for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                if(searchArchives[i]->getMyFileName() == archiveFileName) {
-                    delete searchArchives[i];
-                    searchArchives.erase(searchArchives.begin() + i);
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                if(getSearchArchives()[i]->getMyFileName() == archiveFileName) {
+                    delete getSearchArchives()[i];
+                    getSearchArchives().erase(getSearchArchives().begin() + i);
 
                     archivesMutex.unlock();
                     return;
@@ -639,21 +612,21 @@ namespace ExPop {
             archivesMutex.unlock();
         }
 
-        void clearSearchArchives(void) {
-
+        void clearSearchArchives(void)
+        {
             archivesMutex.lock();
 
-            for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                delete searchArchives[i];
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                delete getSearchArchives()[i];
             }
 
-            searchArchives.clear();
+            getSearchArchives().clear();
 
             archivesMutex.unlock();
         }
 
-        std::string fixFileName(const std::string &str) {
-
+        std::string fixFileName(const std::string &str)
+        {
             // Split the path into directories and the filename.
             vector<string> fileNameParts;
             stringTokenize(str, "\\/", fileNameParts);
@@ -728,14 +701,14 @@ namespace ExPop {
             return outStr.str();
         }
 
-        unsigned int getFileFlags(const std::string &fileName) {
-
+        unsigned int getFileFlags(const std::string &fileName)
+        {
             unsigned int flags = 0;
 
             archivesMutex.lock();
 
-            for(unsigned int i = 0; i < searchArchives.size(); i++) {
-                if(searchArchives[i]->getFileExists(fileName) || searchArchives[i]->getDirExists(fileName)) {
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                if(getSearchArchives()[i]->getFileExists(fileName) || getSearchArchives()[i]->getDirExists(fileName)) {
                     flags |= FILEFLAG_ARCHIVED;
                 }
             }
@@ -750,8 +723,8 @@ namespace ExPop {
 
         }
 
-        void filterFileListByType(const std::string &extension, const std::vector<std::string> &inputList, std::vector<std::string> &outputList) {
-
+        void filterFileListByType(const std::string &extension, const std::vector<std::string> &inputList, std::vector<std::string> &outputList)
+        {
             vector<string> extensions;
 
             stringTokenize(extension, ", ", extensions);
@@ -771,8 +744,8 @@ namespace ExPop {
             }
         }
 
-        std::string getCwd(void) {
-
+        std::string getCwd(void)
+        {
             // FIXME: Hardcoded directory lengths are bad.
 
             char dirBuf[2048];

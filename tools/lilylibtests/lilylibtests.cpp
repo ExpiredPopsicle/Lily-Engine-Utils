@@ -306,6 +306,26 @@ inline void doPreprocessorTests(size_t &passCounter, size_t &failCounter)
     EXPOP_TEST_VALUE(state.hadError, true);
 }
 
+inline void doArchiveTests(size_t &passCounter, size_t &failCounter)
+{
+    {
+        FileSystem::Archive testArchive("lilylibtest.poop", true);
+        std::string fileData = FileSystem::loadFileString("README.org");
+        EXPOP_TEST_VALUE(testArchive.getFailed(), false);
+        bool addFileSucceed = testArchive.addFile("Stuff_Only_For_Archive_Test", fileData.c_str(), fileData.size());
+        EXPOP_TEST_VALUE(addFileSucceed, true);
+        EXPOP_TEST_VALUE(testArchive.getFailed(), false);
+        bool addFileFail = testArchive.addFile("Stuff_Only_For_Archive_Test", fileData.c_str(), fileData.size());
+        EXPOP_TEST_VALUE(addFileFail, false);
+    }
+    EXPOP_TEST_VALUE(FileSystem::fileExists("lilylibtest.poop"), true);
+    EXPOP_TEST_VALUE(FileSystem::fileExists("Stuff_Only_For_Archive_Test"), false);
+    FileSystem::addArchiveForSearch("lilylibtest.poop");
+    EXPOP_TEST_VALUE(FileSystem::fileExists("Stuff_Only_For_Archive_Test"), true);
+    FileSystem::removeArchiveForSearch("lilylibtest.poop");
+    EXPOP_TEST_VALUE(FileSystem::fileExists("Stuff_Only_For_Archive_Test"), false);
+}
+
 // ----------------------------------------------------------------------
 
 class TimerBlock
@@ -399,6 +419,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Preprocessor");
     doPreprocessorTests(passCounter, failCounter);
+
+    showSectionHeader("Archive");
+    doArchiveTests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;

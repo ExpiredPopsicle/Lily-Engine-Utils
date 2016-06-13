@@ -29,28 +29,43 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// Simple file archive system. This is intended to integrate
+// seamlessly with the FileSystem module to provide a transparent
+// overlay to the real filesystem.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <map>
 #include <string>
 #include <fstream>
 #include <vector>
+#include <cassert>
+#include <iostream>
+#include <cstring>
 
 #ifdef OS_ANDROID
+#include <android/asset_manager.h>
 struct AAsset;
 #endif
 
-// Simple file archive system.
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
-namespace ExPop {
-
-    namespace FileSystem {
-
+namespace ExPop
+{
+    namespace FileSystem
+    {
         /// File archive (like pk3 files, but slightly less
         /// cool). Most FileSystem functions can be told to use one or
         /// more archives as fallbacks in case they don't exist on the
         /// real filesystem.
-        class Archive {
+        class Archive
+        {
         public:
 
             /// Default constructor creates a not-really-working
@@ -64,9 +79,10 @@ namespace ExPop {
 
             virtual ~Archive(void);
 
-            /// Add a file to the archive. Archive must have been created
-            /// in write mode or this will fail. (assert fail)
-            virtual void addFile(const std::string &fileName, const char *data, int length);
+            /// Add a file to the archive. Archive must have been
+            /// created in write mode or this will fail. Returns false
+            /// on failure, or true on success.
+            virtual bool addFile(const std::string &fileName, const char *data, int length);
 
             /// Load a file from the archive. Length will be stored in
             /// length. Set addNullTerminator to true for non-binary
@@ -123,11 +139,11 @@ namespace ExPop {
             std::map<std::string, std::vector<std::string> > subdirectories;
             std::string myFileName;
 
-#ifdef OS_ANDROID
+          #ifdef OS_ANDROID
             AAsset *archiveFileAsset;
-#else
+          #else
             std::fstream archiveFile;
-#endif
+          #endif
 
             bool writeMode;
             bool failed;
@@ -136,3 +152,479 @@ namespace ExPop {
 
     }
 }
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+#include "filesystem.h"
+
+namespace ExPop
+{
+    namespace FileSystem
+    {
+        struct FileHeader
+        {
+            // Name of the file.
+            char name[512];
+
+            // Length of the file (little endian, 32 bits).
+            // Does not include the size of this header.
+            unsigned int length;
+        };
+
+        inline Archive::Archive(void)
+        {
+            // No archive, or something with overridden functionality.
+            failed = true;
+            this->writeMode = false;
+
+          #ifdef OS_ANDROID
+            archiveFileAsset = NULL;
+          #endif
+        }
+
+        inline Archive::Archive(const std::string &fileName, bool writeMode)
+        {
+            failed = false;
+
+          #ifdef OS_ANDROID
+
+            // I don't think we're going to be porting tools to Android,
+            // so writeMode is entirely invalid here.
+            assert(!writeMode);
+
+            archiveFileAsset = AAssetManager_open(
+                androidState->activity->assetManager,
+                fileName.c_str(),
+                AASSET_MODE_RANDOM);
+
+            this->writeMode = false;
+
+          #else
+
+            if(writeMode) {
+                archiveFile.open(fileName.c_str(), std::ios::out | std::ios::binary);
+            } else {
+                archiveFile.open(fileName.c_str(), std::ios::in | std::ios::binary);
+            }
+            this->writeMode = writeMode;
+
+          #endif
+
+            myFileName = fileName;
+
+          #ifdef OS_ANDROID
+
+            if(!archiveFileAsset) {
+                failed = true;
+            }
+
+          #else
+
+            if(archiveFile.fail()) {
+                failed = true;
+                return;
+            }
+
+          #endif
+
+            // Scan through the whole file and build up the TOC.
+            if(!writeMode) {
+                rebuildTableOfContents();
+                closeArchiveFile();
+            }
+        }
+
+        inline Archive::~Archive(void)
+        {
+            closeArchiveFile();
+        }
+
+        inline void Archive::openArchiveFile(void)
+        {
+          #ifdef OS_ANDROID
+
+            if(!archiveFileAsset) {
+
+                archiveFileAsset = AAssetManager_open(
+                    androidState->activity->assetManager,
+                    myFileName.c_str(),
+                    AASSET_MODE_RANDOM);
+            }
+
+          #else
+
+            if(!archiveFile.is_open()) {
+                archiveFile.open(myFileName.c_str(), std::ios::binary | (writeMode ? std::ios::out : std::ios::in) );
+            }
+
+          #endif
+        }
+
+        inline void Archive::closeArchiveFile(void)
+        {
+          #ifdef OS_ANDROID
+
+            if(archiveFileAsset) {
+                AAsset_close(archiveFileAsset);
+                archiveFileAsset = NULL;
+            }
+
+          #else
+
+            if(archiveFile.is_open()) {
+                archiveFile.close();
+            }
+
+          #endif
+        }
+
+        inline bool Archive::addFile(const std::string &fileName, const char *data, int length)
+        {
+            if(failed) {
+                return false;
+            }
+
+          #ifdef OS_ANDROID
+
+            // No writing on Android!
+            assert(0);
+
+          #else
+
+            assert(archiveFile.is_open());
+
+            if(!writeMode) {
+                return false;
+            }
+
+            // First, see if the file is already in the archive.
+            if(tableOfContents.find(fileName) != tableOfContents.end()) {
+                return false;
+            }
+
+            // Go to the end of the archive.
+            archiveFile.seekp(0, std::ios_base::end);
+            unsigned int currentEnd = archiveFile.tellp();
+
+            // Make the filename consistent.
+            std::string fixedFileName = fixFileName(fileName);
+
+            // Write the header.
+            FileHeader *header = (FileHeader*)calloc(1, sizeof(FileHeader));
+            assert(header);
+            strncpy(header->name, fixedFileName.c_str(), 511);
+            header->length = length;
+            archiveFile.write((char*)header, sizeof(FileHeader));
+            free(header);
+
+            if(archiveFile.rdstate() & std::ifstream::failbit) {
+                return false;
+            }
+
+            // Write the data.
+            archiveFile.write(data, length);
+
+            if(archiveFile.rdstate() & std::ifstream::failbit) {
+                return false;
+            }
+
+            // Update TOC.
+            tableOfContents[fileName] = currentEnd;
+
+          #endif
+
+            return true;
+        }
+
+        inline char *Archive::loadFile(const std::string &fileName, int *length, bool addNullTerminator)
+        {
+            if(failed) return NULL;
+            assert(!writeMode);
+            openArchiveFile();
+
+            std::string fixedFileName = fixFileName(fileName);
+
+            // Get our offset of the header in the archive.
+            unsigned int offset;
+            std::map<std::string, unsigned int>::iterator iter =
+                tableOfContents.find(fixedFileName);
+
+            if(iter == tableOfContents.end()) {
+                return NULL; // Not in this archive!
+            }
+
+            offset = iter->second;
+
+            // Go to the offset in the archive and read in the header.
+            FileHeader header;
+
+          #ifdef OS_ANDROID
+            AAsset_seek(archiveFileAsset, offset, SEEK_SET);
+            AAsset_read(archiveFileAsset, (char*)&header, sizeof(FileHeader));
+          #else
+            archiveFile.seekg(offset, std::ios_base::beg);
+            archiveFile.read((char*)&header, sizeof(FileHeader));
+          #endif
+
+            // Make a place to put the data.
+            char *data = new char[header.length + (addNullTerminator ? 1 : 0)];
+            if(!data) return NULL; // Too big?
+
+            // TODO: We should probably put an upper limit on the data size
+            //   regardless of what we read from the archive. Allocating too
+            //   much memory can be really bad.
+
+            // Read in the data.
+
+          #ifdef OS_ANDROID
+            AAsset_read(archiveFileAsset, data, header.length);
+          #else
+            archiveFile.read(data, header.length);
+          #endif
+
+            *length = header.length;
+
+            if(addNullTerminator) {
+                data[*length] = 0;
+                (*length)++;
+            }
+
+            closeArchiveFile();
+            return data;
+        }
+
+        inline char *Archive::loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart)
+        {
+            if(failed) return NULL;
+            assert(!writeMode);
+            openArchiveFile();
+
+            std::string fixedFileName = fixFileName(fileName);
+
+            // Get our offset of the header in the archive.
+            unsigned int offset;
+            std::map<std::string, unsigned int>::iterator iter =
+                tableOfContents.find(fixedFileName);
+
+            if(iter == tableOfContents.end()) {
+                return NULL; // Not in this archive!
+            }
+
+            offset = iter->second;
+            offset += offsetFromStart;
+
+            // Go to the offset in the archive and read in the header.
+            FileHeader header;
+
+          #ifdef OS_ANDROID
+            AAsset_seek(archiveFileAsset, offset, SEEK_SET);
+            AAsset_read(archiveFileAsset, (char*)&header, sizeof(FileHeader));
+          #else
+            archiveFile.seekg(offset, std::ios_base::beg);
+            archiveFile.read((char*)&header, sizeof(FileHeader));
+          #endif
+
+            // Make a place to put the data.
+            char *data = new char[lengthToRead];
+            if(!data) return NULL; // Too big?
+
+            memset(data, 0, lengthToRead);
+
+            // Read in the data.
+
+          #ifdef OS_ANDROID
+            AAsset_read(archiveFileAsset, data, (int)header.length < lengthToRead ? header.length : lengthToRead);
+          #else
+            archiveFile.read(data, (int)header.length < lengthToRead ? header.length : lengthToRead);
+          #endif
+
+            closeArchiveFile();
+            return data;
+        }
+
+        inline void Archive::rebuildTableOfContents(void)
+        {
+            tableOfContents.clear();
+            tableOfDirectories.clear();
+
+            assert(!writeMode);
+            openArchiveFile();
+
+            if(failed) return;
+
+            bool foundEof = false;
+
+          #ifdef OS_ANDROID
+            AAsset_seek(archiveFileAsset, 0, SEEK_SET);
+            int currentPos = 0;
+          #else
+            archiveFile.seekg(0, std::ios_base::beg);
+            // Clear whatever last EOF or error might be sitting around.
+            archiveFile.clear();
+          #endif
+            std::map<std::string, std::map<std::string, bool> > directoriesInDirectories;
+
+            while(!foundEof) {
+
+                FileHeader header;
+
+              #ifdef OS_ANDROID
+                AAsset_read(archiveFileAsset, (char*)&header, sizeof(FileHeader));
+                if(!AAsset_getRemainingLength(archiveFileAsset)) {
+                    break;
+                }
+              #else
+                int currentPos = archiveFile.tellg();
+                archiveFile.read((char*)&header, sizeof(FileHeader));
+                if(archiveFile.fail()) {
+                    archiveFile.clear();
+                    break;
+                }
+              #endif
+
+                // Just for safety, add in a NULL terminator to the
+                // last position of the name string, otherwise bad
+                // archives could have us read off the end of the
+                // filename into whatever.
+                header.name[511] = 0;
+
+                tableOfContents[header.name] = currentPos;
+
+                currentPos += header.length + sizeof(FileHeader);
+
+                // Add it to the appropriate directory entry.
+                std::string dirName = getParentName(header.name);
+                std::string baseName = header.name + dirName.size();
+
+                // Get rid of that last '/'.
+                if(baseName.size()) {
+                    baseName = baseName.c_str() + 1;
+                }
+
+                directoryContents[dirName].push_back(baseName);
+
+                while(dirName.size()) {
+                    std::string parentName = getParentName(dirName);
+                    directoriesInDirectories[parentName][getBaseName(dirName)] = true;
+                    dirName = parentName;
+                }
+
+                // Next file.
+
+              #ifdef OS_ANDROID
+                AAsset_seek(archiveFileAsset, currentPos, SEEK_SET);
+                foundEof = !AAsset_getRemainingLength(archiveFileAsset);
+              #else
+                archiveFile.seekg(header.length, std::ios_base::cur);
+                foundEof = archiveFile.eof();
+              #endif
+
+            }
+
+            // Add all the directories found to the directory directories.
+
+            // These iterator loops look ugly as hell. Can I use the 'auto'
+            // keyword yet? Ughh...
+            for(std::map<std::string, std::map<std::string, bool> >::iterator outerIterator = directoriesInDirectories.begin(); outerIterator != directoriesInDirectories.end(); outerIterator++) {
+                for(std::map<std::string, bool>::iterator innerIterator = (*outerIterator).second.begin(); innerIterator != (*outerIterator).second.end(); innerIterator++) {
+
+                    std::string outerDir = (*outerIterator).first;
+                    std::string innerDir = (*innerIterator).first;
+
+                    //cout << "Dir in Dir: " << outerDir << " / " << innerDir << endl;
+                    subdirectories[outerDir].push_back(innerDir);
+
+                    if(outerDir.size()) outerDir = outerDir + "/";
+                    tableOfDirectories[outerDir + innerDir] = true;
+
+                }
+            }
+
+            closeArchiveFile();
+        }
+
+        inline bool Archive::getFileExists(const std::string &fileName)
+        {
+            if(failed) return false;
+
+            std::string fixedFileName = fixFileName(fileName);
+
+            std::map<std::string, unsigned int>::iterator iter =
+                tableOfContents.find(fixedFileName);
+
+            return !(iter == tableOfContents.end());
+        }
+
+        inline bool Archive::getDirExists(const std::string &dirName)
+        {
+            if(failed) return false;
+
+            std::string fixedDirName = fixFileName(dirName);
+
+            std::map<std::string, bool>::iterator iter =
+                tableOfDirectories.find(fixedDirName);
+
+            return !(iter == tableOfDirectories.end());
+        }
+
+        inline unsigned int Archive::getFileSize(const std::string &fileName)
+        {
+            if(failed) return 0;
+            assert(!writeMode);
+            openArchiveFile();
+
+            std::string fixedFileName = fixFileName(fileName);
+
+            if(!getFileExists(fixedFileName)) {
+                return 0;
+            }
+
+            FileHeader header;
+
+          #ifdef OS_ANDROID
+            AAsset_seek(archiveFileAsset, tableOfContents[fileName], SEEK_SET);
+            AAsset_read(archiveFileAsset, (char*)&header, sizeof(FileHeader));
+          #else
+            archiveFile.seekg(tableOfContents[fileName], std::ios_base::beg);
+            archiveFile.read((char*)&header, sizeof(FileHeader));
+          #endif
+
+            closeArchiveFile();
+            return header.length;
+
+        }
+
+        inline void Archive::getFileList(std::vector<std::string> &fileList)
+        {
+            std::map<std::string, unsigned int>::iterator iter;
+
+            for(iter = tableOfContents.begin(); iter != tableOfContents.end(); iter++) {
+                fileList.push_back(iter->first);
+            }
+        }
+
+        inline void Archive::getFileListForDir(const std::string &dirName, std::vector<std::string> &fileList)
+        {
+            // In case anyone decided to be cute and use "." as the
+            // directory name...
+            std::string fixedDirName = fixFileName(dirName);
+
+            fileList.insert(fileList.end(), subdirectories[fixedDirName].begin(), subdirectories[fixedDirName].end());
+            fileList.insert(fileList.end(), directoryContents[fixedDirName].begin(), directoryContents[fixedDirName].end());
+        }
+
+        inline const std::string &Archive::getMyFileName(void)
+        {
+            // Should we return the fixed version of this?
+            return myFileName;
+        }
+
+        inline bool Archive::getFailed(void)
+        {
+            return failed;
+        }
+    }
+}
+
