@@ -324,6 +324,8 @@ inline void doArchiveTests(size_t &passCounter, size_t &failCounter)
     EXPOP_TEST_VALUE(FileSystem::fileExists("Stuff_Only_For_Archive_Test"), true);
     FileSystem::removeArchiveForSearch("lilylibtest.poop");
     EXPOP_TEST_VALUE(FileSystem::fileExists("Stuff_Only_For_Archive_Test"), false);
+    FileSystem::deleteFile("lilylibtest.poop");
+    EXPOP_TEST_VALUE(FileSystem::fileExists("lilylibtest.poop"), false);
 }
 
 // ----------------------------------------------------------------------
