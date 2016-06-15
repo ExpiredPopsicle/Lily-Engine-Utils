@@ -226,6 +226,7 @@ void doThreadTests_thread(void *data)
     size_t &failCounter = *testData->failCounter;
 
     while(!testData->goAhead) {
+        usleep(10);
     }
 
   #if _WIN32
@@ -328,6 +329,32 @@ inline void doArchiveTests(size_t &passCounter, size_t &failCounter)
     EXPOP_TEST_VALUE(FileSystem::fileExists("lilylibtest.poop"), false);
 }
 
+inline void doParserTests(size_t &passCounter, size_t &failCounter)
+{
+    ParserNode *node = new ParserNode();
+    node->setStringValue("dick", "butt");
+    node->setBinaryValue("foo", "bar", 3);
+
+    ParserNode *child = new ParserNode();
+    child->setName("thingy");
+    child->setStringValue("Whatever", "Arghblargh");
+
+    node->addChildToEnd(child);
+
+    cout << *node << endl;
+
+    ostringstream ostr;
+    ostr << *node;
+
+
+    ParserNode *readBack = parseString(ostr.str());
+
+    EXPOP_TEST_VALUE(readBack->getChild(0)->getStringValueDirty("Whatever"), "Arghblargh");
+
+    delete readBack;
+    delete node;
+}
+
 // ----------------------------------------------------------------------
 
 class TimerBlock
@@ -424,6 +451,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Archive");
     doArchiveTests(passCounter, failCounter);
+
+    showSectionHeader("Parser");
+    doParserTests(passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;

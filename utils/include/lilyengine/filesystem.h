@@ -80,6 +80,8 @@ namespace ExPop
 {
     namespace FileSystem
     {
+        class Archive;
+
         /// Get all the files and subdirectories in a directory.
         /// Returns true on success and false on failure.
         bool getAllFiles(const std::string &directory, std::vector<std::string> &names);
@@ -173,12 +175,26 @@ namespace ExPop
         /// success.
         int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree = false);
 
-        /// Add an archive file to fall back on when loading a file from
-        /// the real filesystem fails.
+        /// Add an archive file to fall back on when loading a file
+        /// from the real filesystem fails. This instantiates an
+        /// archive object for the file.
         void addArchiveForSearch(const std::string &archiveFileName);
 
-        /// Remove an archive from the search list.
+        /// Add an archive file to fall back on when loading a file
+        /// from the real filesystem fails. This one adds archive
+        /// objects directly. It takes ownership of the archive, so
+        /// the object will be destroyed when clearSearchArchives() is
+        /// called, or when it is removed from the internal list with
+        /// either version of removeArchiveForSearch().
+        void addArchiveForSearch(Archive *archive);
+
+        /// Remove an archive from the search list by name. Destroys
+        /// the archive object.
         void removeArchiveForSearch(const std::string &archiveFileName);
+
+        /// Remove an archive from the search list by pointer.
+        /// Destroys the archive object.
+        void removeArchiveForSearch(Archive *archive);
 
         /// Remove all archives from the search list.
         void clearSearchArchives(void);
@@ -744,21 +760,28 @@ namespace ExPop
             return 0;
         }
 
-        inline void addArchiveForSearch(const std::string &archiveFileName)
+        inline void addArchiveForSearch(Archive *archive)
         {
             getArchivesMutex().lock();
+            getSearchArchives().push_back(archive);
+            getArchivesMutex().unlock();
+        }
 
+        inline void addArchiveForSearch(const std::string &archiveFileName)
+        {
             // We'll be comparing filenames, so store a fixed version that
             // will be consistent.
             std::string fixedFileName = fixFileName(archiveFileName);
 
             // Bail out if it's already in there.
+            getArchivesMutex().lock();
             for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                 if(getSearchArchives()[i]->getMyFileName() == fixedFileName) {
                     getArchivesMutex().unlock();
                     return;
                 }
             }
+            getArchivesMutex().unlock();
 
             Archive *newArch = new Archive(fixedFileName, false);
 
@@ -770,11 +793,31 @@ namespace ExPop
             } else {
 
                 // Add the new archive.
-                getSearchArchives().push_back(newArch);
+                addArchiveForSearch(newArch);
             }
 
-            getArchivesMutex().unlock();
+        }
 
+        // This one is called by both versions of
+        // removeArchiveForSearch. Does no locking, so it's not thread
+        // safe. Don't call it directly unless you have a very good
+        // reason.
+        inline void removeArchiveForSearch_internal(Archive *archive)
+        {
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                if(getSearchArchives()[i] == archive) {
+                    getSearchArchives().erase(getSearchArchives().begin() + i);
+                    delete archive;
+                    return;
+                }
+            }
+        }
+
+        inline void removeArchiveForSearch(Archive *archive)
+        {
+            getArchivesMutex().lock();
+            removeArchiveForSearch_internal(archive);
+            getArchivesMutex().unlock();
         }
 
         inline void removeArchiveForSearch(const std::string &archiveFileName)
@@ -783,9 +826,8 @@ namespace ExPop
 
             for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                 if(getSearchArchives()[i]->getMyFileName() == archiveFileName) {
-                    delete getSearchArchives()[i];
-                    getSearchArchives().erase(getSearchArchives().begin() + i);
-
+                    Archive *archive = getSearchArchives()[i];
+                    removeArchiveForSearch_internal(archive);
                     getArchivesMutex().unlock();
                     return;
                 }

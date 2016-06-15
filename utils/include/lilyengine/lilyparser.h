@@ -29,6 +29,10 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <map>
@@ -36,12 +40,19 @@
 #include <string>
 #include <sstream>
 
-namespace ExPop {
+#include "malstring.h"
+#include "filesystem.h"
 
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     /// Parser node. Stores information in a hierarchy and can be
     /// saved to or read from text.
-    class ParserNode {
-
+    class ParserNode
+    {
     public:
 
         /// Get the name of this node. Top-level nodes will be named
@@ -209,7 +220,7 @@ namespace ExPop {
     /// compliant. Actually, it's more just an XML-like language.
     ParserNode *parseXmlString(const std::string &str, std::string *errorStr = NULL);
 
-    /// Parse a JSON string. Not fully standards compliant.
+    /// Parse a JSON string. Not standards compliant.
     ParserNode *parseJsonString(const std::string &str, std::string *errorStr = NULL);
 
     /// Output to an ostream.
@@ -217,11 +228,12 @@ namespace ExPop {
 
     // TODO: istream input.
 
-    // /// Load and parse a file.
-    // ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr = NULL);
+    /// Load and parse a file.
+    ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr = NULL);
 
     /// Internal token. Used by multiple parser modules.
-    class ParserToken {
+    class ParserToken
+    {
     public:
         ParserToken(const std::string &str, int type, int lineNumber);
         ParserToken(char c, int lineNumber);
@@ -232,3 +244,803 @@ namespace ExPop {
     };
 
 }
+
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
+    // Utility functions.
+
+    inline bool parserIsSymbolCharacter(char c)
+    {
+        if((c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9') ||
+           (c == '_')) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    inline bool parserIsNumberCharacter(char c)
+    {
+        if((c >= '0' && c <= '9') ||
+           c == '.' ||
+           c == '-') {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    enum ParserTokenType
+    {
+        PT_UNKNOWN,
+
+        PT_BLOCKSTART,
+        PT_BLOCKEND,
+
+        PT_EQUALS,
+        PT_LINEEND,
+
+        PT_SYMBOL,
+        PT_STRING,
+        PT_NUMBER,
+    };
+
+    inline void parserIndentOutput(ostream &out, int indentLevel)
+    {
+        for(int i = 0; i < indentLevel; i++) {
+            out << "    ";
+        }
+    }
+
+    inline std::string escapeCDATA(const std::string &str)
+    {
+        ostringstream outStr;
+
+        unsigned int pos = 0;
+
+        while(pos < str.size()) {
+
+            if(pos + 3 < str.size() &&
+               str[pos] == ']' &&
+               str[pos+1] == ']' &&
+               str[pos+2] == '>') {
+
+                outStr << "]]]><![CDATA[]>";
+                pos += 3;
+
+            } else {
+
+                outStr << str[pos];
+                pos++;
+            }
+
+        }
+
+        return outStr.str();
+
+    }
+
+    // ParserNode implementation.
+
+    inline std::string ParserNode::getName(void) const
+    {
+        return name;
+    }
+
+    inline void ParserNode::setName(const std::string &name)
+    {
+        this->name = name;
+    }
+
+    inline ParserNode *ParserNode::getChild(int index)
+    {
+        if(index >= (int)children.size() || index < 0) {
+            return NULL;
+        }
+        return children[index];
+    }
+
+    inline const ParserNode *ParserNode::getChild(int index) const
+    {
+        if(index >= (int)children.size() || index < 0) {
+            return NULL;
+        }
+        return children[index];
+    }
+
+    inline int ParserNode::getNumChildren(void) const
+    {
+        return (int)children.size();
+    }
+
+    inline void ParserNode::addChildToEnd(ParserNode *node)
+    {
+        children.push_back(node);
+    }
+
+    inline void ParserNode::addChildToStart(ParserNode *node)
+    {
+        children.insert(children.begin(), node);
+    }
+
+    inline void ParserNode::output(ostream &out, int indentLevel) const
+    {
+        // Print all values.
+        bool atLeastOneValue = false;
+        for(std::map<std::string, std::string>::const_iterator i = values.begin(); i != values.end(); i++) {
+            parserIndentOutput(out, indentLevel);
+
+            string escapedOut = stringEscape((*i).second);
+
+            // 80 columns, minus...
+            //   indentation spaces
+            //   spaces on either side of "="
+            //   '='
+            //   ';'
+            //   quotes for the string
+            //   the name of the value
+            int maxLength = 80 - ((indentLevel * 4) + 6 + (*i).first.size());
+
+            if((int)escapedOut.size() > maxLength) {
+
+                // This line is too long. We need to break this up.
+
+                // First line is just "name = "
+                out << (*i).first << " = " << endl;
+
+                string indented;
+                for(int j = 0; j < indentLevel + 1; j++) {
+                    indented = indented + "    ";
+                }
+
+                escapedOut = stringEscape(
+                    // (*i).second, "\\n\"\n" + indented + "\"");
+                    (*i).second, true);
+
+                out << indented << "\"" << escapedOut << "\";" << endl;
+
+            } else {
+
+                // We can fit this on one line.
+                out << (*i).first << " = \"" << escapedOut << "\";" << endl;
+            }
+
+            atLeastOneValue = true;
+        }
+
+        // Add some space before the children.
+        if(atLeastOneValue && children.size()) {
+            out << endl;
+        }
+
+        // Print all children.
+        for(size_t cn = 0; cn < children.size(); cn++) {
+
+            parserIndentOutput(out, indentLevel);
+
+            if(children[cn]->name.size()) {
+                out << children[cn]->name << " ";
+            } else {
+                out << "null " << endl;
+            }
+
+            out << "{" << endl;
+
+            children[cn]->output(out, indentLevel + 1);
+
+            parserIndentOutput(out, indentLevel);
+            out << "}" << endl;
+
+            // Add a line between children.
+            if(cn + 1 != children.size()) {
+                out << endl;
+            }
+        }
+    }
+
+    inline void ParserNode::outputXml(std::ostream &out, int indentLevel) const
+    {
+        parserIndentOutput(out, indentLevel);
+
+        bool headerOnly = false;
+        if(getName() == "_root") {
+            headerOnly = true;
+            out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
+
+            // This will actually wrap around to 0xFFFFFFFF or
+            // somesuch, but whatever.
+            indentLevel--;
+        }
+
+        if(getName() == "_text") {
+
+            string outStr;
+
+            // Check for leading or trailing whitespace so we know if
+            // we need CDATA.
+            bool useCDATA = false;
+            string textStr = getStringValueDirty("text");
+            if(textStr.size() && (isWhiteSpace(textStr[0]) || isWhiteSpace(textStr[textStr.size() - 1]))) {
+                useCDATA = true;
+            }
+
+            if(useCDATA) {
+                out << "<![CDATA[" << escapeCDATA(textStr) << "]]>" << endl;
+            } else {
+                out << stringXmlEscape(textStr) << endl;
+            }
+
+        } else {
+
+            bool hadAttributes = false;
+
+            if(!headerOnly) {
+
+                out << "<" << getName();
+
+                // Output attributes.
+                bool firstAttrib = false;
+                for(map<string, string>::const_iterator i = values.begin(); i != values.end(); i++) {
+
+                    if(firstAttrib) {
+                        firstAttrib = false;
+                    } else {
+                        out << " ";
+                    }
+
+                    out << i->first << "=\"" << stringXmlEscape(i->second) << "\"";
+                    hadAttributes = true;
+                }
+            }
+
+            // Output children.
+            if(getNumChildren()) {
+
+                // Finish the starting tag.
+                if(!headerOnly) {
+                    out << ">" << endl;
+                }
+
+                for(int i = 0; i < getNumChildren(); i++) {
+                    children[i]->outputXml(out, indentLevel + 1);
+                }
+
+                parserIndentOutput(out, indentLevel);
+
+                // End tag.
+                if(!headerOnly) {
+                    out << "</" << getName() << ">" << endl;
+                }
+
+            } else {
+
+                if(!headerOnly) {
+                    out << (hadAttributes ? " " : "") << "/>" << endl;
+                }
+            }
+        }
+    }
+
+    inline ParserNode::~ParserNode(void)
+    {
+        for(unsigned int cn = 0; cn < children.size(); cn++) {
+            delete children[cn];
+        }
+    }
+
+    inline std::string ParserNode::toString(void) const
+    {
+        ostringstream str;
+        output(str, 0);
+        return str.str();
+    }
+
+    inline bool ParserNode::getBooleanValue(const std::string &name, bool *value) const
+    {
+        if(values.count(name)) {
+            string val = values.find(name)->second;
+            if(val == "false" || val == "0" || val == "") {
+                *value = false;
+            } else {
+                *value = true;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    inline bool ParserNode::getStringValue(const std::string &name, std::string *value) const
+    {
+        if(values.count(name)) {
+            string val = values.find(name)->second;
+            *value = val;
+            return true;
+        }
+        return false;
+    }
+
+    inline std::string ParserNode::getStringValueDirty(const std::string &name) const
+    {
+        string str = "";
+        getStringValue(name, &str);
+        return str;
+    }
+
+    inline bool ParserNode::getFloatValue(const std::string &name, float *value) const
+    {
+        if(values.count(name)) {
+            string val = values.find(name)->second;
+            *value = atof(val.c_str());
+            return true;
+        }
+        return false;
+    }
+
+    inline bool ParserNode::getIntValue(const std::string &name, int *value) const
+    {
+        if(values.count(name)) {
+            string val = values.find(name)->second;
+            *value = atoi(val.c_str());
+            return true;
+        }
+        return false;
+    }
+
+    inline bool ParserNode::getBinaryValue(const std::string &name, char **buf, int *length) const
+    {
+        if(values.count(name)) {
+            *buf = strDecodeHex(values.find(name)->second, length);
+            return true;
+        }
+        return false;
+    }
+
+    inline void ParserNode::setBinaryValue(const std::string &name, const char *buf, int length)
+    {
+        strEncodeHex(buf, length, values[name], 40);
+    }
+
+    inline void ParserNode::setBooleanValue(const std::string &name, bool value)
+    {
+        ostringstream str;
+        str << (value ? "true" : "false");
+        values[name] = str.str();
+    }
+
+    inline void ParserNode::setStringValue(const std::string &name, const std::string &value)
+    {
+        values[name] = value;
+    }
+
+    inline void ParserNode::setFloatValue(const std::string &name, float value)
+    {
+        ostringstream str;
+        str << value;
+        values[name] = str.str();
+    }
+
+    inline void ParserNode::setIntValue(const std::string &name, int value)
+    {
+        ostringstream str;
+        str << value;
+        values[name] = str.str();
+    }
+
+    inline void ParserNode::clearValue(const std::string &name)
+    {
+        values.erase(name);
+    }
+
+    inline void ParserNode::getValueNames(std::vector<std::string> &names) const
+    {
+        for(std::map<std::string, std::string>::const_iterator i = values.begin();
+            i != values.end(); i++) {
+            names.push_back((*i).first);
+        }
+    }
+
+    inline int ParserNode::getChildIndexByName(const std::string &name, int after)
+    {
+        if(after < -1 || after >= int(children.size()) - 1) {
+            return int(children.size());
+        }
+
+        for(int i = after + 1; i < int(children.size()); i++) {
+            if(children[i] && children[i]->name == name) {
+                return i;
+            }
+        }
+
+        return int(children.size());
+    }
+
+    inline ParserNode *ParserNode::getChildByName(const std::string &name)
+    {
+        return getChild(getChildIndexByName(name));
+    }
+
+    inline ostream &operator<<(ostream &out, const ParserNode &node)
+    {
+        node.output(out, 0);
+        return out;
+    }
+
+    inline ParserNode::ParserNode(void)
+    {
+        name = "null";
+    }
+
+    inline ParserNode::ParserNode(const std::string &name)
+    {
+        this->name = name;
+    }
+
+    inline ParserNode *ParserNode::clone() const
+    {
+        ParserNode *newNode = new ParserNode(getName());
+        newNode->values = values;
+        for(size_t i = 0; i < children.size(); i++) {
+            ParserNode *newChild = nullptr;
+            if(children[i]) {
+                newChild = children[i]->clone();
+            }
+            newNode->children.push_back(newChild);
+        }
+
+        return newNode;
+    }
+
+    // Parser implementation.
+
+    inline ParserToken::ParserToken(const std::string &str, int type, int lineNumber)
+    {
+        this->str = str;
+        this->type = type;
+        this->lineNumber = lineNumber;
+    }
+
+    inline ParserToken::ParserToken(char c, int lineNumber)
+    {
+        // This seems oddly the simplest way to do this...
+        str = " ";
+        str[0] = c;
+        this->type = PT_UNKNOWN;
+        this->lineNumber = lineNumber;
+    }
+
+    inline ParserNode *parseTokens(
+        const std::vector<ParserToken*> &tokens,
+        const std::string &nodeName,
+        int *pos, std::string *errorStr)
+    {
+        ParserNode *node = new ParserNode();
+        node->setName(nodeName);
+
+        while(*pos < (int)tokens.size()) {
+
+            int tokensLeft = (int)tokens.size() - *pos;
+
+            if(tokensLeft >= 4 &&
+               tokens[*pos    ]->type == PT_SYMBOL &&
+               tokens[*pos + 1]->type == PT_EQUALS &&
+               (   tokens[*pos + 2]->type == PT_SYMBOL ||
+                   tokens[*pos + 2]->type == PT_NUMBER ||
+                   tokens[*pos + 2]->type == PT_STRING) &&
+               tokens[*pos + 3]->type == PT_LINEEND) {
+
+                // Something in the form of: symbol = "someValue";
+
+                node->setStringValue(tokens[*pos]->str, tokens[*pos + 2]->str);
+
+                (*pos) += 4;
+
+            } else if(tokensLeft >=2 &&
+                      tokens[*pos]->type == PT_SYMBOL &&
+                      tokens[*pos + 1]->type == PT_LINEEND) {
+
+                // Simple boolean flag.
+
+                node->setBooleanValue(tokens[*pos]->str, true);
+
+                (*pos) += 2;
+
+            } else if(tokensLeft >= 2 &&
+                      tokens[*pos]->type == PT_SYMBOL &&
+                      tokens[*pos + 1]->type == PT_BLOCKSTART) {
+
+                // Recurse into a child thinger.
+
+                string childNodeName = tokens[*pos]->str;
+
+                (*pos) += 2;
+
+                ParserNode *childNode = parseTokens(tokens, childNodeName, pos, errorStr);
+
+                if(childNode) {
+
+                    node->addChildToEnd(childNode);
+
+                } else {
+
+                    // An error happened when parsing the child. Clean
+                    // up and return.
+                    delete node;
+                    return NULL;
+                }
+
+            } else if(tokensLeft >= 1 && tokens[*pos]->type == PT_BLOCKEND) {
+
+                // Done with this block!
+                (*pos)++;
+
+                break;
+
+            } else {
+
+                // I don't know what this is. Toss out an error message
+                // and bail out.
+                if(errorStr) {
+                    ostringstream errStrStr;
+                    errStrStr << "Syntax error at: \"" << tokens[*pos]->str << "\" on line " << tokens[*pos]->lineNumber;
+                    *errorStr = errStrStr.str();
+                }
+
+                delete node;
+                return NULL;
+
+            }
+
+        }
+
+        return node;
+    }
+
+    inline ParserNode *parseBuffer(const char *buf, int length, std::string *errorStr)
+    {
+        // First, tokenize.
+
+        vector<ParserToken*> tokens;
+
+        int pos = 0;
+        int lineNumber = 0;
+
+        while(pos < length) {
+
+            char c = buf[pos];
+
+            if(isWhiteSpace(c)) {
+
+                if(c == '\n') {
+                    lineNumber++;
+                }
+
+                // Just whitespace. Ignore it.
+                pos++;
+
+            } else if(
+                (c == '#') ||                                       // Bash comment
+                (c == '/' && pos + 1 < length && buf[pos+1] == '/') // C++ comment
+                ) {
+
+                // Comment. Read until end of line or file.
+
+                while(pos < length && c != '\n') {
+                    pos++;
+                    c = buf[pos];
+                }
+
+                // Note: Don't skip over the \n. Let the line number
+                // counter get it next pass.
+
+            } else if(parserIsNumberCharacter(c)) {
+
+                // Number. Go to end of number.
+
+                int numberStartPos = pos;
+
+                while(pos < length && parserIsNumberCharacter(c)) {
+                    pos++;
+                    c = buf[pos];
+                }
+
+                int numberLength = pos - numberStartPos;
+                char *numberCStr = new char[numberLength + 1];
+                strncpy(numberCStr, buf + numberStartPos, numberLength);
+                numberCStr[numberLength] = 0;
+
+                tokens.push_back(new ParserToken(numberCStr, PT_NUMBER, lineNumber));
+
+                delete[] numberCStr;
+
+            } else if(parserIsSymbolCharacter(c)) {
+
+                // Start of a symbol. Go to end of symbol.
+
+                int symbolStartPos = pos;
+
+                while(pos < length && parserIsSymbolCharacter(c)) {
+                    pos++;
+                    c = buf[pos];
+                }
+
+                int symbolLength = pos - symbolStartPos;
+                char *symbolCStr = new char[symbolLength + 1];
+                strncpy(symbolCStr, buf + symbolStartPos, symbolLength);
+                symbolCStr[symbolLength] = 0;
+
+                tokens.push_back(new ParserToken(symbolCStr, PT_SYMBOL, lineNumber));
+
+                delete[] symbolCStr;
+
+            } else if(c == '"') {
+
+                // Start of a quote block thinger.
+
+                int consecutiveBackSlashes = 0;
+                int quoteStartPos = pos;
+
+                while(pos < length) {
+                    pos++;
+                    c = buf[pos];
+
+                    if(c == '"') {
+
+                        // As long as we have an even number of slashes,
+                        // the quote isn't escaped. I think.
+                        if(consecutiveBackSlashes % 2 == 0) {
+                            break;
+                        }
+                    }
+
+                    if(c == '\\') {
+                        consecutiveBackSlashes++;
+                    } else {
+                        consecutiveBackSlashes = 0;
+                    }
+                }
+
+                int quoteLength = pos - quoteStartPos;
+                char *quoteCStr = new char[quoteLength + 1];
+                strncpy(quoteCStr, buf + quoteStartPos, quoteLength);
+                quoteCStr[quoteLength] = 0;
+
+                tokens.push_back(new ParserToken(
+                        stringUnescape<char>(quoteCStr + 1),
+                        PT_STRING, lineNumber));
+
+                delete[] quoteCStr;
+
+                // Move OFF the last quote.
+                pos++;
+
+            } else {
+
+                // All the single-character special tokens.
+
+                ParserToken *pt = new ParserToken(c, lineNumber);
+
+                switch(c) {
+
+                case '{':
+                    pt->type = PT_BLOCKSTART;
+                    break;
+
+                case '}':
+                    pt->type = PT_BLOCKEND;
+                    break;
+
+                case '=':
+                    pt->type = PT_EQUALS;
+                    break;
+
+                case ';':
+                    pt->type = PT_LINEEND;
+                    break;
+
+                default:
+
+                    // Spew out an error and bail out.
+                    if(errorStr) {
+                        ostringstream errStrStr;
+                        errStrStr << "Unknown character token: \'" << c << "\' (0x" << std::hex << int(c) << ") on line " << lineNumber;
+                        *errorStr = errStrStr.str();
+                    }
+
+                    delete pt;
+
+                    // Clean up.
+                    for(unsigned int i = 0; i < tokens.size(); i++) {
+                        delete tokens[i];
+                    }
+
+                    return NULL;
+                }
+
+                tokens.push_back(pt);
+                pos++;
+            }
+
+        }
+
+        // At this point, concatenate strings that are adjacent to
+        // each other. (Like in C, saying "Foo" "Bar" really means
+        // "FooBar".)
+        vector<ParserToken*> tokensCombined;
+        unsigned int i = 0;
+        while(i < tokens.size()) {
+
+            while(i < tokens.size() && tokens[i]->type != PT_STRING) {
+                tokensCombined.push_back(tokens[i]);
+                tokens[i] = NULL;
+                i++;
+            }
+
+            bool atLeastOne = false;
+            int lineNo = -1;
+            ostringstream str;
+            while(i < tokens.size() && tokens[i]->type == PT_STRING) {
+                if(!atLeastOne) {
+                    atLeastOne = true;
+                    lineNo = tokens[i]->lineNumber;
+                }
+                str << tokens[i]->str;
+                i++;
+            }
+
+            if(atLeastOne) {
+                ParserToken *pt = new ParserToken(str.str(), PT_STRING, lineNo);
+                tokensCombined.push_back(pt);
+            }
+        }
+
+        // Now do some simple not-really-grammars.
+
+        pos = 0;
+
+        ParserNode *node = parseTokens(tokensCombined, "root", &pos, errorStr);
+
+        // Clean up. (Just string tokens left over from combining step.)
+        for(unsigned int i = 0; i < tokens.size(); i++) {
+            if(tokens[i]) {
+                delete tokens[i];
+            }
+        }
+
+        // Clean up.
+        for(unsigned int i = 0; i < tokensCombined.size(); i++) {
+            if(tokensCombined[i]) {
+                delete tokensCombined[i];
+            }
+        }
+
+        return node;
+    }
+
+    inline ParserNode *parseString(const std::string &str, std::string *errorStr)
+    {
+        return parseBuffer(str.c_str(), str.size(), errorStr);
+    }
+
+    inline ParserNode *loadAndParse(const std::string &fileName, std::string *errorStr)
+    {
+        ParserNode *node = nullptr;
+        std::string fileData = FileSystem::loadFileString(fileName);
+
+        if(fileData.size()) {
+            node = parseString(fileData, errorStr);
+        } else if(errorStr) {
+            *errorStr = "Failed to open file";
+        }
+
+        return node;
+    }
+}
+
