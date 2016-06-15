@@ -342,6 +342,7 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
     node->addChildToEnd(child);
 
     cout << *node << endl;
+    node->outputXml(cout, 0);
 
     ostringstream ostr;
     ostr << *node;

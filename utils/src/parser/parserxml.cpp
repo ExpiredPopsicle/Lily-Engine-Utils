@@ -29,121 +29,10 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-#include <iostream>
-#include <sstream>
-#include <cstdarg>
+#include <lilyengine/lilyparserxml.h>
 using namespace std;
 
-#include <lilyengine/malstring.h>
-#include <lilyengine/lilyparser.h>
-
 namespace ExPop {
-
-    enum XmlTokenType {
-        XMLTOKEN_EQUALS,
-        XMLTOKEN_LT,
-        XMLTOKEN_GT,
-        XMLTOKEN_SLASH,
-        XMLTOKEN_IDENTIFIER,
-        XMLTOKEN_QUOTEDSTRING,
-        XMLTOKEN_BANG,
-        XMLTOKEN_MINUS,
-        XMLTOKEN_QUESTION,
-        XMLTOKEN_WHITESPACE,
-        XMLTOKEN_WHAT,
-        XMLTOKEN_TEXT,
-        XMLTOKEN_COMMENTSTART,
-        XMLTOKEN_COMMENTEND,
-        XMLTOKEN_CDATA
-    };
-
-    class XmlToken {
-    public:
-        string str;
-        XmlTokenType type;
-        unsigned int lineNumber;
-
-        XmlToken(const std::string &inStr, XmlTokenType type, int lineNumber) {
-            this->str = inStr;
-            this->type = type;
-            this->lineNumber = lineNumber;
-        }
-    };
-
-    // Start this one character in from the quote mark.
-    static void readQuotedString(const std::string &str, unsigned int &pos, string &outStr, unsigned int &lineNumber) {
-
-        bool ignoreNext = false;
-        unsigned int startPos = pos;
-
-        while(pos < str.size() && (str[pos] != '"' || ignoreNext)) {
-
-            if(str[pos] == '\\' && !ignoreNext) {
-                ignoreNext = true;
-            } else {
-                ignoreNext = false;
-            }
-
-            if(str[pos] == '\n') lineNumber++;
-
-            pos++;
-        }
-
-        outStr = str.substr(startPos, pos - startPos);
-
-    }
-
-    static bool isValidIdentifierCharacter(char c) {
-        if(c >= 'a' && c <= 'z') return true;
-        if(c >= 'A' && c <= 'Z') return true;
-        if(c >= '0' && c <= '9') return true;
-        if(c == ':' || c == '_' || c == '-' || (c & 0x10000000)) return true;
-        return false;
-    }
-
-    static void readIdentifier(const std::string &str, unsigned int &pos, std::string &outStr) {
-
-        unsigned int startPos = pos;
-
-        while(pos < str.size()) {
-            if(!isValidIdentifierCharacter(str[pos])) {
-                break;
-            }
-            pos++;
-        }
-
-        outStr = str.substr(startPos, pos - startPos);
-
-        // Leave us pointing at the last character instead of the
-        // character after the end (because pos++ will happen in the main
-        // block at the end of the loop iteration).
-        pos--;
-    }
-
-    static bool readAheadTokenTypes(
-        vector<XmlToken*> &tokens,
-        unsigned int start,
-        unsigned int count,
-        ...) {
-
-        if(tokens.size() <= start + count - 1) return false;
-
-        va_list argList;
-        va_start(argList, count);
-
-        // FIXME: MinGW build complains about unsigned/signed
-        // comparison here.
-        while(count && tokens[start]->type == va_arg(argList, unsigned int)) {
-            start++;
-            count--;
-        }
-
-        va_end(argList);
-
-        if(!count) return true;
-
-        return false;
-    }
 
     static void parseTag(
         vector<XmlToken*> &tokens,
@@ -153,7 +42,7 @@ namespace ExPop {
         ostringstream &errorOut) {
 
         // Read in all attributes.
-        while(readAheadTokenTypes(
+        while(parserXmlReadAheadTokenTypes(
                   tokens, tokNum, 3,
                   XMLTOKEN_IDENTIFIER,
                   XMLTOKEN_EQUALS,
@@ -168,7 +57,7 @@ namespace ExPop {
         }
 
         // Look for self-terminating stuff.
-        if(readAheadTokenTypes(
+        if(parserXmlReadAheadTokenTypes(
                tokens, tokNum, 1,
                XMLTOKEN_SLASH)) {
 
@@ -179,7 +68,7 @@ namespace ExPop {
         }
 
         // Look for the end of the tag.
-        if(!readAheadTokenTypes(
+        if(!parserXmlReadAheadTokenTypes(
                tokens, tokNum, 1,
                XMLTOKEN_GT)) {
 
@@ -241,7 +130,7 @@ namespace ExPop {
                     nodeStack[nodeStack.size()-1]->addChildToEnd(newNode);
                 }
 
-            } else if(readAheadTokenTypes(
+            } else if(parserXmlReadAheadTokenTypes(
                           tokens, tokNum, 2,
                           XMLTOKEN_LT,
                           XMLTOKEN_IDENTIFIER)) {
@@ -261,7 +150,7 @@ namespace ExPop {
                     nodeStack.push_back(newNode);
                 }
 
-            } else if(readAheadTokenTypes(
+            } else if(parserXmlReadAheadTokenTypes(
                           tokens, tokNum, 4,
                           XMLTOKEN_LT,
                           XMLTOKEN_SLASH,
@@ -430,7 +319,7 @@ namespace ExPop {
 
                     // Quoted string.
                     pos++;
-                    readQuotedString(str, pos, strTmp, lineNumber);
+                    parserXmlReadQuotedString(str, pos, strTmp, lineNumber);
                     tokens.push_back(new XmlToken(stringXmlUnescape(strTmp), XMLTOKEN_QUOTEDSTRING, lineNumber));
 
                 } else if(str[pos] == '=') {
@@ -443,10 +332,10 @@ namespace ExPop {
                     // Slash.
                     tokens.push_back(new XmlToken("/", XMLTOKEN_SLASH, lineNumber));
 
-                } else if(isValidIdentifierCharacter(str[pos])) {
+                } else if(parserXmlIsValidIdentifierCharacter(str[pos])) {
 
                     // Normal identifier.
-                    readIdentifier(str, pos, strTmp);
+                    parserXmlReadIdentifier(str, pos, strTmp);
                     tokens.push_back(new XmlToken(strTmp, XMLTOKEN_IDENTIFIER, lineNumber));
 
                 } else if(str[pos] == '!') {
@@ -486,14 +375,14 @@ namespace ExPop {
         // Skip past any XML declarations because we just don't care about
         // them.
         while(tokNum < tokens.size() &&
-              readAheadTokenTypes(
+              parserXmlReadAheadTokenTypes(
                   tokens, tokNum, 2,
                   XMLTOKEN_LT,
                   XMLTOKEN_QUESTION)) {
 
             tokNum += 2;
 
-            while(!readAheadTokenTypes(
+            while(!parserXmlReadAheadTokenTypes(
                       tokens, tokNum, 2,
                       XMLTOKEN_QUESTION,
                       XMLTOKEN_GT)) {

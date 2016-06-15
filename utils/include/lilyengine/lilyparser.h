@@ -29,6 +29,16 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// This is a hierarchical text data format.
+
+// It's hierarchical like XML, but without the horrible syntax. Having
+// said that, there's a module for it to read in or write out XML-like
+// syntax. It does not pretend to be standards compliant.
+
+// There's also a JSON-like module, but the representation of the data
+// gets a little weird. We don't have arrays the same way JSON does,
+// so it fakes it with some specially named nodes, for instance.
+
 // ----------------------------------------------------------------------
 // Needed headers
 // ----------------------------------------------------------------------
@@ -293,7 +303,7 @@ namespace ExPop
         PT_NUMBER,
     };
 
-    inline void parserIndentOutput(ostream &out, int indentLevel)
+    inline void parserIndentOutput(std::ostream &out, int indentLevel)
     {
         for(int i = 0; i < indentLevel; i++) {
             out << "    ";
@@ -302,7 +312,7 @@ namespace ExPop
 
     inline std::string escapeCDATA(const std::string &str)
     {
-        ostringstream outStr;
+        std::ostringstream outStr;
 
         unsigned int pos = 0;
 
@@ -371,14 +381,14 @@ namespace ExPop
         children.insert(children.begin(), node);
     }
 
-    inline void ParserNode::output(ostream &out, int indentLevel) const
+    inline void ParserNode::output(std::ostream &out, int indentLevel) const
     {
         // Print all values.
         bool atLeastOneValue = false;
         for(std::map<std::string, std::string>::const_iterator i = values.begin(); i != values.end(); i++) {
             parserIndentOutput(out, indentLevel);
 
-            string escapedOut = stringEscape((*i).second);
+            std::string escapedOut = stringEscape((*i).second);
 
             // 80 columns, minus...
             //   indentation spaces
@@ -394,9 +404,9 @@ namespace ExPop
                 // This line is too long. We need to break this up.
 
                 // First line is just "name = "
-                out << (*i).first << " = " << endl;
+                out << (*i).first << " = " << std::endl;
 
-                string indented;
+                std::string indented;
                 for(int j = 0; j < indentLevel + 1; j++) {
                     indented = indented + "    ";
                 }
@@ -405,12 +415,12 @@ namespace ExPop
                     // (*i).second, "\\n\"\n" + indented + "\"");
                     (*i).second, true);
 
-                out << indented << "\"" << escapedOut << "\";" << endl;
+                out << indented << "\"" << escapedOut << "\";" << std::endl;
 
             } else {
 
                 // We can fit this on one line.
-                out << (*i).first << " = \"" << escapedOut << "\";" << endl;
+                out << (*i).first << " = \"" << escapedOut << "\";" << std::endl;
             }
 
             atLeastOneValue = true;
@@ -418,7 +428,7 @@ namespace ExPop
 
         // Add some space before the children.
         if(atLeastOneValue && children.size()) {
-            out << endl;
+            out << std::endl;
         }
 
         // Print all children.
@@ -429,19 +439,19 @@ namespace ExPop
             if(children[cn]->name.size()) {
                 out << children[cn]->name << " ";
             } else {
-                out << "null " << endl;
+                out << "null " << std::endl;
             }
 
-            out << "{" << endl;
+            out << "{" << std::endl;
 
             children[cn]->output(out, indentLevel + 1);
 
             parserIndentOutput(out, indentLevel);
-            out << "}" << endl;
+            out << "}" << std::endl;
 
             // Add a line between children.
             if(cn + 1 != children.size()) {
-                out << endl;
+                out << std::endl;
             }
         }
     }
@@ -453,7 +463,7 @@ namespace ExPop
         bool headerOnly = false;
         if(getName() == "_root") {
             headerOnly = true;
-            out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
+            out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << std::endl;
 
             // This will actually wrap around to 0xFFFFFFFF or
             // somesuch, but whatever.
@@ -462,20 +472,20 @@ namespace ExPop
 
         if(getName() == "_text") {
 
-            string outStr;
+            std::string outStr;
 
             // Check for leading or trailing whitespace so we know if
             // we need CDATA.
             bool useCDATA = false;
-            string textStr = getStringValueDirty("text");
+            std::string textStr = getStringValueDirty("text");
             if(textStr.size() && (isWhiteSpace(textStr[0]) || isWhiteSpace(textStr[textStr.size() - 1]))) {
                 useCDATA = true;
             }
 
             if(useCDATA) {
-                out << "<![CDATA[" << escapeCDATA(textStr) << "]]>" << endl;
+                out << "<![CDATA[" << escapeCDATA(textStr) << "]]>" << std::endl;
             } else {
-                out << stringXmlEscape(textStr) << endl;
+                out << stringXmlEscape(textStr) << std::endl;
             }
 
         } else {
@@ -488,7 +498,7 @@ namespace ExPop
 
                 // Output attributes.
                 bool firstAttrib = false;
-                for(map<string, string>::const_iterator i = values.begin(); i != values.end(); i++) {
+                for(std::map<std::string, std::string>::const_iterator i = values.begin(); i != values.end(); i++) {
 
                     if(firstAttrib) {
                         firstAttrib = false;
@@ -506,7 +516,7 @@ namespace ExPop
 
                 // Finish the starting tag.
                 if(!headerOnly) {
-                    out << ">" << endl;
+                    out << ">" << std::endl;
                 }
 
                 for(int i = 0; i < getNumChildren(); i++) {
@@ -517,13 +527,13 @@ namespace ExPop
 
                 // End tag.
                 if(!headerOnly) {
-                    out << "</" << getName() << ">" << endl;
+                    out << "</" << getName() << ">" << std::endl;
                 }
 
             } else {
 
                 if(!headerOnly) {
-                    out << (hadAttributes ? " " : "") << "/>" << endl;
+                    out << (hadAttributes ? " " : "") << "/>" << std::endl;
                 }
             }
         }
@@ -538,7 +548,7 @@ namespace ExPop
 
     inline std::string ParserNode::toString(void) const
     {
-        ostringstream str;
+        std::ostringstream str;
         output(str, 0);
         return str.str();
     }
@@ -546,7 +556,7 @@ namespace ExPop
     inline bool ParserNode::getBooleanValue(const std::string &name, bool *value) const
     {
         if(values.count(name)) {
-            string val = values.find(name)->second;
+            std::string val = values.find(name)->second;
             if(val == "false" || val == "0" || val == "") {
                 *value = false;
             } else {
@@ -560,7 +570,7 @@ namespace ExPop
     inline bool ParserNode::getStringValue(const std::string &name, std::string *value) const
     {
         if(values.count(name)) {
-            string val = values.find(name)->second;
+            std::string val = values.find(name)->second;
             *value = val;
             return true;
         }
@@ -569,7 +579,7 @@ namespace ExPop
 
     inline std::string ParserNode::getStringValueDirty(const std::string &name) const
     {
-        string str = "";
+        std::string str = "";
         getStringValue(name, &str);
         return str;
     }
@@ -577,7 +587,7 @@ namespace ExPop
     inline bool ParserNode::getFloatValue(const std::string &name, float *value) const
     {
         if(values.count(name)) {
-            string val = values.find(name)->second;
+            std::string val = values.find(name)->second;
             *value = atof(val.c_str());
             return true;
         }
@@ -587,7 +597,7 @@ namespace ExPop
     inline bool ParserNode::getIntValue(const std::string &name, int *value) const
     {
         if(values.count(name)) {
-            string val = values.find(name)->second;
+            std::string val = values.find(name)->second;
             *value = atoi(val.c_str());
             return true;
         }
@@ -610,7 +620,7 @@ namespace ExPop
 
     inline void ParserNode::setBooleanValue(const std::string &name, bool value)
     {
-        ostringstream str;
+        std::ostringstream str;
         str << (value ? "true" : "false");
         values[name] = str.str();
     }
@@ -622,14 +632,14 @@ namespace ExPop
 
     inline void ParserNode::setFloatValue(const std::string &name, float value)
     {
-        ostringstream str;
+        std::ostringstream str;
         str << value;
         values[name] = str.str();
     }
 
     inline void ParserNode::setIntValue(const std::string &name, int value)
     {
-        ostringstream str;
+        std::ostringstream str;
         str << value;
         values[name] = str.str();
     }
@@ -667,7 +677,7 @@ namespace ExPop
         return getChild(getChildIndexByName(name));
     }
 
-    inline ostream &operator<<(ostream &out, const ParserNode &node)
+    inline std::ostream &operator<<(std::ostream &out, const ParserNode &node)
     {
         node.output(out, 0);
         return out;
@@ -758,7 +768,7 @@ namespace ExPop
 
                 // Recurse into a child thinger.
 
-                string childNodeName = tokens[*pos]->str;
+                std::string childNodeName = tokens[*pos]->str;
 
                 (*pos) += 2;
 
@@ -788,7 +798,7 @@ namespace ExPop
                 // I don't know what this is. Toss out an error message
                 // and bail out.
                 if(errorStr) {
-                    ostringstream errStrStr;
+                    std::ostringstream errStrStr;
                     errStrStr << "Syntax error at: \"" << tokens[*pos]->str << "\" on line " << tokens[*pos]->lineNumber;
                     *errorStr = errStrStr.str();
                 }
@@ -807,7 +817,7 @@ namespace ExPop
     {
         // First, tokenize.
 
-        vector<ParserToken*> tokens;
+        std::vector<ParserToken*> tokens;
 
         int pos = 0;
         int lineNumber = 0;
@@ -949,7 +959,7 @@ namespace ExPop
 
                     // Spew out an error and bail out.
                     if(errorStr) {
-                        ostringstream errStrStr;
+                        std::ostringstream errStrStr;
                         errStrStr << "Unknown character token: \'" << c << "\' (0x" << std::hex << int(c) << ") on line " << lineNumber;
                         *errorStr = errStrStr.str();
                     }
@@ -973,7 +983,7 @@ namespace ExPop
         // At this point, concatenate strings that are adjacent to
         // each other. (Like in C, saying "Foo" "Bar" really means
         // "FooBar".)
-        vector<ParserToken*> tokensCombined;
+        std::vector<ParserToken*> tokensCombined;
         unsigned int i = 0;
         while(i < tokens.size()) {
 
@@ -985,7 +995,7 @@ namespace ExPop
 
             bool atLeastOne = false;
             int lineNo = -1;
-            ostringstream str;
+            std::ostringstream str;
             while(i < tokens.size() && tokens[i]->type == PT_STRING) {
                 if(!atLeastOne) {
                     atLeastOne = true;
