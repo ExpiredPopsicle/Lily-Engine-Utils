@@ -344,15 +344,22 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
     cout << *node << endl;
     node->outputXml(cout, 0);
 
-    ostringstream ostr;
-    ostr << *node;
+    {
+        ostringstream ostr;
+        ostr << *node;
+        ParserNode *readBack = parseString(ostr.str());
+        EXPOP_TEST_VALUE(readBack->getChild(0)->getStringValueDirty("Whatever"), "Arghblargh");
+        delete readBack;
+    }
 
+    {
+        ostringstream ostr;
+        node->outputXml(ostr, 0);
+        ParserNode *readBack = parseXmlString(ostr.str());
+        EXPOP_TEST_VALUE(readBack->getChild(0)->getChild(0)->getStringValueDirty("Whatever"), "Arghblargh");
+        delete readBack;
+    }
 
-    ParserNode *readBack = parseString(ostr.str());
-
-    EXPOP_TEST_VALUE(readBack->getChild(0)->getStringValueDirty("Whatever"), "Arghblargh");
-
-    delete readBack;
     delete node;
 }
 

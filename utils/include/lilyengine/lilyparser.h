@@ -181,7 +181,7 @@ namespace ExPop
             int indentLevel,
             bool lineStart = true) const;
 
-        /// Output this ParserNode and all its children to an XML
+        /// Output this ParserNode and all its children to an XML-like
         /// format.
         void outputXml(std::ostream &out, int indentLevel) const;
 
@@ -224,11 +224,6 @@ namespace ExPop
     /// NULL on error and sets an error description in errorStr if
     /// errorStr is not NULL.
     ParserNode *parseString(const std::string &str, std::string *errorStr = NULL);
-
-    /// Parse a string of XML stuff. Not fully standards
-    /// compliant. Probably not even mostly standards
-    /// compliant. Actually, it's more just an XML-like language.
-    ParserNode *parseXmlString(const std::string &str, std::string *errorStr = NULL);
 
     /// Parse a JSON string. Not standards compliant.
     ParserNode *parseJsonString(const std::string &str, std::string *errorStr = NULL);

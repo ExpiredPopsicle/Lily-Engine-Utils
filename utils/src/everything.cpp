@@ -40,7 +40,5 @@
 // enabled or disabled.
 #include <lilyengine/config.h>
 
-#include "parser/parserxml.cpp"
-
 #include "image/image.cpp"
 
