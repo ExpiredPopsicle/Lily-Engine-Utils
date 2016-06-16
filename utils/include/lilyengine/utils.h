@@ -40,6 +40,7 @@
 #include "angle.h"
 #include "lilyparser.h"
 #include "lilyparserxml.h"
+#include "lilyparserjson.h"
 #include "assetloader.h"
 #include "preprocess.h"
 #include "image.h"

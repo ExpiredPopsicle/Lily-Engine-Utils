@@ -341,8 +341,27 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
 
     node->addChildToEnd(child);
 
+    node->addChildToEnd(parseXmlString("<junk><blagh>HERPDERP</blagh>Whatever</junk>"));
+
+    {
+        std::string badXmlError;
+        ParserNode *badXml = parseXmlString("<bad_xml<", &badXmlError);
+        EXPOP_TEST_VALUE(!badXmlError.size(), 0);
+        delete badXml;
+    }
+
+    {
+        std::string badJsonError;
+        ParserNode *badJson = parseJsonString("This is obviously not valid JSON", &badJsonError);
+        EXPOP_TEST_VALUE(!badJsonError.size(), 0);
+        delete badJson;
+    }
+
     cout << *node << endl;
     node->outputXml(cout, 0);
+    cout << endl;
+    node->outputJson(cout, 0);
+    cout << endl;
 
     {
         ostringstream ostr;
@@ -357,6 +376,14 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
         node->outputXml(ostr, 0);
         ParserNode *readBack = parseXmlString(ostr.str());
         EXPOP_TEST_VALUE(readBack->getChild(0)->getChild(0)->getStringValueDirty("Whatever"), "Arghblargh");
+        delete readBack;
+    }
+
+    {
+        ostringstream ostr;
+        node->outputJson(ostr, 0);
+        ParserNode *readBack = parseJsonString(ostr.str());
+        EXPOP_TEST_VALUE(readBack->getChild(0)->getStringValueDirty("Whatever"), "Arghblargh");
         delete readBack;
     }
 
