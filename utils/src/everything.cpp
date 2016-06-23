@@ -40,5 +40,4 @@
 // enabled or disabled.
 #include <lilyengine/config.h>
 
-#include "image/image.cpp"
-
+#include "image/imagedxt.cpp"
