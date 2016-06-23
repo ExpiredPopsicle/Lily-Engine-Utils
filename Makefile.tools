@@ -63,9 +63,10 @@ all : \
 # buffergen relies on a primitive version of buffergen to generate the
 # internal --help text buffer!
 $(NATIVEBUFFERGEN) : tools/buffergen/buffergen.cpp
-	$(NATIVECXX) $(NATIVE_CXXFLAGS) $(NATIVE_LDFLAGS) \
+	$(NATIVECXX) $(NATIVE_CXXFLAGS) \
 		-DNO_HELP_ALLOWED=1 \
 		tools/buffergen/buffergen.cpp \
+		 $(NATIVE_LDFLAGS) \
 		-o $@
 
 # We'll re-use this macro a bunch for generating the --help usage text
@@ -88,8 +89,9 @@ endif
 $(call generateUsageTextFromREADME,buffergen)
 
 buffergen$(TARGET_EXT) : tools/buffergen/buffergen.cpp tools/buffergen/usagetext.h
-	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) \
 		tools/buffergen/buffergen.cpp \
+		$(TARGET_LDFLAGS) \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) $(NATIVEBUFFERGEN) buffergen$(TARGET_EXT)
@@ -104,8 +106,9 @@ lilyarchiver$(TARGET_EXT) : \
 	tools/archiver/archiver.cpp \
 	tools/archiver/usagetext.h
 
-	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) \
 		tools/archiver/archiver.cpp \
+		$(TARGET_LDFLAGS) \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) lilyarchiver$(TARGET_EXT)
@@ -124,8 +127,9 @@ headerfixer$(TARGET_EXT) : \
 	tools/headerfixer/mainheader.h \
 	tools/headerfixer/usagetext.h
 
-	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) \
 		tools/headerfixer/headerfixer.cpp \
+		$(TARGET_LDFLAGS) \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) headerfixer$(TARGET_EXT)
@@ -140,8 +144,9 @@ imgbuffer$(TARGET_EXT) : \
 	tools/imgbuffer/imgbuffer.cpp \
 	tools/imgbuffer/usagetext.h
 
-	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) \
 		tools/imgbuffer/imgbuffer.cpp \
+		$(TARGET_LDFLAGS) \
 		-o $@
 
 CLEANLIST := $(CLEANLIST) imgbuffer$(TARGET_EXT)
@@ -159,8 +164,9 @@ $(NATIVETODOSCAN) : \
 	tools/todoscan/todoscan.cpp \
 	tools/todoscan/usagetext.h
 
-	$(NATIVECXX) $(NATIVE_CXXFLAGS) $(NATIVE_LDFLAGS) \
+	$(NATIVECXX) $(NATIVE_CXXFLAGS) \
 		$(TODOSCAN_SOURCES) \
+		$(NATIVE_LDFLAGS) \
 		-o $@
 
 $(call generateUsageTextFromREADME,todoscan)
@@ -169,8 +175,9 @@ todoscan$(TARGET_EXT) : \
 	tools/todoscan/todoscan.cpp \
 	tools/todoscan/usagetext.h
 
-	$(CXX) $(TARGET_CXXFLAGS) $(TARGET_LDFLAGS) \
+	$(CXX) $(TARGET_CXXFLAGS) \
 		$(TODOSCAN_SOURCES) \
+		$(TARGET_LDFLAGS) \
 		-o $@
 
 
