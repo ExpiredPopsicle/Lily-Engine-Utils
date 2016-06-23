@@ -53,19 +53,20 @@
 #include "archive.h"
 #include "assetmanager.h"
 
-// Various useful #defines...
-#if !defined(MIN) || !defined(MAX)
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#endif
+// TODO: Move these to a math module or something.
+namespace ExPop
+{
+    template<typename T>
+    inline const T &min(const T &a, const T &b)
+    {
+        return (b < a) ? b : a;
+    }
 
-#if !defined(OFFSET_OF)
-// Get the offset if a field in a structure, in bytes. Does an ugly
-// hack to get around compiler complaining about possibly
-// dereferencing something from NULL.
-#define OFFSET_OF(t, x) ((char*)&(((t*)(0x1))->x) - 1)
-#endif
-
-
+    template<typename T>
+    inline const T &max(const T &a, const T &b)
+    {
+        return (b > a) ? b : a;
+    }
+}
 
 

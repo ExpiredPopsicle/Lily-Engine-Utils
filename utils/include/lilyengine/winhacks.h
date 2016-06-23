@@ -28,26 +28,3 @@
 //      distribution.
 //
 // -------------------------- END HEADER -------------------------------------
-
-#ifndef WINHACKS_H
-#define WINHACKS_H
-#if _WIN32
-
-// Windows-specific hacks and stupid crap.
-
-// Winelib-only testing stuff.
-// (Probably don't need this anymore.)
-#ifdef WINELIB
-#	include <wine/windows/windows.h>
-#endif
-
-// Needs to be before any OpenGL headers.
-#include <windows.h>
-
-#define strcasecmp _stricmp
-
-// FIXME: Precision loss. Come back to this later.
-#define usleep(x) Sleep((x) / 1000)
-
-#endif
-#endif

@@ -29,7 +29,8 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-// Simple HTTP library.
+// Simple HTTP library. Only handles unencrypted HTTP 1.1 using very
+// basic GET requests.
 
 // ----------------------------------------------------------------------
 // Needed headers

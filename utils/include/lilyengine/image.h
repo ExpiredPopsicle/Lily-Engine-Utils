@@ -38,10 +38,12 @@
 
 #pragma once
 
+#include "config.h"
+#include "filesystem.h"
+
 #include <cstdlib>
 #include <string>
 #include <cassert>
-#include "filesystem.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation
@@ -942,7 +944,7 @@ namespace ExPop
             }
         }
 
-      #if EXPOP_USE_SQUISH
+      #if EXPOP_ENABLE_SQUISH
 
         unsigned char *Image::compressDXT(unsigned int *bufferLength, unsigned int *dxtLevel)
         {

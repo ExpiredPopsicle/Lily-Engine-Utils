@@ -49,3 +49,8 @@
 #define EXPOP_ENABLE_SOCKETS 0
 #endif
 
+// libsquish support in the image module (FIXME).
+#ifndef EXPOP_ENABLE_SQUISH
+#define EXPOP_ENABLE_SQUISH 0
+#endif
+

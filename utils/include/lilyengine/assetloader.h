@@ -271,7 +271,11 @@ namespace ExPop
                 // If there was nothing on the queue, go to sleep for
                 // a bit. It's only acceptable to run continuously if
                 // it's still got stuff to do.
+              #if _WIN32
+                Sleep(1);
+              #else
                 usleep(1000);
+              #endif
             }
 
         }

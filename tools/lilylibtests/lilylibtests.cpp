@@ -217,6 +217,15 @@ struct ThreadTestData
     bool goAhead;
 };
 
+void sleepWrapper(uint32_t time)
+{
+  #if _WIN32
+    Sleep(time / 1000);
+  #else
+    usleep(time);
+  #endif
+}
+
 void doThreadTests_thread(void *data)
 {
     ThreadTestData *testData = (ThreadTestData*)data;
@@ -226,7 +235,7 @@ void doThreadTests_thread(void *data)
     size_t &failCounter = *testData->failCounter;
 
     while(!testData->goAhead) {
-        usleep(10);
+        sleepWrapper(10);
     }
 
   #if _WIN32
@@ -250,7 +259,7 @@ inline void doThreadTests(size_t &passCounter, size_t &failCounter)
     testData.goAhead = false;
 
     ExPop::Threads::Thread t(doThreadTests_thread, &testData);
-    usleep(1000);
+    sleepWrapper(1000);
 
     #if _WIN32
     std::cout << "[Main  ] Current thread ID: " << GetCurrentThreadId() << std::endl;
@@ -278,7 +287,7 @@ inline void doCompressTests(size_t &passCounter, size_t &failCounter)
     char *uncompressedData = decompressRLE(compressedData, len, &len2, 1);
     EXPOP_TEST_VALUE(len2, fileData.size());
 
-    EXPOP_TEST_VALUE(strncmp(&fileData[0], uncompressedData, MIN(fileData.size(), len2)), 0);
+    EXPOP_TEST_VALUE(strncmp(&fileData[0], uncompressedData, ExPop::min(fileData.size(), (size_t)len2)), 0);
 
     delete[] uncompressedData;
     delete[] compressedData;
