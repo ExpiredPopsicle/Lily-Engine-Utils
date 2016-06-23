@@ -29,16 +29,26 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// AssetLoader wrapper for specific assets, with specialized
+// initialization and teardown code.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 #include <map>
 #include <string>
 #include <iostream>
 
 #include "assetloader.h"
-#include "console.h"
 
-namespace ExPop {
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
+namespace ExPop
+{
     class AssetLoader;
 
     /// AssetManager is a wrapper around a (possibly shared)
@@ -116,23 +126,26 @@ namespace ExPop {
         AssetLoader *loader;
         E extraLoadData;
     };
+}
 
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
 
-
+namespace ExPop
+{
     template<class T, class E>
     AssetManager<T, E>::AssetManager(AssetLoader *loader, E loadData, CreatorFunction creatorFunc) :
-        extraLoadData(loadData) {
-
+        extraLoadData(loadData)
+    {
         this->creatorFunc = creatorFunc;
         this->loader = loader;
         maxAge = 100;
-
-        Console::outSetPrefix("AssetManager", "AssetManager: ");
     }
 
     template<class T, class E>
-    AssetManager<T, E>::~AssetManager(void) {
-
+    AssetManager<T, E>::~AssetManager(void)
+    {
         typename std::map<std::string, LoadedAsset*>::iterator i;
         for(i = loadedAssets.begin();
             i != loadedAssets.end(); i++) {
@@ -141,8 +154,8 @@ namespace ExPop {
     }
 
     template<class T, class E>
-    void AssetManager<T, E>::ageAssets(unsigned int age) {
-
+    void AssetManager<T, E>::ageAssets(unsigned int age)
+    {
         std::vector<std::string> eraseList;
 
         typename std::map<std::string, LoadedAsset*>::iterator i;
@@ -158,20 +171,21 @@ namespace ExPop {
         }
 
         for(unsigned int i = 0; i < eraseList.size(); i++) {
-            Console::out("AssetManager") << "Purging asset: " << eraseList[i] << std::endl;
             loadedAssets.erase(eraseList[i]);
         }
 
     }
 
     template<class T, class E>
-    void AssetManager<T, E>::setMaxAge(unsigned int maxAge) {
+    void AssetManager<T, E>::setMaxAge(unsigned int maxAge)
+    {
         this->maxAge = maxAge;
         ageAssets(0);
     }
 
     template<class T, class E>
-    unsigned int AssetManager<T, E>::getMaxAge(void) {
+    unsigned int AssetManager<T, E>::getMaxAge(void)
+    {
         return maxAge;
     }
 
@@ -179,8 +193,8 @@ namespace ExPop {
     template<class T, class E>
     T* AssetManager<T, E>::getAsset(
         const std::string &name,
-        AssetLoader::LoadStatus *status) {
-
+        AssetLoader::LoadStatus *status)
+    {
         if(loadedAssets.count(name)) {
             LoadedAsset *loadedAsset = loadedAssets[name];
             loadedAsset->age = 0;
@@ -191,8 +205,6 @@ namespace ExPop {
         char *data = loader->requestData(name, 100, &length, status);
 
         if(data) {
-
-            Console::out("AssetManager") << "Initializing asset: " << name << std::endl;
 
             T *newData = creatorFunc(
                 name,
@@ -210,16 +222,17 @@ namespace ExPop {
     }
 
     template<class T, class E>
-    AssetManager<T, E>::LoadedAsset::LoadedAsset(T *asset) {
+    AssetManager<T, E>::LoadedAsset::LoadedAsset(T *asset)
+    {
         this->asset = asset;
         age = 0;
     }
 
     template<class T, class E>
-    AssetManager<T, E>::LoadedAsset::~LoadedAsset(void) {
+    AssetManager<T, E>::LoadedAsset::~LoadedAsset(void)
+    {
         delete asset;
     }
-
-};
+}
 
 

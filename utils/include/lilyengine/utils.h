@@ -51,6 +51,7 @@
 #include "cryptorc4.h"
 #include "compress.h"
 #include "archive.h"
+#include "assetmanager.h"
 
 // Various useful #defines...
 #if !defined(MIN) || !defined(MAX)
