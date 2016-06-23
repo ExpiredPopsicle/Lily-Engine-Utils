@@ -29,13 +29,23 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// 2D dynamic array.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
 #include <cassert>
 #include <cstddef>
 
-namespace ExPop {
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
+namespace ExPop
+{
     typedef std::ptrdiff_t CAINDEXTYPE;
     typedef std::size_t CAUNSIGNED;
 
@@ -45,7 +55,8 @@ namespace ExPop {
     /// were previously defined will then be copied over those using
     /// operator=.
     template<typename T>
-    class CellArray {
+    class CellArray
+    {
     public:
 
         CellArray(void);
@@ -98,9 +109,17 @@ namespace ExPop {
         T *cells;
 
     };
+}
 
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
     template<typename T>
-    CellArray<T>::CellArray(void) {
+    CellArray<T>::CellArray(void)
+    {
         cells = NULL;
         width = 0;
         height = 0;
@@ -109,15 +128,16 @@ namespace ExPop {
     }
 
     template<typename T>
-    CellArray<T>::~CellArray(void) {
+    CellArray<T>::~CellArray(void)
+    {
         if(cells) {
             delete[] cells;
         }
     }
 
     template<typename T>
-    void CellArray<T>::expandToFit(CAINDEXTYPE x, CAINDEXTYPE y) {
-
+    void CellArray<T>::expandToFit(CAINDEXTYPE x, CAINDEXTYPE y)
+    {
         // We don't necessarily need the origin to be in the range of
         // stuff we get, so the first time, just make sure that the
         // offset is set right where our first value is.
@@ -189,14 +209,14 @@ namespace ExPop {
     }
 
     template<typename T>
-    void CellArray<T>::set(const T &t, CAINDEXTYPE x, CAINDEXTYPE y) {
-
+    void CellArray<T>::set(const T &t, CAINDEXTYPE x, CAINDEXTYPE y)
+    {
         get(x, y) = t;
     }
 
     template<typename T>
-    T &CellArray<T>::get(CAINDEXTYPE x, CAINDEXTYPE y) {
-
+    T &CellArray<T>::get(CAINDEXTYPE x, CAINDEXTYPE y)
+    {
         expandToFit(x, y);
         CAUNSIGNED srcx = (x - offsetx) % ((CAUNSIGNED)~0);
         CAUNSIGNED srcy = (y - offsety) % ((CAUNSIGNED)~0);
@@ -204,8 +224,8 @@ namespace ExPop {
     }
 
     template<typename T>
-    const T *CellArray<T>::getConst(CAINDEXTYPE x, CAINDEXTYPE y) {
-
+    const T *CellArray<T>::getConst(CAINDEXTYPE x, CAINDEXTYPE y)
+    {
         if(x < offsetx ||
            x >= (CAINDEXTYPE)(offsetx + width) ||
            y < offsety ||
@@ -220,39 +240,46 @@ namespace ExPop {
     }
 
     template<typename T>
-    CAUNSIGNED CellArray<T>::getWidth(void) const {
+    CAUNSIGNED CellArray<T>::getWidth(void) const
+    {
         return width;
     }
 
     template<typename T>
-    CAUNSIGNED CellArray<T>::getHeight(void) const {
+    CAUNSIGNED CellArray<T>::getHeight(void) const
+    {
         return height;
     }
 
     template<typename T>
-    CAINDEXTYPE CellArray<T>::getMinX(void) const {
+    CAINDEXTYPE CellArray<T>::getMinX(void) const
+    {
         return offsetx;
     }
 
     template<typename T>
-    CAINDEXTYPE CellArray<T>::getMaxX(void) const {
+    CAINDEXTYPE CellArray<T>::getMaxX(void) const
+    {
         return offsetx + width;
     }
 
     template<typename T>
-    CAINDEXTYPE CellArray<T>::getMinY(void) const {
+    CAINDEXTYPE CellArray<T>::getMinY(void) const
+    {
         return offsety;
     }
 
     template<typename T>
-    CAINDEXTYPE CellArray<T>::getMaxY(void) const {
+    CAINDEXTYPE CellArray<T>::getMaxY(void) const
+    {
         return offsety + height;
     }
 
     template<typename T>
-    void CellArray<T>::clear(void) {
+    void CellArray<T>::clear(void)
+    {
         delete cells;
-        cells = NULL;
+        cells = nullptr;
         width = 0;
         height = 0;
         offsetx = 0;
