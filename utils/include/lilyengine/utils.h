@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "image.h"
 #include "config.h"
 #include "winhacks.h"
 #include "malstring.h"
@@ -43,7 +44,6 @@
 #include "lilyparserjson.h"
 #include "assetloader.h"
 #include "preprocess.h"
-#include "image.h"
 #include "cellarray.h"
 #include "expopsockets.h"
 #include "params.h"

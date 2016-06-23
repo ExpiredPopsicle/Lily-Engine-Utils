@@ -686,7 +686,12 @@ namespace ExPop
             if(!buf) {
                 return "";
             }
+
+            // Note: This will get '\0' characters that would normally
+            // be treated as the end of a C-style string, in case you
+            // want to load some binary blob into an std::string.
             std::string ret(buf, bufLen);
+
             delete[] buf;
             return ret;
         }
