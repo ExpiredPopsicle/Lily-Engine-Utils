@@ -47,6 +47,7 @@
 // Declarations and documentation
 // ----------------------------------------------------------------------
 
+#if EXPOP_ENABLE_THREADS
 namespace ExPop
 {
     class AssetLoader;
@@ -235,4 +236,5 @@ namespace ExPop
     }
 }
 
+#endif
 

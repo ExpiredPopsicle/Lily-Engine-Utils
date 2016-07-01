@@ -67,11 +67,11 @@ namespace ExPop
 {
   #define EXPOP_JSON_TOKEN_TYPE(x) (parserJsonGetTokenTypeSafe(tokens, i + (x)))
   #define EXPOP_JSON_LINE_NUMBER (parserJsonGetTokenLineSafe(tokens, i))
-  #define EXPOP_JSON_ERROR(x)                                   \
-    do {                                                        \
-        std::ostringstream ostr;                                \
-        ostr << EXPOP_JSON_LINE_NUMBER << ": " << (x) << endl;  \
-        errorStr = errorStr + ostr.str();                       \
+  #define EXPOP_JSON_ERROR(x)                                       \
+    do {                                                            \
+        std::ostringstream ostr;                                    \
+        ostr << EXPOP_JSON_LINE_NUMBER << ": " << (x) << std::endl; \
+        errorStr = errorStr + ostr.str();                           \
     } while(0);
 
     //  Tokenization
@@ -97,7 +97,7 @@ namespace ExPop
     inline std::string parserJsonCharToString(char c)
     {
         char s1[2] = { c, 0 };
-        return string(s1);
+        return std::string(s1);
     }
 
     inline bool parserJsonIsNumber(char c)
@@ -110,7 +110,7 @@ namespace ExPop
     inline void parserJsonTokenizeJson(
         const std::string &str,
         std::string &errorStr,
-        vector<ParserToken*> &tokens)
+        std::vector<ParserToken*> &tokens)
     {
         unsigned int ptr = 0;
         unsigned int lineNumber = 1;
@@ -184,7 +184,7 @@ namespace ExPop
                     ptr++;
                 }
 
-                string quotedStr = str.substr(
+                std::string quotedStr = str.substr(
                     startPt + 1,
                     ptr - startPt - 1);
 
@@ -243,9 +243,9 @@ namespace ExPop
 
             } else {
 
-                ostringstream errorStream;
+                std::ostringstream errorStream;
                 errorStream << lineNumber << ": " <<
-                    "Unrecognized token starting with '" << c << "'"<< endl;
+                    "Unrecognized token starting with '" << c << "'"<< std::endl;
                 errorStr = errorStr + errorStream.str();
                 return;
             }
@@ -265,7 +265,7 @@ namespace ExPop
     }
 
     inline unsigned int parserJsonGetTokenLineSafe(
-        const vector<ParserToken*> &tokens,
+        const std::vector<ParserToken*> &tokens,
         unsigned int i)
     {
         if(!tokens.size())
@@ -281,19 +281,19 @@ namespace ExPop
     // Parsing
 
     inline ParserNode *parserJsonParseJsonObject(
-        vector<ParserToken*> &tokens,
+        std::vector<ParserToken*> &tokens,
         unsigned int &i,
-        string &errorStr);
+        std::string &errorStr);
 
     inline ParserNode *parserJsonParseJsonArray(
-        vector<ParserToken*> &tokens,
+        std::vector<ParserToken*> &tokens,
         unsigned int &i,
-        string &errorStr);
+        std::string &errorStr);
 
     inline ParserNode *parserJsonParseJsonThingy(
-        vector<ParserToken*> &tokens,
+        std::vector<ParserToken*> &tokens,
         unsigned int &i,
-        string &errorStr)
+        std::string &errorStr)
     {
         if(EXPOP_JSON_TOKEN_TYPE(0) == JSPT_OPENCURLY) {
             return parserJsonParseJsonObject(tokens, i, errorStr);
@@ -447,7 +447,7 @@ namespace ExPop
 
 
     // Different from the normal output indent!
-    inline void parserJsonIndentOutputJson(ostream &out, int indentLevel)
+    inline void parserJsonIndentOutputJson(std::ostream &out, int indentLevel)
     {
         for(int i = 0; i < indentLevel; i++) {
             out << "  ";
@@ -594,7 +594,7 @@ namespace ExPop
         out << (isArray ? "[" : "{");
 
         if(values.size() || getNumChildren()) {
-            out << endl;
+            out << std::endl;
         }
 
         // Print out attributes.
