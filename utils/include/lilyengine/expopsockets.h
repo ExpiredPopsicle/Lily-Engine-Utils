@@ -43,6 +43,7 @@
 #if EXPOP_ENABLE_SOCKETS
 
 #if !_WIN32
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -189,7 +190,12 @@ namespace ExPop
     inline void socketsCloseOSSpecfic(int x) { close(x); }
     inline const void *socketsConstDataCast(const void *x) { return (const void*)(x); }
     inline void *socketsDataCast(void *x) { return (void*)(x); }
+  #if __CYGWIN__
+    // Cygwin, why are you such a pain in my ass?
+    typedef int SocketsAddrLen;
+  #else
     typedef unsigned int SocketsAddrLen;
+  #endif
   #endif
 
     inline void Socket::initCommon(void)

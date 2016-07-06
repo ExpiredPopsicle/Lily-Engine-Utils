@@ -470,7 +470,10 @@ void assignMissingIssueNumbers(
 
 void getGitState(GitState &state)
 {
-  #if !_WIN32
+    // popen is not present on Windows, and completely broken on
+    // Cygwin, so we'll have to skip the VC check on those systems.
+
+  #if !_WIN32 && !__CYGWIN__
 
     string curLine;
     int c;

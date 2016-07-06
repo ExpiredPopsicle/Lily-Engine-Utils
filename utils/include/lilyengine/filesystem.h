@@ -47,6 +47,11 @@
 
 #pragma once
 
+// Compensate for broken Cygwin headers.
+#if __CYGWIN__
+#define NAME_MAX FILENAME_MAX
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
