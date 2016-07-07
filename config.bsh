@@ -1,6 +1,15 @@
 #!/bin/bash
 
-PATHTOME="$(realpath $(dirname "$0"))"
+# Determine path to this script, and then we'll assume
+WHICHME="$(which "$0" 2>/dev/null)"
+if [[ "${WHICHME}" == "" ]]; then
+    WHICHME="./$0"
+fi
+PATHTOME="$(dirname "${WHICHME}")"
+if [[ "${PATHTOME}" != "/"* ]]; then
+    PATHTOME="${PWD}/${PATHTOME}"
+fi
+
 # This is pretty ugly, but Bash doesn't make it easy to cram "here
 # documents" into variables.
 USAGESTR="Usage: $0 [options] [--libs] [--cflags] [--cxxflags]\n\nOptions:\n\n  --platform-windows            Force Windows-specific flags (for MinGW)\n  --platform-posix              Force POSIX-specific flags\n  --platform-emscripten         Force Emscripten-specific flags\n  --enable-sockets              Enable sockets-related features (off by default)\n  --enable-threads              Enable threading-related features (off by default)\n"
