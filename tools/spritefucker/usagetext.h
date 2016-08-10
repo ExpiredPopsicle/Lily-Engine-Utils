@@ -1,0 +1,4 @@
+const unsigned int usageText_len = 6;
+const char usageText[] = {
+    0x62, 0x75, 0x74, 0x74, 0x73, 0x0a,
+};

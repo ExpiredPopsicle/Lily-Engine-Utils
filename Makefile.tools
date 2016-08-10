@@ -56,8 +56,8 @@ endif
 all : \
 	buffergen$(TARGET_EXT) lilyarchiver$(TARGET_EXT) \
 	headerfixer$(TARGET_EXT) imgbuffer$(TARGET_EXT) \
-	todoscan$(TARGET_EXT) lilylibtests$(TARGET_EXT)
-
+	todoscan$(TARGET_EXT) lilylibtests$(TARGET_EXT) \
+	spritefucker$(TARGET_EXT)
 
 # ----------------------------------------------------------------------
 # buffergen
@@ -153,6 +153,23 @@ imgbuffer$(TARGET_EXT) : \
 
 CLEANLIST := $(CLEANLIST) imgbuffer$(TARGET_EXT)
 GENERATEDLIST := $(GENERATEDLIST) tools/imgbuffer/usagetext.h
+
+# ----------------------------------------------------------------------
+# spritefucker
+
+$(call generateUsageTextFromREADME,spritefucker)
+
+spritefucker$(TARGET_EXT) : \
+	tools/spritefucker/spritefucker.cpp \
+	tools/spritefucker/usagetext.h
+
+	$(CXX) $(TARGET_CXXFLAGS) \
+		tools/spritefucker/spritefucker.cpp \
+		$(TARGET_LDFLAGS) \
+		-o $@
+
+CLEANLIST := $(CLEANLIST) spritefucker$(TARGET_EXT)
+GENERATEDLIST := $(GENERATEDLIST) tools/spritefucker/usagetext.h
 
 # ----------------------------------------------------------------------
 # todoscan
