@@ -1,6 +1,6 @@
 Usage: $0 [-f] [-o] <source files> <org mode file>
 
-ExpiredPopsicle's TODO/FIXME Scanner and Issue Tracker
+ExpiredPopsicle's TODO/FIXME Scanner and Issue Tracker 1.1
 
 This tool helps track TODO and FIXME comments in your C/C++ code by
 assigning them issue numbers and consolidating them into org-mode
@@ -24,3 +24,5 @@ Options:
                     version control.
   -o                Just write everything to stdout instead of any
                     files.
+
+Report bugs to expiredpopsicle@gmail.com

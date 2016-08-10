@@ -17,18 +17,20 @@ NATIVEBUFFERGEN := ./buffergen_temp
 NATIVETODOSCAN := ./todoscan_temp
 .INTERMEDIATE : $(NATIVEBUFFERGEN) $(NATIVETODOSCAN)
 
+CONFIG_SCRIPT=lilyutils-config
+
 # Flags for the target platform.
 TARGET_CXXFLAGS := $(COMMON_CXXFLAGS)  \
-	$(shell bash config.bsh --cxxflags --enable-threads --enable-sockets)
+	$(shell bash $(CONFIG_SCRIPT) --cxxflags --enable-threads --enable-sockets)
 TARGET_LDFLAGS := $(COMMON_LDFLAGS) \
-	$(shell bash config.bsh --libs --enable-threads --enable-sockets)
+	$(shell bash $(CONFIG_SCRIPT) --libs --enable-threads --enable-sockets)
 TARGET_EXT :=
 
 # Flags for this (build) platform so we can build code generators.
 NATIVE_CXXFLAGS := $(COMMON_CXXFLAGS) \
-	$(shell CXX=$(NATIVECXX) bash config.bsh --cxxflags --enable-threads --enable-sockets)
+	$(shell CXX=$(NATIVECXX) bash $(CONFIG_SCRIPT) --cxxflags --enable-threads --enable-sockets)
 NATIVE_LDFLAGS := $(COMMON_LDFLAGS) \
-	$(shell CXX=$(NATIVECXX) bash config.bsh --libs --enable-threads --enable-sockets)
+	$(shell CXX=$(NATIVECXX) bash $(CONFIG_SCRIPT) --libs --enable-threads --enable-sockets)
 NATIVE_EXT :=
 
 # Need to add Winsock stuff to Windows builds when using Mingw, and

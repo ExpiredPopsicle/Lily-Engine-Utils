@@ -1,4 +1,4 @@
-Usage: $0 <source files>
+Usage: $0 [options] <source files>
 
 ExpiredPopsicle's Header Fixer Tool 1.1
 

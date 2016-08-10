@@ -1,6 +1,6 @@
-Usage: $0 <filename> [variable]
+Usage: $0 [options] <filename> [variable]
 
-ExpiredPopsicle's Static Buffer Header Generator 1.1
+ExpiredPopsicle's Static Buffer Header Generator 1.2
 
 Useful for when you really want to embed a whole damn file into your
 source code.
