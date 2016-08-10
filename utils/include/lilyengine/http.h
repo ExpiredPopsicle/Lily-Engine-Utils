@@ -112,10 +112,10 @@ namespace ExPop
             fragment);
 
         // Split up the user/host/port even further.
-        string user;
-        string host;
-        string hostName;
-        string hostPort;
+        std::string user;
+        std::string host;
+        std::string hostName;
+        std::string hostPort;
         stringSplit(authority, "@", user, host, true);
         stringSplit(host, ":", hostName, hostPort);
 
