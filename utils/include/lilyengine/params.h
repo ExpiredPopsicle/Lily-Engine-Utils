@@ -71,9 +71,6 @@
 // +Mal | I'm going to copy+paste this conversation into my program as a
 //      | comment now that I think I've covered everything.
 
-// TODO: Replace std::cerr use with some sort of customizable error
-// output.
-
 // ----------------------------------------------------------------------
 // Needed headers
 // ----------------------------------------------------------------------
@@ -116,7 +113,8 @@ namespace ExPop
     bool parseCommandLine(
         int argc, char *argv[],
         const std::vector<std::string> &paramsWithParameters,
-        std::vector<ParsedParameter> &outputParameters);
+        std::vector<ParsedParameter> &outputParameters,
+        std::ostream &errorOut = std::cerr);
 
     // Usage example:
     // ----------------------------------------------------------------------
@@ -171,7 +169,8 @@ namespace ExPop
     inline bool parseCommandLine(
         int argc, char *argv[],
         const std::vector<std::string> &paramsWithParameters,
-        std::vector<ParsedParameter> &outputParameters)
+        std::vector<ParsedParameter> &outputParameters,
+        std::ostream &errorOut)
     {
         // First get everything into a std::vector that we can work with.
         std::vector<std::string> vecParams;
@@ -242,7 +241,7 @@ namespace ExPop
                         }
 
                         if(outputParam.value.size() && !needsParameter) {
-                            std::cerr << "Too many parameters for --" << outputParam.name << std::endl;
+                            errorOut << "Too many parameters for --" << outputParam.name << std::endl;
                             parseError = true;
                         }
 
@@ -257,7 +256,7 @@ namespace ExPop
                                     outputParam.value = vecParams[0];
                                     vecParams.erase(vecParams.begin());
                                 } else {
-                                    std::cerr << "Missing parameter for --" << outputParam.name << std::endl;
+                                    errorOut << "Missing parameter for --" << outputParam.name << std::endl;
                                     parseError = true;
                                 }
                             }
@@ -302,7 +301,7 @@ namespace ExPop
                                     outputParam.value = vecParams[0];
                                     vecParams.erase(vecParams.begin());
                                 } else {
-                                    std::cerr << "Missing parameter for -" << outputParam.name << std::endl;
+                                    errorOut << "Missing parameter for -" << outputParam.name << std::endl;
                                     parseError = true;
                                 }
 
