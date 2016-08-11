@@ -293,6 +293,7 @@ namespace ExPop
             virtual void handle();
             virtual bool isZeroParam();
         private:
+            // Needed for some error handling.
             CommandlineParser *parent;
         };
 
@@ -592,14 +593,12 @@ namespace ExPop
 
     inline void CommandlineParser::HandlerWrapper_Base::handle(const std::string &value)
     {
-        (*parent->errorStream) << "Got a parameter when one was not expected." << std::endl;
-        parent->raiseErrorFlag();
+        parent->throwError("Got a parameter when one was not expected.");
     }
 
     inline void CommandlineParser::HandlerWrapper_Base::handle()
     {
-        (*parent->errorStream) << "Got no parameters when one was expected." << std::endl;
-        parent->raiseErrorFlag();
+        parent->throwError("Got no parameters when one was expected.");
     }
 
     inline bool CommandlineParser::HandlerWrapper_Base::isZeroParam()
