@@ -145,6 +145,13 @@ private:
         std::function<void()> handlerFunction;
     };
 
+    std::string formatBlock(
+        const std::string &paramName,
+        const std::string &valueName,
+        const std::string &block,
+        size_t columns = 80,
+        size_t paramSpace = 20);
+
     std::map<std::string, std::vector<HandlerWrapper_Base*> > handlerWrappers;
     std::map<std::string, std::string> parameterAliases;
 
@@ -176,16 +183,17 @@ inline void CommandlineParser::addHandler(
     const std::string &paramName,
     std::function<void(T)> handler)
 {
-    HandlerWrapper<T> *wrapper = new HandlerWrapper<T>(this, handler);
-
-    std::vector<HandlerWrapper_Base*> &wrappers = handlerWrappers[paramName];
+    // Check that no alias uses this name yet.
+    assert(parameterAliases.find(paramName) == parameterAliases.end());
 
     // Check that no zero-param wrappers are here already, because
     // we're making this parameter one that does require parameters.
+    std::vector<HandlerWrapper_Base*> &wrappers = handlerWrappers[paramName];
     for(size_t i = 0; i < wrappers.size(); i++) {
         assert(!wrappers[i]->isZeroParam());
     }
 
+    HandlerWrapper<T> *wrapper = new HandlerWrapper<T>(this, handler);
     wrappers.push_back(wrapper);
 }
 
@@ -193,17 +201,18 @@ inline void CommandlineParser::addHandler(
     const std::string &paramName,
     std::function<void()> handler)
 {
-    HandlerWrapper_NoParam *wrapper = new HandlerWrapper_NoParam(this, handler);
-
-    std::vector<HandlerWrapper_Base*> &wrappers = handlerWrappers[paramName];
+    // Check that no alias uses this name yet.
+    assert(parameterAliases.find(paramName) == parameterAliases.end());
 
     // Check that no non-zero-param wrappers are here already, because
     // we're making this parameter one that does NOT require
     // parameters.
+    std::vector<HandlerWrapper_Base*> &wrappers = handlerWrappers[paramName];
     for(size_t i = 0; i < wrappers.size(); i++) {
         assert(wrappers[i]->isZeroParam());
     }
 
+    HandlerWrapper_NoParam *wrapper = new HandlerWrapper_NoParam(this, handler);
     wrappers.push_back(wrapper);
 }
 
@@ -481,12 +490,12 @@ inline std::string makeSpaces(size_t numSpaces)
     return ret;
 }
 
-inline std::string formatBlock(
+inline std::string CommandlineParser::formatBlock(
     const std::string &paramName,
     const std::string &valueName,
     const std::string &block,
-    size_t columns = 80,
-    size_t paramSpace = 20)
+    size_t columns,
+    size_t paramSpace)
 {
     // FIXME: Remove these.
     const size_t spacing = paramSpace;
@@ -511,16 +520,16 @@ inline std::string formatBlock(
     for(size_t i = 0; i < aliases.size(); i++) {
 
         if(valueName.size()) {
-            if(paramName.size() == 1) {
-                usagePart += "-" + paramName + " <" + valueName + ">";
+            if(aliases[i].size() == 1) {
+                usagePart += "-" + aliases[i] + " <" + valueName + ">";
             } else {
-                usagePart += "--" + paramName + "=<" + valueName + ">";
+                usagePart += "--" + aliases[i] + "=<" + valueName + ">";
             }
         } else {
-            if(paramName.size() == 1) {
-                usagePart += "-" + paramName;
+            if(aliases[i].size() == 1) {
+                usagePart += "-" + aliases[i];
             } else {
-                usagePart += "--" + paramName;
+                usagePart += "--" + aliases[i];
             }
         }
 
@@ -660,7 +669,7 @@ int main(int argc, char *argv[])
             std::cout << foo << std::endl;
         });
 
-    cmdParser.setParameterAlias("cheese", "butter");
+    cmdParser.setParameterAlias("cheese", "f");
 
     cmdParser.addHandler(
         "butts", []()
