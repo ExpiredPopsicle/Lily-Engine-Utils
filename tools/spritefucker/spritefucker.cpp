@@ -496,19 +496,38 @@ inline std::string formatBlock(
     std::vector<std::string> paragraphLines;
     ExPop::stringTokenize(paragraphs, "\n", paragraphLines, true);
 
+    // Find all known names for this parameter.
+    std::vector<std::string> aliases;
+    aliases.push_back(paramName);
+    for(auto k = parameterAliases.begin(); k != parameterAliases.end(); k++) {
+        if(k->second == paramName) {
+            aliases.push_back(k->first);
+        }
+    }
+
+    // Assemble the usage string, with a list of all the aliases,
+    // properly formatted.
     std::string usagePart;
-    if(valueName.size()) {
-        if(paramName.size() == 1) {
-            usagePart = "-" + paramName + " <" + valueName + ">";
+    for(size_t i = 0; i < aliases.size(); i++) {
+
+        if(valueName.size()) {
+            if(paramName.size() == 1) {
+                usagePart += "-" + paramName + " <" + valueName + ">";
+            } else {
+                usagePart += "--" + paramName + "=<" + valueName + ">";
+            }
         } else {
-            usagePart = "--" + paramName + "=<" + valueName + ">";
+            if(paramName.size() == 1) {
+                usagePart += "-" + paramName;
+            } else {
+                usagePart += "--" + paramName;
+            }
         }
-    } else {
-        if(paramName.size() == 1) {
-            usagePart = "-" + paramName;
-        } else {
-            usagePart = "--" + paramName;
+
+        if(i + 1 != aliases.size()) {
+            usagePart += ", ";
         }
+
     }
 
     usagePart = "  " + usagePart;
