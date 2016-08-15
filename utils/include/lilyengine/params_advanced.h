@@ -430,7 +430,7 @@ namespace ExPop
             });
     }
 
-    void CommandlineParser::setParameterAlias(
+    inline void CommandlineParser::setParameterAlias(
         const std::string &parameterName,
         const std::string &alias)
     {
