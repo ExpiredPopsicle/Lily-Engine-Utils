@@ -153,6 +153,9 @@ namespace ExPop
         /// filesystem junk and calls loadTGA().
         Image *loadTGAFromFile(const std::string &filename);
 
+        /// Save equivalent to loadTGAFromFile.
+        bool saveTGAToFile(const Image *img, const std::string &filename);
+
         /// Load an image from a 1-bit-per-pixel buffer. Use with the
         /// imgbuffer tool for embedding images in code.
         Image *load1BitImageFromBitmap(
@@ -675,6 +678,18 @@ namespace ExPop
                 return img;
             }
             return NULL;
+        }
+
+        inline bool saveTGAToFile(const Image *img, const std::string &filename)
+        {
+            int imgLen = 0;
+            unsigned char *data = img->saveTGA(&imgLen);
+
+            bool ret = (0 == FileSystem::saveFile(filename, (char*)data, imgLen));
+
+            delete[] data;
+
+            return ret;
         }
 
         // ----------------------------------------------------------------------
