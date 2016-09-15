@@ -48,6 +48,7 @@
 #include <cassert>
 #include <sstream>
 #include <cstring>
+#include <cstdlib>
 
 // ----------------------------------------------------------------------
 // Declarations and documentation

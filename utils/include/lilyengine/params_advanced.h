@@ -624,6 +624,15 @@ namespace ExPop
         handlerFunction(convertedValue);
     }
 
+    // Template specialization for strings so we don't end up just
+    // getting the first thing before whitespace, as
+    // std::istringstream would give us.
+    template<>
+    inline void CommandlineParser::HandlerWrapper<std::string>::handle(const std::string &value)
+    {
+        handlerFunction(value);
+    }
+
     template<typename T>
     inline bool CommandlineParser::HandlerWrapper<T>::isZeroParam()
     {
