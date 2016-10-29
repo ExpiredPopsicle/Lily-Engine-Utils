@@ -222,6 +222,16 @@ namespace ExPop
         /// directory on a Unix filesystem or the root directory on
         /// some Windows drive. Max path length is 2048 bytes.
         std::string getCwd(void);
+
+        /// Returns true if the path given is a full path.
+        bool isFullPath(const std::string &path);
+
+        /// Returns the given path, converted into a full path.
+        std::string makeFullPath(const std::string &path);
+
+        /// Returns the given path, converted into a relative path
+        /// from the current working directory.
+        std::string makeRelativePath(const std::string &path);
     }
 }
 
