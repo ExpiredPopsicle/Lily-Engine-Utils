@@ -238,21 +238,11 @@ namespace ExPop
 {
     namespace FileSystem
     {
-        // If we have threads disabled, stick in a fake mutex class
-        // and pretend if we aren't using threads at all.
-      #if EXPOP_ENABLE_THREADS
-        typedef Threads::Mutex ArchivesMutexType;
-      #else
-        class FakeMutex { public: void lock() { } void unlock() { } };
-        typedef FakeMutex ArchivesMutexType;
-      #endif
-
-        // Global archives mutex.
-        inline ArchivesMutexType &getArchivesMutex()
-        {
-            static ArchivesMutexType archivesMutex;
-            return archivesMutex;
-        }
+        // ----------------------------------------------------------------------
+        // Functions that just juggle data and don't touch the file
+        // system directly (but may call our own functions that do).
+        // These ones shouldn't need to be altered for
+        // platform-specific things ever.
 
         // Justification for ugly global data hack here: The
         // filesystem itself is kind of a global resource, so the
@@ -262,6 +252,168 @@ namespace ExPop
             static std::vector<Archive*> searchArchives;
             return searchArchives;
         }
+
+        inline bool getSubdirectories(const std::string &directory, std::vector<std::string> &names)
+        {
+            std::vector<std::string> allNames;
+            if(!getAllFiles(directory, allNames)) return false;
+
+            for(unsigned int i = 0; i < allNames.size(); i++) {
+                std::string fullPath = directory + std::string("/") + allNames[i];
+                if(isDir(fullPath)) {
+                    names.push_back(allNames[i]);
+                }
+            }
+            return true;
+        }
+
+        inline bool getNondirectories(const std::string &directory, std::vector<std::string> &names)
+        {
+            std::vector<std::string> allNames;
+            if(!getAllFiles(directory, allNames)) return false;
+
+            for(unsigned int i = 0; i < allNames.size(); i++) {
+                std::string fullPath = directory + std::string("/") + allNames[i];
+                if(!isDir(fullPath)) {
+                    names.push_back(allNames[i]);
+                }
+            }
+            return true;
+        }
+
+        inline std::string getParentName(const std::string &dirPath)
+        {
+            std::string dp(dirPath);
+
+            int i;
+            for(i = int(dp.size()) - 1; i >= 0; i--) {
+                if(dp[i] == '/' || dp[i] == '\\') break;
+            }
+
+            if(i >= 0) {
+                // Cut off the string at the first slash from the end.
+                dp[i] = 0;
+
+                return std::string(dp.c_str());
+            }
+
+            return "";
+        }
+
+        inline std::string getBaseName(const std::string &path)
+        {
+            std::string dir = getParentName(path);
+            std::string base = path.substr(dir.size());
+
+            // Strip off leading '/'.
+            if(base.size() && base[0] == '/') base = base.c_str() + 1;
+
+            return base;
+        }
+
+        inline std::string fixFileName(const std::string &str)
+        {
+            // Split the path into directories and the filename.
+            std::vector<std::string> fileNameParts;
+            stringTokenize(str, "\\/", fileNameParts);
+
+            std::ostringstream outStr;
+
+            // For ".." going above the current directory.
+            int numHigherDirectories = 0;
+
+            for(unsigned int i = 0; i < fileNameParts.size(); i++) {
+
+                if(fileNameParts[i] == ".") {
+
+                    // "." for the current directory. Just drop these from
+                    // the list. They're redundant.
+
+                    fileNameParts.erase(fileNameParts.begin() + i);
+                    i--;
+
+                } else if(fileNameParts[i] == "..") {
+
+                    // ".." for previous directory. Remove this one and the one
+                    // before it, UNLESS it's the first one, in which case it's
+                    // a directory above the current one.
+
+                    if(i == 0) {
+
+                        // Top level. Remove this directory and count how
+                        // far we've gone above the current directory.
+                        numHigherDirectories++;
+                        fileNameParts.erase(fileNameParts.begin());
+
+                        // I know this will cause the unsigned int to wrap
+                        // around, but it'll wrap back when it increments
+                        // again. Please don't kill me.
+                        i--;
+
+                    } else {
+
+                        // Remove the previous directory.
+                        fileNameParts.erase(fileNameParts.begin() + (i-1));
+
+                        // Remove THIS directory.
+                        fileNameParts.erase(fileNameParts.begin() + (i-1));
+
+                        // Unsigned weirdness: We're at at least 1 here, so
+                        // the most this can do is wrap around for -1. The
+                        // next iteration of the for loop will bring it back
+                        // to zero.
+                        i -= 2;
+                    }
+                }
+            }
+
+            for(int i = 0; i < numHigherDirectories; i++) {
+                // Add "../" for as many directories we ended up going
+                // above the current one.
+                outStr << "../";
+            }
+
+            for(unsigned int i = 0; i < fileNameParts.size(); i++) {
+                // Add the current name.
+                outStr << fileNameParts[i];
+
+                // If this isn't the last one, then it's not at the file
+                // name yet.
+                if(i != fileNameParts.size() - 1) {
+                    outStr << "/";
+                }
+            }
+
+            return outStr.str();
+        }
+
+        inline void filterFileListByType(
+            const std::string &extension,
+            const std::vector<std::string> &inputList,
+            std::vector<std::string> &outputList)
+        {
+            std::vector<std::string> extensions;
+
+            stringTokenize(extension, ", ", extensions);
+
+            for(unsigned int i = 0; i < inputList.size(); i++) {
+                for(unsigned int j = 0; j < extensions.size(); j++) {
+                    if(stringEndsWith(std::string(".") + extensions[j], inputList[i])) {
+
+                        // This check only does anything if the list is
+                        // sorted. Removes doubles.
+                        if(!outputList.size() || inputList[i] != outputList[outputList.size() - 1]) {
+
+                            outputList.push_back(inputList[i]);
+                        }
+                    }
+                }
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // Things that actually touch the system. OS-specific stuff
+        // happens here.
 
         inline bool getAllFiles(const std::string &directory, std::vector<std::string> &names)
         {
@@ -281,7 +433,6 @@ namespace ExPop
                     // Names that start with a . are hidden in Unix.
                     // This also removes the . and .. directories (which is good).
                     if(name[0] != '.') {
-                        //names.push_back(name);
                         allFiles[name] = true;
                     }
                 }
@@ -322,13 +473,9 @@ namespace ExPop
             std::string fixedName = fixFileName(directory);
             std::vector<std::string> archivedFiles;
 
-            getArchivesMutex().lock();
-
             for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                 getSearchArchives()[i]->getFileListForDir(fixedName, archivedFiles);
             }
-
-            getArchivesMutex().unlock();
 
             for(unsigned int i = 0; i < archivedFiles.size(); i++) {
                 allFiles[archivedFiles[i]] = true;
@@ -343,34 +490,6 @@ namespace ExPop
             return true;
         }
 
-        inline bool getSubdirectories(const std::string &directory, std::vector<std::string> &names)
-        {
-            std::vector<std::string> allNames;
-            if(!getAllFiles(directory, allNames)) return false;
-
-            for(unsigned int i = 0; i < allNames.size(); i++) {
-                std::string fullPath = directory + std::string("/") + allNames[i];
-                if(isDir(fullPath)) {
-                    names.push_back(allNames[i]);
-                }
-            }
-            return true;
-        }
-
-        inline bool getNondirectories(const std::string &directory, std::vector<std::string> &names)
-        {
-            std::vector<std::string> allNames;
-            if(!getAllFiles(directory, allNames)) return false;
-
-            for(unsigned int i = 0; i < allNames.size(); i++) {
-                std::string fullPath = directory + std::string("/") + allNames[i];
-                if(!isDir(fullPath)) {
-                    names.push_back(allNames[i]);
-                }
-            }
-            return true;
-        }
-
         inline bool fileExists(const std::string &fileName, bool skipArchives)
         {
             struct stat fileStat;
@@ -380,18 +499,13 @@ namespace ExPop
 
             if(!skipArchives) {
 
-                getArchivesMutex().lock();
-
                 // Couldn't find it on the filesystem. Try archives.
                 std::string fixedName = fixFileName(fileName);
                 for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                     if(getSearchArchives()[i]->getFileExists(fixedName) || getSearchArchives()[i]->getDirExists(fixedName)) {
-                        getArchivesMutex().unlock();
                         return true;
                     }
                 }
-
-                getArchivesMutex().unlock();
             }
 
             return false;
@@ -451,51 +565,16 @@ namespace ExPop
 
             if(!skipArchives) {
 
-                getArchivesMutex().lock();
-
                 // Couldn't find it on the filesystem. Try archives.
                 std::string fixedName = fixFileName(fileName);
                 for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                     if(getSearchArchives()[i]->getDirExists(fixedName)) {
-                        getArchivesMutex().unlock();
                         return true;
                     }
                 }
-
-                getArchivesMutex().unlock();
             }
 
             return false;
-        }
-
-        inline std::string getParentName(const std::string &dirPath)
-        {
-            std::string dp(dirPath);
-
-            int i;
-            for(i = int(dp.size()) - 1; i >= 0; i--) {
-                if(dp[i] == '/' || dp[i] == '\\') break;
-            }
-
-            if(i >= 0) {
-                // Cut off the string at the first slash from the end.
-                dp[i] = 0;
-
-                return std::string(dp.c_str());
-            }
-
-            return "";
-        }
-
-        inline std::string getBaseName(const std::string &path)
-        {
-            std::string dir = getParentName(path);
-            std::string base = path.c_str() + dir.size();
-
-            // Strip off leading '/'.
-            if(base.size() && base[0] == '/') base = base.c_str() + 1;
-
-            return base;
         }
 
         inline bool makePath(const std::string &dirPath)
@@ -617,18 +696,13 @@ namespace ExPop
 
             } else {
 
-                getArchivesMutex().lock();
-
                 // Couldn't find it on the filesystem. Try archives.
                 for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                     if(getSearchArchives()[i]->getFileExists(fileName)) {
                         bool ret = getSearchArchives()[i]->getFileSize(fileName);
-                        getArchivesMutex().unlock();
                         return ret;
                     }
                 }
-
-                getArchivesMutex().unlock();
 
                 return -1;
             }
@@ -657,18 +731,13 @@ namespace ExPop
 
                 delete[] data;
 
-                getArchivesMutex().lock();
-
                 // Couldn't load from filesystem. Try archives.
                 for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                     if(getSearchArchives()[i]->getFileExists(fileName)) {
                         char *ret = getSearchArchives()[i]->loadFile(fileName, length, addNullTerminator);
-                        getArchivesMutex().unlock();
                         return ret;
                     }
                 }
-
-                getArchivesMutex().unlock();
 
                 // Both failed. Ouch. If this happened, something went
                 // horribly wrong besides the file just not being there.
@@ -721,18 +790,13 @@ namespace ExPop
 
                 delete[] buf;
 
-                getArchivesMutex().lock();
-
                 // Couldn't load from filesystem. Try archives.
                 for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                     if(getSearchArchives()[i]->getFileExists(fileName)) {
                         char *ret = getSearchArchives()[i]->loadFilePart(fileName, lengthToRead, offsetFromStart);
-                        getArchivesMutex().unlock();
                         return ret;
                     }
                 }
-
-                getArchivesMutex().unlock();
 
                 // Both failed. Ouch. If this happened, something went
                 // horribly wrong besides the file just not being there.
@@ -770,11 +834,61 @@ namespace ExPop
             return 0;
         }
 
+        inline unsigned int getFileFlags(const std::string &fileName)
+        {
+            unsigned int flags = 0;
+
+            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
+                if(getSearchArchives()[i]->getFileExists(fileName) || getSearchArchives()[i]->getDirExists(fileName)) {
+                    flags |= FILEFLAG_ARCHIVED;
+                }
+            }
+
+            if(fileExists(fileName, true)) {
+                flags |= FILEFLAG_NONARCHIVED;
+            }
+
+            return flags;
+
+        }
+
+        inline std::string getCwd(void)
+        {
+            // FIXME: Hardcoded directory lengths are bad, but all the
+            // API we use for each platform takes a buffer size, so
+            // we're not at risk of running over. Just giving a bad
+            // answer.
+            char dirBuf[2048];
+
+          #if _WIN32
+
+            GetCurrentDirectory(2048, dirBuf);
+
+            // Convert backslashes to forward slashes for consistency.
+            size_t len = strlen(dirBuf);
+            for(size_t i = 0; i < len; i++) {
+                if(dirBuf[i] == '\\') {
+                    dirBuf[i] = '/';
+                }
+            }
+
+          #else
+
+            if(!getcwd(dirBuf, 2048)) {
+                return "";
+            }
+
+          #endif
+
+            return std::string(dirBuf);
+        }
+
+        // ----------------------------------------------------------------------
+        // Archive-related functions.
+
         inline void addArchiveForSearch(Archive *archive)
         {
-            getArchivesMutex().lock();
             getSearchArchives().push_back(archive);
-            getArchivesMutex().unlock();
         }
 
         inline void addArchiveForSearch(const std::string &archiveFileName)
@@ -784,14 +898,11 @@ namespace ExPop
             std::string fixedFileName = fixFileName(archiveFileName);
 
             // Bail out if it's already in there.
-            getArchivesMutex().lock();
             for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                 if(getSearchArchives()[i]->getMyFileName() == fixedFileName) {
-                    getArchivesMutex().unlock();
                     return;
                 }
             }
-            getArchivesMutex().unlock();
 
             Archive *newArch = new Archive(fixedFileName, false);
 
@@ -825,188 +936,27 @@ namespace ExPop
 
         inline void removeArchiveForSearch(Archive *archive)
         {
-            getArchivesMutex().lock();
             removeArchiveForSearch_internal(archive);
-            getArchivesMutex().unlock();
         }
 
         inline void removeArchiveForSearch(const std::string &archiveFileName)
         {
-            getArchivesMutex().lock();
-
             for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                 if(getSearchArchives()[i]->getMyFileName() == archiveFileName) {
                     Archive *archive = getSearchArchives()[i];
                     removeArchiveForSearch_internal(archive);
-                    getArchivesMutex().unlock();
                     return;
                 }
             }
-
-            getArchivesMutex().unlock();
         }
 
         inline void clearSearchArchives(void)
         {
-            getArchivesMutex().lock();
-
             for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                 delete getSearchArchives()[i];
             }
 
             getSearchArchives().clear();
-
-            getArchivesMutex().unlock();
-        }
-
-        inline std::string fixFileName(const std::string &str)
-        {
-            // Split the path into directories and the filename.
-            std::vector<std::string> fileNameParts;
-            stringTokenize(str, "\\/", fileNameParts);
-
-            std::ostringstream outStr;
-
-            // For ".." going above the current directory.
-            int numHigherDirectories = 0;
-
-            for(unsigned int i = 0; i < fileNameParts.size(); i++) {
-
-                if(fileNameParts[i] == ".") {
-
-                    // "." for the current directory. Just drop these from
-                    // the list. They're redundant.
-
-                    fileNameParts.erase(fileNameParts.begin() + i);
-                    i--;
-
-                } else if(fileNameParts[i] == "..") {
-
-                    // ".." for previous directory. Remove this one and the one
-                    // before it, UNLESS it's the first one, in which case it's
-                    // a directory above the current one.
-
-                    if(i == 0) {
-
-                        // Top level. Remove this directory and count how
-                        // far we've gone above the current directory.
-                        numHigherDirectories++;
-                        fileNameParts.erase(fileNameParts.begin());
-
-                        // I know this will cause the unsigned int to wrap
-                        // around, but it'll wrap back when it increments
-                        // again. Please don't kill me.
-                        i--;
-
-                    } else {
-
-                        // Remove the previous directory.
-                        fileNameParts.erase(fileNameParts.begin() + (i-1));
-
-                        // Remove THIS directory.
-                        fileNameParts.erase(fileNameParts.begin() + (i-1));
-
-                        // Unsigned weirdness: We're at at least 1 here, so
-                        // the most this can do is wrap around for -1. The
-                        // next iteration of the for loop will bring it back
-                        // to zero.
-                        i -= 2;
-                    }
-                }
-            }
-
-            for(int i = 0; i < numHigherDirectories; i++) {
-                // Add "../" for as many directories we ended up going
-                // above the current one.
-                outStr << "../";
-            }
-
-            for(unsigned int i = 0; i < fileNameParts.size(); i++) {
-                // Add the current name.
-                outStr << fileNameParts[i];
-
-                // If this isn't the last one, then it's not at the file
-                // name yet.
-                if(i != fileNameParts.size() - 1) {
-                    outStr << "/";
-                }
-            }
-
-            return outStr.str();
-        }
-
-        inline unsigned int getFileFlags(const std::string &fileName)
-        {
-            unsigned int flags = 0;
-
-            getArchivesMutex().lock();
-
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                if(getSearchArchives()[i]->getFileExists(fileName) || getSearchArchives()[i]->getDirExists(fileName)) {
-                    flags |= FILEFLAG_ARCHIVED;
-                }
-            }
-
-            getArchivesMutex().unlock();
-
-            if(fileExists(fileName, true)) {
-                flags |= FILEFLAG_NONARCHIVED;
-            }
-
-            return flags;
-
-        }
-
-        inline void filterFileListByType(const std::string &extension, const std::vector<std::string> &inputList, std::vector<std::string> &outputList)
-        {
-            std::vector<std::string> extensions;
-
-            stringTokenize(extension, ", ", extensions);
-
-            for(unsigned int i = 0; i < inputList.size(); i++) {
-                for(unsigned int j = 0; j < extensions.size(); j++) {
-                    if(stringEndsWith(std::string(".") + extensions[j], inputList[i])) {
-
-                        // This check only does anything if the list is
-                        // sorted. Removes doubles.
-                        if(!outputList.size() || inputList[i] != outputList[outputList.size() - 1]) {
-
-                            outputList.push_back(inputList[i]);
-                        }
-                    }
-                }
-            }
-        }
-
-        inline std::string getCwd(void)
-        {
-            // FIXME: Hardcoded directory lengths are bad, but all the
-            // API we use for each platform takes a buffer size, so
-            // we're not at risk of running over. Just giving a bad
-            // answer.
-            char dirBuf[2048];
-
-          #if _WIN32
-
-            GetCurrentDirectory(2048, dirBuf);
-
-            // Convert backslashes to forward slashes for consistency.
-            size_t len = strlen(dirBuf);
-            for(size_t i = 0; i < len; i++) {
-                if(dirBuf[i] == '\\') {
-                    dirBuf[i] = '/';
-                }
-            }
-
-          #else
-
-            if(!getcwd(dirBuf, 2048)) {
-                return "";
-            }
-
-          #endif
-
-            return std::string(dirBuf);
         }
 
     }
