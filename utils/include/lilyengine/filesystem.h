@@ -52,6 +52,7 @@
 #define NAME_MAX FILENAME_MAX
 #endif
 
+#include <memory>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -223,8 +224,94 @@ namespace ExPop
 
 namespace ExPop
 {
+    class ZipFile;
+
     namespace FileSystem
     {
+        // ----------------------------------------------------------------------
+        // Internal types.
+
+        class ArchiveTreeNode
+        {
+        public:
+            std::map<std::string, std::shared_ptr<ArchiveTreeNode> > children;
+
+            ArchiveTreeNode *resolvePath(
+                const std::vector<std::string> &pathParts,
+                size_t pathPartsIndex,
+                bool buildPath = false);
+
+            ArchiveTreeNode *resolvePath(
+                const std::string &path,
+                bool buildPath = false);
+
+            void dump(size_t indent = 0);
+
+
+
+            std::shared_ptr<ZipFile> zipFile;
+            std::string filenameInZipFile;
+        };
+
+        inline ArchiveTreeNode *ArchiveTreeNode::resolvePath(
+            const std::vector<std::string> &pathParts,
+            size_t pathPartsIndex,
+            bool buildPath)
+        {
+            if(pathPartsIndex == pathParts.size()) {
+                return this;
+            }
+
+            auto it = children.find(pathParts[pathPartsIndex]);
+
+            if(it != children.end()) {
+
+                return it->second->resolvePath(pathParts, pathPartsIndex + 1, buildPath);
+
+            } else if(buildPath) {
+
+                children[pathParts[pathPartsIndex]] =
+                    std::shared_ptr<ArchiveTreeNode>(new ArchiveTreeNode);
+                return children[pathParts[pathPartsIndex]]->resolvePath(
+                    pathParts, pathPartsIndex + 1, buildPath);
+
+            }
+
+            return nullptr;
+        }
+
+        inline ArchiveTreeNode *ArchiveTreeNode::resolvePath(
+            const std::string &path,
+            bool buildPath)
+        {
+            std::string fullPath = makeFullPath(path);
+            std::vector<std::string> fullPathParts;
+            stringTokenize(fullPath, "/", fullPathParts);
+            return resolvePath(fullPathParts, 0, buildPath);
+        }
+
+        inline void ArchiveTreeNode::dump(size_t indent)
+        {
+            for(auto it = children.begin(); it != children.end(); it++) {
+                for(size_t i = 0; i < indent; i++) {
+                    std::cout << "  ";
+                }
+                std::cout << it->first << std::endl;
+                it->second->dump(indent + 1);
+            }
+        }
+
+
+
+
+        inline std::shared_ptr<ArchiveTreeNode> getRootArchiveTreeNode()
+        {
+            static std::shared_ptr<ArchiveTreeNode> root(new ArchiveTreeNode);
+            return root;
+        }
+
+
+
         // ----------------------------------------------------------------------
         // Functions that just juggle data and don't touch the file
         // system directly (but may call our own functions that do).
@@ -527,7 +614,13 @@ namespace ExPop
 
           #endif
 
-            // TODO: Zip archives.
+            // Zip archives.
+            ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(directory);
+            if(node) {
+                for(auto it = node->children.begin(); it != node->children.end(); it++) {
+                    allFiles[it->first] = true;
+                }
+            }
 
             // Finally, convert our map we were using to avoid redundancies
             // into a vector list.
@@ -547,7 +640,11 @@ namespace ExPop
 
             if(!skipArchives) {
 
-                // TODO: Zip archives.
+                // Zip archives.
+                ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
+                if(node) {
+                    return true;
+                }
 
             }
 
@@ -608,7 +705,13 @@ namespace ExPop
 
             if(!skipArchives) {
 
-                // TODO: Zip archives.
+                // Zip archives.
+                ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
+                if(node) {
+                    // This assumes no empty directories inside
+                    // archives.
+                    return !!node->children.size();
+                }
 
             }
 
@@ -728,7 +831,14 @@ namespace ExPop
 
             } else {
 
-                // TODO: Zip archives.
+                // Zip archives.
+                ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
+                if(node) {
+                    std::shared_ptr<ZipFile> zf = node->zipFile;
+                    if(zf) {
+                        return zf->getFileSize(node->filenameInZipFile);
+                    }
+                }
 
             }
 
@@ -747,7 +857,14 @@ namespace ExPop
                 return realFile;
             }
 
-            // TODO: Zip archives.
+            // Fallback to zip archives.
+            ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
+            if(node) {
+                std::shared_ptr<ZipFile> zf = node->zipFile;
+                if(zf) {
+                    return zf->openFile(node->filenameInZipFile);
+                }
+            }
 
             // All attempts failed.
             return nullptr;
@@ -849,8 +966,13 @@ namespace ExPop
         {
             unsigned int flags = 0;
 
-            // TODO: Zip archives.
+            // Zip archives.
+            ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
+            if(node) {
+                flags |= FILEFLAG_ARCHIVED;
+            }
 
+            // Non-archives.
             if(fileExists(fileName, true)) {
                 flags |= FILEFLAG_NONARCHIVED;
             }
