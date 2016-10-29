@@ -384,7 +384,15 @@ namespace ExPop
                 }
             }
 
-            return outStr.str();
+            std::string ret = outStr.str();
+
+            // Little hack to restore the root slash that we may have
+            // dropped in the tokenization stage.
+            if(str.size() && str[0] == '/') {
+                ret = "/" + ret;
+            }
+
+            return ret;
         }
 
         inline void filterFileListByType(
@@ -409,6 +417,79 @@ namespace ExPop
                     }
                 }
             }
+        }
+
+        inline bool isFullPath(const std::string &path)
+        {
+            if(path.size()) {
+
+                if(path[0] == '/') {
+                    // Unix path starting at root.
+                    return true;
+                }
+
+                if((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[1] <= 'z')) {
+
+                    if(path.size() > 1) {
+
+                        if(path[1] == ':') {
+                            // Windows drive letter.
+                            return true;
+                        }
+
+                    }
+
+                }
+            }
+
+            return false;
+        }
+
+        inline std::string makeFullPath(const std::string &path)
+        {
+            if(isFullPath(path)) {
+                return fixFileName(path);
+            }
+
+            return fixFileName(getCwd() + "/" + path);
+        }
+
+        inline std::string makeRelativePath(const std::string &path)
+        {
+            if(!isFullPath(path)) {
+                return fixFileName(path);
+            }
+
+            std::string cwd = getCwd();
+
+            std::vector<std::string> cwdParts;
+            stringTokenize(cwd, "/", cwdParts);
+
+            std::vector<std::string> pathParts;
+            stringTokenize(path, "/", pathParts);
+
+            // Strip off common elements from the front.
+            while(cwdParts.size() && pathParts.size() && cwdParts[0] == pathParts[0]) {
+                cwdParts.erase(cwdParts.begin());
+                pathParts.erase(pathParts.begin());
+            }
+
+            // Now just turn every directory left in the cwd into a
+            // "..".
+            for(size_t i = 0; i < cwdParts.size(); i++) {
+                pathParts.insert(pathParts.begin(), "..");
+            }
+
+            // Re-assemble the full path.
+            std::ostringstream retStr;
+            for(size_t i = 0; i < pathParts.size(); i++) {
+                retStr << pathParts[i];
+                if(i + 1 < pathParts.size()) {
+                    retStr << "/";
+                }
+            }
+
+            return retStr.str();
         }
 
         // ----------------------------------------------------------------------
@@ -706,6 +787,24 @@ namespace ExPop
 
                 return -1;
             }
+        }
+
+        inline std::shared_ptr<std::istream> openFile(const std::string &fileName)
+        {
+            // Attempt to open the actual file first.
+            std::shared_ptr<std::istream> realFile(
+                new std::fstream(
+                    fileName,
+                    std::ios_base::in | std::ios_base::binary));
+
+            if(!realFile->fail()) {
+                return realFile;
+            }
+
+            // TODO: Attempt to load from archive.
+
+            // All attempts failed.
+            return nullptr;
         }
 
         inline char *loadFile(const std::string &fileName, int *length, bool addNullTerminator)
