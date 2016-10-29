@@ -883,12 +883,13 @@ namespace ExPop
             memset(buf, 0, lengthToRead);
 
             // Read from filesystem first.
-            std::ifstream in(fileName.c_str(), std::ios::in | std::ios::binary);
-            in.seekg(offsetFromStart, std::ios_base::beg);
-            in.read(buf, realLength < lengthToRead ? realLength : lengthToRead);
-            in.close();
+            std::shared_ptr<std::istream> in = openReadFile(fileName);
+            if(in) {
+                in->seekg(offsetFromStart);
+                in->read(buf, realLength < lengthToRead ? realLength : lengthToRead);
+            }
 
-            if(in.fail()) {
+            if(!in || in->fail()) {
 
                 delete[] buf;
 
