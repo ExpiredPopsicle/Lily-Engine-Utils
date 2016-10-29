@@ -85,8 +85,6 @@ namespace ExPop
 {
     namespace FileSystem
     {
-        class Archive;
-
         /// Get all the files and subdirectories in a directory.
         /// Returns true on success and false on failure.
         bool getAllFiles(const std::string &directory, std::vector<std::string> &names);
@@ -180,30 +178,6 @@ namespace ExPop
         /// success.
         int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree = false);
 
-        /// Add an archive file to fall back on when loading a file
-        /// from the real filesystem fails. This instantiates an
-        /// archive object for the file.
-        void addArchiveForSearch(const std::string &archiveFileName);
-
-        /// Add an archive file to fall back on when loading a file
-        /// from the real filesystem fails. This one adds archive
-        /// objects directly. It takes ownership of the archive, so
-        /// the object will be destroyed when clearSearchArchives() is
-        /// called, or when it is removed from the internal list with
-        /// either version of removeArchiveForSearch().
-        void addArchiveForSearch(Archive *archive);
-
-        /// Remove an archive from the search list by name. Destroys
-        /// the archive object.
-        void removeArchiveForSearch(const std::string &archiveFileName);
-
-        /// Remove an archive from the search list by pointer.
-        /// Destroys the archive object.
-        void removeArchiveForSearch(Archive *archive);
-
-        /// Remove all archives from the search list.
-        void clearSearchArchives(void);
-
         /// Make a filename consistent. Interprets ".." and "." directories
         /// and properly strips them out. Replaces backslashes with forward
         /// slashes.
@@ -233,6 +207,7 @@ namespace ExPop
         /// from the current working directory.
         std::string makeRelativePath(const std::string &path);
 
+        /// Open a file for reading. May search inside archives.
         std::shared_ptr<std::istream> openReadFile(const std::string &fileName);
     }
 }
@@ -255,15 +230,6 @@ namespace ExPop
         // system directly (but may call our own functions that do).
         // These ones shouldn't need to be altered for
         // platform-specific things ever.
-
-        // Justification for ugly global data hack here: The
-        // filesystem itself is kind of a global resource, so the
-        // archives system "overlay" onto it should be too.
-        inline std::vector<Archive*> &getSearchArchives()
-        {
-            static std::vector<Archive*> searchArchives;
-            return searchArchives;
-        }
 
         inline bool getSubdirectories(const std::string &directory, std::vector<std::string> &names)
         {
@@ -561,18 +527,7 @@ namespace ExPop
 
           #endif
 
-            // Add all matching archive file names.
-
-            std::string fixedName = fixFileName(directory);
-            std::vector<std::string> archivedFiles;
-
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                getSearchArchives()[i]->getFileListForDir(fixedName, archivedFiles);
-            }
-
-            for(unsigned int i = 0; i < archivedFiles.size(); i++) {
-                allFiles[archivedFiles[i]] = true;
-            }
+            // TODO: Zip archives.
 
             // Finally, convert our map we were using to avoid redundancies
             // into a vector list.
@@ -592,13 +547,8 @@ namespace ExPop
 
             if(!skipArchives) {
 
-                // Couldn't find it on the filesystem. Try archives.
-                std::string fixedName = fixFileName(fileName);
-                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                    if(getSearchArchives()[i]->getFileExists(fixedName) || getSearchArchives()[i]->getDirExists(fixedName)) {
-                        return true;
-                    }
-                }
+                // TODO: Zip archives.
+
             }
 
             return false;
@@ -658,13 +608,8 @@ namespace ExPop
 
             if(!skipArchives) {
 
-                // Couldn't find it on the filesystem. Try archives.
-                std::string fixedName = fixFileName(fileName);
-                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                    if(getSearchArchives()[i]->getDirExists(fixedName)) {
-                        return true;
-                    }
-                }
+                // TODO: Zip archives.
+
             }
 
             return false;
@@ -751,8 +696,6 @@ namespace ExPop
 
         inline bool recursiveCopy(const std::string &src, const std::string &dst)
         {
-            // TODO: Make this cooperate with archives. (Maybe)
-
             if(isDir(src)) {
                 if(!makePath(dst)) return false;
 
@@ -785,16 +728,11 @@ namespace ExPop
 
             } else {
 
-                // Couldn't find it on the filesystem. Try archives.
-                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                    if(getSearchArchives()[i]->getFileExists(fileName)) {
-                        bool ret = getSearchArchives()[i]->getFileSize(fileName);
-                        return ret;
-                    }
-                }
+                // TODO: Zip archives.
 
-                return -1;
             }
+
+            return -1;
         }
 
         inline std::shared_ptr<std::istream> openReadFile(const std::string &fileName)
@@ -809,7 +747,7 @@ namespace ExPop
                 return realFile;
             }
 
-            // TODO: Attempt to load from archive.
+            // TODO: Zip archives.
 
             // All attempts failed.
             return nullptr;
@@ -832,27 +770,12 @@ namespace ExPop
             std::shared_ptr<std::istream> in = openReadFile(fileName);
             if(in) {
                 in->read(data, *length);
+                return data;
             }
 
-            // If that fails, try the archives.
-            if(!in || in->fail()) {
-
-                delete[] data;
-
-                // Couldn't load from filesystem. Try archives.
-                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                    if(getSearchArchives()[i]->getFileExists(fileName)) {
-                        char *ret = getSearchArchives()[i]->loadFile(fileName, length);
-                        return ret;
-                    }
-                }
-
-                // Both failed. Ouch. If this happened, something went
-                // horribly wrong besides the file just not being there.
-                return NULL;
-            }
-
-            return data;
+            // Read failed.
+            delete[] data;
+            return nullptr;
         }
 
         inline std::string loadFileString(const std::string &fileName)
@@ -887,27 +810,12 @@ namespace ExPop
             if(in) {
                 in->seekg(offsetFromStart);
                 in->read(buf, realLength < lengthToRead ? realLength : lengthToRead);
+                return buf;
             }
 
-            if(!in || in->fail()) {
-
-                delete[] buf;
-
-                // Couldn't load from filesystem. Try archives.
-                for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                    if(getSearchArchives()[i]->getFileExists(fileName)) {
-                        char *ret = getSearchArchives()[i]->loadFilePart(fileName, lengthToRead, offsetFromStart);
-                        return ret;
-                    }
-                }
-
-                // Both failed. Ouch. If this happened, something went
-                // horribly wrong besides the file just not being there.
-                return NULL;
-            }
-
-            return buf;
-
+            // Read failed.
+            delete[] buf;
+            return nullptr;
         }
 
         inline int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree)
@@ -941,11 +849,7 @@ namespace ExPop
         {
             unsigned int flags = 0;
 
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                if(getSearchArchives()[i]->getFileExists(fileName) || getSearchArchives()[i]->getDirExists(fileName)) {
-                    flags |= FILEFLAG_ARCHIVED;
-                }
-            }
+            // TODO: Zip archives.
 
             if(fileExists(fileName, true)) {
                 flags |= FILEFLAG_NONARCHIVED;
@@ -984,82 +888,6 @@ namespace ExPop
           #endif
 
             return std::string(dirBuf);
-        }
-
-        // ----------------------------------------------------------------------
-        // Archive-related functions.
-
-        inline void addArchiveForSearch(Archive *archive)
-        {
-            getSearchArchives().push_back(archive);
-        }
-
-        inline void addArchiveForSearch(const std::string &archiveFileName)
-        {
-            // We'll be comparing filenames, so store a fixed version that
-            // will be consistent.
-            std::string fixedFileName = fixFileName(archiveFileName);
-
-            // Bail out if it's already in there.
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                if(getSearchArchives()[i]->getMyFileName() == fixedFileName) {
-                    return;
-                }
-            }
-
-            Archive *newArch = new Archive(fixedFileName, false);
-
-            if(newArch->getFailed()) {
-
-                // Hmm... that didn't go well. Not a fatal error, though.
-                delete newArch;
-
-            } else {
-
-                // Add the new archive.
-                addArchiveForSearch(newArch);
-            }
-
-        }
-
-        // This one is called by both versions of
-        // removeArchiveForSearch. Does no locking, so it's not thread
-        // safe. Don't call it directly unless you have a very good
-        // reason.
-        inline void removeArchiveForSearch_internal(Archive *archive)
-        {
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                if(getSearchArchives()[i] == archive) {
-                    getSearchArchives().erase(getSearchArchives().begin() + i);
-                    delete archive;
-                    return;
-                }
-            }
-        }
-
-        inline void removeArchiveForSearch(Archive *archive)
-        {
-            removeArchiveForSearch_internal(archive);
-        }
-
-        inline void removeArchiveForSearch(const std::string &archiveFileName)
-        {
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                if(getSearchArchives()[i]->getMyFileName() == archiveFileName) {
-                    Archive *archive = getSearchArchives()[i];
-                    removeArchiveForSearch_internal(archive);
-                    return;
-                }
-            }
-        }
-
-        inline void clearSearchArchives(void)
-        {
-            for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
-                delete getSearchArchives()[i];
-            }
-
-            getSearchArchives().clear();
         }
 
     }
