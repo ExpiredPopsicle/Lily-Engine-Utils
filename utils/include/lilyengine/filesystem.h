@@ -165,7 +165,7 @@ namespace ExPop
         /// buffer). Buffer length is stored in length. Use
         /// addNullTerminator if you intend to use the result as a string.
         /// length will be changed to reflect the size of the returned data.
-        char *loadFile(const std::string &fileName, int *length, bool addNullTerminator = false);
+        char *loadFile(const std::string &fileName, int *length);
 
         /// Load a file and just return it as an std::string.
         std::string loadFileString(const std::string &fileName);
@@ -232,6 +232,8 @@ namespace ExPop
         /// Returns the given path, converted into a relative path
         /// from the current working directory.
         std::string makeRelativePath(const std::string &path);
+
+        std::shared_ptr<std::istream> openReadFile(const std::string &fileName);
     }
 }
 
@@ -702,13 +704,11 @@ namespace ExPop
 
         inline bool renameFile(const std::string &src, const std::string &dst)
         {
-            // TODO: Make this cooperate with archives. (Maybe)
             return(!rename(src.c_str(), dst.c_str()));
         }
 
         inline bool deleteFile(const std::string &fileName)
         {
-            // TODO: Make this cooperate with archives. (Maybe)
             return !remove(fileName.c_str());
         }
 
@@ -716,7 +716,6 @@ namespace ExPop
         {
             // remove() handles both directories and files?
             // TODO: Investigate further, otherwise leave if(){} block here.
-            // TODO: Make this cooperate with archives. (Maybe)
 
             if(isDir(fileName)) {
                 std::vector<std::string> names;
@@ -737,15 +736,14 @@ namespace ExPop
         {
             // TODO: Make this cooperate with archives. (Maybe only copying OUT of a file)
 
-            std::ifstream inFile(src.c_str(), std::ios::in | std::ios::binary);
-            if(!inFile.is_open()) return false;
+            std::shared_ptr<std::istream> inFile = openReadFile(src);
+            if(!inFile) return false;
 
             std::ofstream outFile(dst.c_str(), std::ios::out | std::ios::binary);
             if(!outFile.is_open()) return false;
 
-            outFile << inFile.rdbuf();
+            outFile << inFile->rdbuf();
 
-            inFile.close();
             outFile.close();
 
             return true;
@@ -799,7 +797,7 @@ namespace ExPop
             }
         }
 
-        inline std::shared_ptr<std::istream> openFile(const std::string &fileName)
+        inline std::shared_ptr<std::istream> openReadFile(const std::string &fileName)
         {
             // Attempt to open the actual file first.
             std::shared_ptr<std::istream> realFile(
@@ -817,7 +815,7 @@ namespace ExPop
             return nullptr;
         }
 
-        inline char *loadFile(const std::string &fileName, int *length, bool addNullTerminator)
+        inline char *loadFile(const std::string &fileName, int *length)
         {
             // Get the file size from file system or archive.
             *length = getFileSize(fileName);
@@ -828,22 +826,23 @@ namespace ExPop
                 return NULL;
             }
 
-            char *data = new char[*length + (addNullTerminator ? 1 : 0)];
+            char *data = new char[*length];
 
             // First, attempt to read everything in from the file system.
-            std::ifstream in(fileName.c_str(), std::ios::in | std::ios::binary);
-            in.read(data, *length);
-            in.close();
+            std::shared_ptr<std::istream> in = openReadFile(fileName);
+            if(in) {
+                in->read(data, *length);
+            }
 
             // If that fails, try the archives.
-            if(in.fail()) {
+            if(!in || in->fail()) {
 
                 delete[] data;
 
                 // Couldn't load from filesystem. Try archives.
                 for(unsigned int i = 0; i < getSearchArchives().size(); i++) {
                     if(getSearchArchives()[i]->getFileExists(fileName)) {
-                        char *ret = getSearchArchives()[i]->loadFile(fileName, length, addNullTerminator);
+                        char *ret = getSearchArchives()[i]->loadFile(fileName, length);
                         return ret;
                     }
                 }
@@ -853,19 +852,13 @@ namespace ExPop
                 return NULL;
             }
 
-            if(addNullTerminator) {
-                data[*length] = 0;
-                (*length)++;
-            }
-
             return data;
-
         }
 
         inline std::string loadFileString(const std::string &fileName)
         {
             int bufLen = 0;
-            char *buf = loadFile(fileName, &bufLen, false);
+            char *buf = loadFile(fileName, &bufLen);
             if(!buf) {
                 return "";
             }
