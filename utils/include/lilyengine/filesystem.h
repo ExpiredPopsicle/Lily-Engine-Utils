@@ -158,13 +158,13 @@ namespace ExPop
         bool recursiveCopy(const std::string &src, const std::string &dst);
 
         /// Get the size of a file in bytes.
-        int getFileSize(const std::string &fileName);
+        int64_t getFileSize(const std::string &fileName);
 
         /// Load a file to a new buffer (caller takes ownership of the
         /// buffer). Buffer length is stored in length. Use
         /// addNullTerminator if you intend to use the result as a string.
         /// length will be changed to reflect the size of the returned data.
-        char *loadFile(const std::string &fileName, int *length);
+        char *loadFile(const std::string &fileName, int64_t *length);
 
         /// Load a file and just return it as an std::string.
         std::string loadFileString(const std::string &fileName);
@@ -173,11 +173,11 @@ namespace ExPop
         /// you already know the length you're dealing with. If it
         /// hits a file in an archive it may start reading into the
         /// next file's header and the next file.
-        char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart = 0);
+        char *loadFilePart(const std::string &fileName, int64_t lengthToRead, int offsetFromStart = 0);
 
         /// Saves a buffer to a file. Returns -1 on failure or 0 on
         /// success.
-        int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree = false);
+        int saveFile(const std::string &fileName, const char *data, int64_t length, bool mkDirTree = false);
 
         /// Make a filename consistent. Interprets ".." and "." directories
         /// and properly strips them out. Replaces backslashes with forward
@@ -818,7 +818,7 @@ namespace ExPop
             }
         }
 
-        inline int getFileSize(const std::string &fileName)
+        inline int64_t getFileSize(const std::string &fileName)
         {
             // TODO: Should this be replaced with opening the file, seeking
             //   to the end, then recording the position?
@@ -870,7 +870,7 @@ namespace ExPop
             return nullptr;
         }
 
-        inline char *loadFile(const std::string &fileName, int *length)
+        inline char *loadFile(const std::string &fileName, int64_t *length)
         {
             // Get the file size from file system or archive.
             *length = getFileSize(fileName);
@@ -883,7 +883,7 @@ namespace ExPop
 
             char *data = new char[*length];
 
-            // First, attempt to read everything in from the file system.
+            // Read it. openReadFile() handles archives too now.
             std::shared_ptr<std::istream> in = openReadFile(fileName);
             if(in) {
                 in->read(data, *length);
@@ -897,7 +897,7 @@ namespace ExPop
 
         inline std::string loadFileString(const std::string &fileName)
         {
-            int bufLen = 0;
+            int64_t bufLen = 0;
             char *buf = loadFile(fileName, &bufLen);
             if(!buf) {
                 return "";
@@ -912,9 +912,10 @@ namespace ExPop
             return ret;
         }
 
-        inline char *loadFilePart(const std::string &fileName, int lengthToRead, int offsetFromStart)
+        inline char *loadFilePart(
+            const std::string &fileName, int64_t lengthToRead, int64_t offsetFromStart)
         {
-            int realLength = getFileSize(fileName);
+            int64_t realLength = getFileSize(fileName);
             if(realLength <= 0) {
                 return NULL;
             }
@@ -935,7 +936,9 @@ namespace ExPop
             return nullptr;
         }
 
-        inline int saveFile(const std::string &fileName, const char *data, int length, bool mkDirTree)
+        inline int saveFile(
+            const std::string &fileName, const char *data,
+            int64_t length, bool mkDirTree)
         {
             if(mkDirTree) {
                 std::string parentName = getParentName(fileName);

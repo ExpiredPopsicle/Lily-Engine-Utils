@@ -670,7 +670,7 @@ namespace ExPop
         inline Image *loadTGAFromFile(const std::string &filename)
         {
             char *fileData = NULL;
-            int fileLen = 0;
+            int64_t fileLen = 0;
             fileData = FileSystem::loadFile(filename, &fileLen);
             if(fileData) {
                 Image *img = loadTGA(fileData, fileLen);
