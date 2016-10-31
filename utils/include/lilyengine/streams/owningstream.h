@@ -29,48 +29,46 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// We needed a std::istream equivalent with the ability to have
+// generic shared ownership of its source streambuf. This is for stuff
+// like opening files in zips and then discarding the zip file object,
+// returning just the stream.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
-#include "image.h"
-#include "config.h"
-#include "winhacks.h"
-#include "malstring.h"
-#include "base64.h"
-#include "filesystem.h"
-#include "matrix.h"
-#include "angle.h"
-#include "lilyparser.h"
-#include "lilyparserxml.h"
-#include "lilyparserjson.h"
-#include "assetloader.h"
-#include "preprocess.h"
-#include "cellarray.h"
-#include "expopsockets.h"
-#include "params.h"
-#include "params_advanced.h"
-#include "http.h"
-#include "cryptorc4.h"
-#include "compress.h"
-#include "archive.h"
-#include "assetmanager.h"
+#include <iostream>
+#include <memory>
 
-#include "streams/streamsection.h"
-#include "streams/owningstream.h"
+// ----------------------------------------------------------------------
+// Declarations and documentation
+// ----------------------------------------------------------------------
 
-// TODO: Move these to a math module or something.
 namespace ExPop
 {
-    template<typename T>
-    inline const T &min(const T &a, const T &b)
+    // std::istream with generic shared ownership.
+    class OwningIStream : public std::istream
     {
-        return (b < a) ? b : a;
-    }
-
-    template<typename T>
-    inline const T &max(const T &a, const T &b)
-    {
-        return (b > a) ? b : a;
-    }
+    public:
+        OwningIStream(std::shared_ptr<std::streambuf> sb);
+    private:
+        std::shared_ptr<std::streambuf> sourceStreambuf;
+    };
 }
 
+// ----------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------
+
+namespace ExPop
+{
+    inline OwningIStream::OwningIStream(std::shared_ptr<std::streambuf> sb) :
+        std::istream(sb.get())
+    {
+        sourceStreambuf = sb;
+    }
+}
 
