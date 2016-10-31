@@ -29,52 +29,24 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
+// Common stuff for the DEFLATE implementation.
+
+// ----------------------------------------------------------------------
+// Needed headers
+// ----------------------------------------------------------------------
+
 #pragma once
 
-#include "streams/streamsection.h"
-#include "streams/owningstream.h"
+#if EXPOP_DEFLATE_ENABLE_ASSERTS
+#include <cassert>
+#endif
 
-#include "deflate/deflate.h"
-#include "deflate/deflate_streambuf.h"
-#include "deflate/zipfile.h"
+// ----------------------------------------------------------------------
+// Macros
+// ----------------------------------------------------------------------
 
-#include "image.h"
-#include "config.h"
-#include "winhacks.h"
-#include "malstring.h"
-#include "base64.h"
-#include "filesystem.h"
-#include "matrix.h"
-#include "angle.h"
-#include "lilyparser.h"
-#include "lilyparserxml.h"
-#include "lilyparserjson.h"
-#include "assetloader.h"
-#include "preprocess.h"
-#include "cellarray.h"
-#include "expopsockets.h"
-#include "params.h"
-#include "params_advanced.h"
-#include "http.h"
-#include "cryptorc4.h"
-#include "compress.h"
-#include "archive.h"
-#include "assetmanager.h"
-
-// TODO: Move these to a math module or something.
-namespace ExPop
-{
-    template<typename T>
-    inline const T &min(const T &a, const T &b)
-    {
-        return (b < a) ? b : a;
-    }
-
-    template<typename T>
-    inline const T &max(const T &a, const T &b)
-    {
-        return (b > a) ? b : a;
-    }
-}
-
-
+#if EXPOP_DEFLATE_ENABLE_ASSERTS
+#define EXPOP_DEFLATE_ASSERT(x) do { assert((x)); } while(0)
+#else
+#define EXPOP_DEFLATE_ASSERT(x) do { } while(0)
+#endif

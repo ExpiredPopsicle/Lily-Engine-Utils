@@ -47,6 +47,10 @@
 
 #pragma once
 
+#include "deflate/zipfile.h"
+#include "malstring.h"
+#include "thread.h"
+
 // Compensate for broken Cygwin headers.
 #if __CYGWIN__
 #define NAME_MAX FILENAME_MAX
@@ -59,10 +63,6 @@
 #include <vector>
 #include <cstring>
 #include <string>
-
-#include <lilyengine/filesystem.h>
-#include <lilyengine/malstring.h>
-#include <lilyengine/thread.h>
 
 #if !_WIN32
 #include <sys/types.h>
