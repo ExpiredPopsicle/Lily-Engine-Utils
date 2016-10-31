@@ -87,15 +87,24 @@ namespace ExPop
     {
         /// Get all the files and subdirectories in a directory.
         /// Returns true on success and false on failure.
-        bool getAllFiles(const std::string &directory, std::vector<std::string> &names);
+        bool getAllFiles(
+            const std::string &directory,
+            std::vector<std::string> &names,
+            bool showUnixHidden = false);
 
         /// Get all the subdirectories in a directory. Returns true if
         /// successful, false otherwise.
-        bool getSubdirectories(const std::string &directory, std::vector<std::string> &names);
+        bool getSubdirectories(
+            const std::string &directory,
+            std::vector<std::string> &names,
+            bool showUnixHidden = false);
 
         /// Get all the non-directory files in a directory. Returns
         /// true if successful, false otherwise.
-        bool getNondirectories(const std::string &directory, std::vector<std::string> &names);
+        bool getNondirectories(
+            const std::string &directory,
+            std::vector<std::string> &names,
+            bool showUnixHidden = false);
 
         /// Determine if a file exists. Returns true if it exists.
         bool fileExists(const std::string &fileName, bool skipArchives = false);
@@ -318,10 +327,13 @@ namespace ExPop
         // These ones shouldn't need to be altered for
         // platform-specific things ever.
 
-        inline bool getSubdirectories(const std::string &directory, std::vector<std::string> &names)
+        inline bool getSubdirectories(
+            const std::string &directory,
+            std::vector<std::string> &names,
+            bool showUnixHidden)
         {
             std::vector<std::string> allNames;
-            if(!getAllFiles(directory, allNames)) return false;
+            if(!getAllFiles(directory, allNames, showUnixHidden)) return false;
 
             for(unsigned int i = 0; i < allNames.size(); i++) {
                 std::string fullPath = directory + std::string("/") + allNames[i];
@@ -332,10 +344,13 @@ namespace ExPop
             return true;
         }
 
-        inline bool getNondirectories(const std::string &directory, std::vector<std::string> &names)
+        inline bool getNondirectories(
+            const std::string &directory,
+            std::vector<std::string> &names,
+            bool showUnixHidden)
         {
             std::vector<std::string> allNames;
-            if(!getAllFiles(directory, allNames)) return false;
+            if(!getAllFiles(directory, allNames, showUnixHidden)) return false;
 
             for(unsigned int i = 0; i < allNames.size(); i++) {
                 std::string fullPath = directory + std::string("/") + allNames[i];
@@ -561,7 +576,10 @@ namespace ExPop
         // Things that actually touch the system. OS-specific stuff
         // happens here.
 
-        inline bool getAllFiles(const std::string &directory, std::vector<std::string> &names)
+        inline bool getAllFiles(
+            const std::string &directory,
+            std::vector<std::string> &names,
+            bool showUnixHidden)
         {
             std::map<std::string, bool> allFiles;
 
@@ -575,11 +593,19 @@ namespace ExPop
 
                 struct dirent* de;
                 while((de = readdir(d))) {
+
                     std::string name(de->d_name);
-                    // Names that start with a . are hidden in Unix.
-                    // This also removes the . and .. directories (which is good).
-                    if(name[0] != '.') {
-                        allFiles[name] = true;
+
+                    if(name.size()) {
+
+                        if(name == "." || name == "..") {
+                            continue;
+                        }
+
+                        // Names that start with a . are hidden in Unix.
+                        if(name[0] != '.' || showUnixHidden) {
+                            allFiles[name] = true;
+                        }
                     }
                 }
 
@@ -602,10 +628,16 @@ namespace ExPop
                 while(FindNextFile(findHandle, &findData)) {
                     name = findData.cFileName;
 
-                    // See above for reason for not showing . files.
-                    if(name[0] != '.') {
-                        //names.push_back(name);
-                        allFiles[name] = true;
+                    if(name.size()) {
+
+                        if(name == "." || name == "..") {
+                            continue;
+                        }
+
+                        // Names that start with a . are hidden in Unix.
+                        if(name[0] != '.' || showUnixHidden) {
+                            allFiles[name] = true;
+                        }
                     }
                 }
 
