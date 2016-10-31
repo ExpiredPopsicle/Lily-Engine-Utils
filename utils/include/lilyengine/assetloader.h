@@ -138,7 +138,7 @@ namespace ExPop
             bool started;
             bool done;
             char *loadedBuffer;
-            int loadedBufferLength;
+            int64_t loadedBufferLength;
             int age;
 
         };

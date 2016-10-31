@@ -47,7 +47,6 @@
 
 #pragma once
 
-#include "deflate/zipfile.h"
 #include "malstring.h"
 #include "thread.h"
 
@@ -173,7 +172,7 @@ namespace ExPop
         /// you already know the length you're dealing with. If it
         /// hits a file in an archive it may start reading into the
         /// next file's header and the next file.
-        char *loadFilePart(const std::string &fileName, int64_t lengthToRead, int offsetFromStart = 0);
+        char *loadFilePart(const std::string &fileName, int64_t lengthToRead, int64_t offsetFromStart = 0);
 
         /// Saves a buffer to a file. Returns -1 on failure or 0 on
         /// success.
@@ -221,6 +220,7 @@ namespace ExPop
 // sure both sets of declarations precede any actual implementation on
 // both sides.
 #include "archive.h"
+#include "deflate/zipfile.h"
 
 namespace ExPop
 {

@@ -132,13 +132,11 @@ void stripOldHeader(vector<string> &lines)
 
 vector<string> loadLinesFromFile(const string &fileName)
 {
-	int length;
-	char *rawContents = FileSystem::loadFile(fileName, &length, true);
+    std::string rawContents = FileSystem::loadFileString(fileName);
 	vector<string> lines;
 
-    if(rawContents) {
+    if(rawContents.size()) {
         stringTokenize(rawContents, "\n", lines, true);
-        delete[] rawContents;
     }
 
 	return lines;

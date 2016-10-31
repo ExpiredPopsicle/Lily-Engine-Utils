@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int len = 0;
+    int64_t len = 0;
     char *buf = FileSystem::loadFile(filename, &len);
 
     if(!buf) {

@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int fileLen = 0;
+    int64_t fileLen = 0;
     char *fileData = FileSystem::loadFile(filename, &fileLen);
 
     if(!fileData) {

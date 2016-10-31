@@ -126,7 +126,7 @@ namespace ExPop
 // Implementation
 // ----------------------------------------------------------------------
 
-#include "filesystem.h"
+#include "../filesystem.h"
 
 namespace ExPop
 {

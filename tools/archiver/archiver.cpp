@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
         for(int i = 3; i < argc; i++) {
 
-            int len = 0;
+            int64_t len = 0;
 
             // Skip directories internally because they're a pain to
             // screen out on the command line.

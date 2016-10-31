@@ -117,15 +117,12 @@ void loadFileLines(
     const std::string &filename,
     vector<string> &lines) {
 
-    int fileLen = 0;
-    char *fileData = FileSystem::loadFile(filename, &fileLen, true);
+    std::string fileData = FileSystem::loadFileString(filename);
 
-    if(fileData) {
+    if(fileData.size()) {
 
         // Separate file into lines.
         stringTokenize(fileData, "\n", lines, true);
-
-        delete[] fileData;
 
     } else {
 
