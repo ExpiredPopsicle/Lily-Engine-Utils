@@ -44,6 +44,7 @@
 #include <cstdlib>
 #include <string>
 #include <cassert>
+#include <cstring>
 
 // ----------------------------------------------------------------------
 // Declarations and documentation
@@ -80,8 +81,14 @@ namespace ExPop
             /// Create a new image with specified width and height.
             Image(int width, int height);
 
+            /// Copy constructor.
+            Image(const Image &other);
+
             /// Destructor.
             ~Image(void);
+
+            /// Copy.
+            Image &operator=(const Image &other);
 
             /// Set a pixel.
             void setPixel(const Pixel &p, int x, int y);
@@ -95,11 +102,36 @@ namespace ExPop
             /// Get a pointer to a pixel based on linear index.
             Pixel *getPixel(int index);
 
+            /// Get a pointer to a pixel. Skip bounds checking.
+            /// Dangerous if you don't carefully check your image
+            /// bounds. Faster for large image operations.
+            Pixel *getPixelFast(int x, int y);
+
+            /// Get a pointer to a pixel based on linear index. Skip
+            /// bounds checking. Dangerous if you don't carefully
+            /// check your image bounds. Faster for large image
+            /// operations.
+            Pixel *getPixelFast(int index);
+
+            /// Get a pointer to a pixel. Skip bounds checking.
+            /// Dangerous if you don't carefully check your image
+            /// bounds. Faster for large image operations.
+            const Pixel *getPixelFast(int x, int y) const;
+
+            /// Get a pointer to a pixel based on linear index. Skip
+            /// bounds checking. Dangerous if you don't carefully
+            /// check your image bounds. Faster for large image
+            /// operations.
+            const Pixel *getPixelFast(int index) const;
+
             /// Get a pointer to a pixel.
             const Pixel *getPixel(int x, int y) const;
 
             /// Get a pointer to a pixel based on linear index.
             const Pixel *getPixel(int index) const;
+
+            // Set the image to entirely transparent black.
+            void clear();
 
             /// Get a bilinear interpolated color value from some
             /// fractional point.
@@ -181,7 +213,7 @@ namespace ExPop
     {
         inline Image::Image(void)
         {
-            pixels = NULL;
+            pixels = nullptr;
             width = 0;
             height = 0;
         }
@@ -191,6 +223,40 @@ namespace ExPop
             this->width = width;
             this->height = height;
             this->pixels = new Pixel[width * height];
+        }
+
+        inline Image::Image(const Image &other)
+        {
+            this->width = 0;
+            this->height = 0;
+            this->pixels = nullptr;
+
+            operator=(other);
+        }
+
+        inline Image &Image::operator=(const Image &other)
+        {
+            delete[] pixels;
+            pixels = nullptr;
+
+            this->width = other.width;
+            this->height = other.height;
+
+            if(other.pixels) {
+
+                this->pixels = new Pixel[width * height];
+                memcpy(
+                    this->pixels,
+                    other.pixels,
+                    sizeof(Pixel) * width * height);
+
+            } else {
+
+                pixels = nullptr;
+
+            }
+
+            return *this;
         }
 
         inline Image::~Image(void)
@@ -215,9 +281,29 @@ namespace ExPop
             return getPixel(x + y * width);
         }
 
+        inline Pixel *Image::getPixelFast(int x, int y)
+        {
+            return getPixelFast(x + y * width);
+        }
+
+        inline const Pixel *Image::getPixelFast(int x, int y) const
+        {
+            return getPixelFast(x + y * width);
+        }
+
         inline Pixel *Image::getPixel(int index)
         {
             if(index < 0 || index > int(width * height)) return NULL;
+            return &(pixels[index]);
+        }
+
+        inline Pixel *Image::getPixelFast(int index)
+        {
+            return &(pixels[index]);
+        }
+
+        inline const Pixel *Image::getPixelFast(int index) const
+        {
             return &(pixels[index]);
         }
 
@@ -241,6 +327,11 @@ namespace ExPop
         inline unsigned int Image::getHeight(void) const
         {
             return height;
+        }
+
+        inline void Image::clear()
+        {
+            memset(pixels, 0, sizeof(Pixel) * width * height);
         }
 
         inline bool Image::isPow2Size(void) const
