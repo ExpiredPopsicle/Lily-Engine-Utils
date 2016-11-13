@@ -87,8 +87,7 @@ namespace ExPop
         std::vector<std::string> &tokens,
         bool allowEmpty = false);
 
-    /// Escape a string. newLineReplace will be used to replace new
-    /// lines.
+    /// Escape a string.
     template<typename T>
     inline std::basic_string<T> stringEscape(
         const std::basic_string<T> &str,
@@ -143,7 +142,7 @@ namespace ExPop
 
     /// Convert a UTF-32 string to a UTF-8 string.
     inline std::string stringUTF32ToUTF8(
-        const std::vector<uint32_t> &utf32Str);
+        const std::basic_string<uint32_t> &utf32Str);
 
     /// Return a string with all the trailing and leading whitespace
     /// removed.
@@ -923,7 +922,7 @@ namespace ExPop
     // }
 
     inline std::string stringUTF32ToUTF8(
-        const std::vector<uint32_t> &utf32Str)
+        const std::basic_string<uint32_t> &utf32Str)
     {
         std::ostringstream outStr;
 
