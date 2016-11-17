@@ -36,6 +36,7 @@
 
 #include "deflate/deflate.h"
 #include "deflate/deflate_streambuf.h"
+#include "deflate/deflate_zlib.h"
 #include "deflate/zipfile.h"
 
 #include "image.h"

@@ -262,6 +262,10 @@ namespace ExPop
                     outStr << '\\' << 'r';
                     break;
 
+                case '\e':
+                    outStr << '\\' << 'e';
+                    break;
+
                 default:
                     outStr << str[i];
                     break;
@@ -302,6 +306,10 @@ namespace ExPop
 
                     case 'r':
                         outStr << '\r';
+                        break;
+
+                    case 'e':
+                        outStr << '\e';
                         break;
 
                     default:
@@ -1008,6 +1016,49 @@ namespace ExPop
         return outStr.str();
     }
 
+    inline std::string stripVT100(
+        const std::string &text)
+    {
+        std::string ret;
+
+        for(size_t i = 0; i < text.size(); i++) {
+
+            if(text[i] == 0x1b) {
+
+                // Skip '\e'.
+                i++;
+
+                if(i < text.size() && text[i] == '[') {
+
+                    // Skip '['.
+                    i++;
+
+                    // Find the end of the code. Look for something
+                    // that's not a number or a semicolon.
+                    size_t k = i;
+                    for(; k < text.size(); k++) {
+                        if((text[k] < '0' || text[k] > '9') && text[k] != ';') {
+                            break;
+                        }
+                    }
+
+                    // If we wanted to do something with the code, now
+                    // would be the time.
+
+                    i = k;
+                }
+
+            } else {
+
+                // Normal character.
+                ret.append(1, text[i]);
+
+            }
+        }
+
+        return ret;
+    }
+
     // FIXME: Not UTF-8 compatible.
     inline std::string stringWordWrap(
         const std::string &str,
@@ -1027,8 +1078,14 @@ namespace ExPop
 
         for(unsigned int i = 0; i < words.size(); i++) {
 
+            // Get the word with invisible control codes removed, so
+            // we know how many characters it really has.
+            std::string strippedWord = stripVT100(words[i]);
+
             // New line?
-            if(thisLineLength != 0 && words[i].size() + thisLineLength >= (firstLine ? columns : columnsAfterFirstLine)) {
+            if(thisLineLength != 0 && strippedWord.size() +
+                thisLineLength >= (firstLine ? columns : columnsAfterFirstLine))
+            {
                 outStr << std::endl;
                 thisLineLength = 0;
                 firstLine = false;
@@ -1047,7 +1104,7 @@ namespace ExPop
 
             // Add the word.
             outStr << words[i];
-            thisLineLength += words[i].size();
+            thisLineLength += strippedWord.size();
         }
 
         return outStr.str();
