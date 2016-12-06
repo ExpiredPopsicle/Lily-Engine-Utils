@@ -469,7 +469,7 @@ namespace ExPop
         for(int i = 0; i < node->getNumChildren(); i++) {
 
             const ParserNode *childNode = node->getChild(i);
-            std::string childName = childNode->getName();
+            std::string childName = childNode ? childNode->getName() : "";
 
             if(childNode && (
                    childName != "null" &&
