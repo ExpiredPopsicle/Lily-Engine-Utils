@@ -1083,7 +1083,7 @@ namespace ExPop
         return conversionTable;
     }
 
-    inline uint32_t codepage437ToUTF32(uint8_t c, bool ignoreControlCharacters = true)
+    inline uint32_t codepage437ToUTF32(uint8_t c, bool ignoreControlCharacters)
     {
         uint32_t *conversionTable = getCodepage437Table();
 
@@ -1144,7 +1144,7 @@ namespace ExPop
     // Crappy 437->UTF32 converter.
     inline std::basic_string<uint32_t> stringCodepage437ToUTF32(
         const std::string &str,
-        bool ignoreControlCharacters = true)
+        bool ignoreControlCharacters)
     {
         std::basic_string<uint32_t> ret;
         ret.resize(str.size());
