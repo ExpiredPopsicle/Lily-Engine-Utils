@@ -146,7 +146,8 @@ namespace ExPop
 
     /// Crappy UTF32->437 converter. Kinda slow. This only exists
     /// because I wanted to use all the "extended ASCII" graphical
-    /// characters in the graphical console system.
+    /// characters in the graphical console system. Non-representable
+    /// characters are replaced with '?'.
     inline std::string stringUTF32ToCodepage437(
         const std::basic_string<uint32_t> &str);
 
