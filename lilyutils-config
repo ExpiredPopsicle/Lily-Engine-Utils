@@ -11,9 +11,34 @@ if [[ "${PATHTOME}" != "/"* ]]; then
     PATHTOME="${PWD}/${PATHTOME}"
 fi
 
-# This is pretty ugly, but Bash doesn't make it easy to cram "here
-# documents" into variables.
-USAGESTR="Usage: $0 [options] [--libs] [--cflags] [--cxxflags]\n\nOptions:\n\n  --platform-windows            Force Windows-specific flags (for MinGW)\n  --platform-posix              Force POSIX-specific flags\n  --platform-emscripten         Force Emscripten-specific flags\n  --enable-sockets              Enable sockets-related features (off by default)\n  --enable-threads              Enable threading-related features (off by default)\n"
+function printUsage()
+{
+    cat <<EOF
+Usage: $0 [options] [--libs] [--cflags] [--cxxflags]
+
+General platform options:
+
+  --platform-windows            Force Windows-specific flags (for
+                                MinGW)
+  --platform-posix              Force POSIX-specific flags
+  --platform-emscripten         Force Emscripten-specific flags
+  --enable-sockets              Enable sockets-related features (off
+                                by default)
+  --enable-threads              Enable threading-related features (off
+                                by default)
+
+SDL/OpenGL options:
+
+  --enable-sdl2                 Enable functionality that depends on
+                                SDL2 like the graphical console.
+  --disable-sdl2hacks           Disable hacky SDL2 features like
+                                function overrides for easy console
+                                integration.
+  --enable-gl                   Enable functionality that depends on
+                                OpenGL.
+
+EOF
+}
 
 # Attempt to determine platform based on the CXX environment variable.
 # If we see MinGW, then we know we're compiling for Windows. Otherwise
@@ -76,8 +101,22 @@ for PARAM in ${SECONDARYPARAMS}; do
             echo "Warning: Sockets code is incompatible with Emscripten platform." 1>&2
         fi
 
+    elif [ "${PARAM}" == "--enable-sdl2" ]; then
+
+        EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -DEXPOP_ENABLE_SDL2=1"
+
+    elif [ "${PARAM}" == "--disable-sdl2hacks" ]; then
+
+        EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -DEXPOP_ENABLE_SDL2_OVERRIDES=0"
+
+    elif [ "${PARAM}" == "--enable-gl" ]; then
+
+        EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -DEXPOP_ENABLE_GL=1"
+
     else
 
+        # Workaround to the first parameter not having a space in
+        # front of it. Pass this one through to FINALPARAMS.
         if [ "${FINALPARAMS}" == "" ]; then
             FINALPARAMS="${PARAM}"
         else
@@ -107,7 +146,7 @@ for PARAM in ${FINALPARAMS}; do
 
         echo "Unknown parameter: ${PARAM}"
 
-        echo -e "${USAGESTR}" 1>&2
+        printUsage 1>&2
         exit 1
 
     fi
@@ -116,7 +155,7 @@ done
 
 # No parameters given? Dump the usage string.
 if [ "$#" == 0 ]; then
-    echo -e "${USAGESTR}" 1>&2
+    printUsage 1>&2
     exit 1
 fi
 
