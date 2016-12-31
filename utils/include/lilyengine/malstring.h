@@ -202,6 +202,19 @@ namespace ExPop
     template<typename T>
     inline std::basic_string<T> stringToLower(
         const std::basic_string<T> &str);
+
+    /// URL-Encode a string. (' ' becomes %20, etc).
+    inline std::string urlDecode(const std::string &data);
+
+    /// URL-Decode a string. (%20 becomes ' ', etc).
+    inline std::string urlEncode(const std::string &data);
+
+    /// Read a quoted section of a string. Handles escape characters
+    /// and escaped quotes. When calling this, in[ptr] should be on
+    /// the first '"'. By the end of the function, in[ptr] will be the
+    /// last '"'. Modifies ptr to point to the end of the quoted
+    /// section.
+    inline std::string readQuotedString(const std::string &in, size_t &ptr);
 }
 
 // ----------------------------------------------------------------------
@@ -1328,6 +1341,81 @@ namespace ExPop
             ret[i] = tolower(ret[i]);
         }
         return ret;
+    }
+
+    inline std::string urlDecode(const std::string &data)
+    {
+        std::ostringstream ostr;
+
+        for(size_t i = 0; i < data.size(); i++) {
+
+            if(data[i] != '%') {
+                if(data[i] == '+') {
+                    ostr << " ";
+                } else {
+                    ostr << data[i];
+                }
+            } else {
+                if(data.size() > i + 2) {
+                    uint8_t byte = 0;
+                    byte |= stringHexToNibble(data[i+1]) << 4;
+                    byte |= stringHexToNibble(data[i+2]);
+                    ostr << char(byte);
+                    i += 2;
+                }
+            }
+        }
+
+        return ostr.str();
+    }
+
+    inline std::string urlEncode(const std::string &data)
+    {
+        const char *hexTable = "0123456789ABCDEF";
+        std::ostringstream ostr;
+        for(size_t i = 0; i < data.size(); i++) {
+
+            if(data[i] == '-' || data[i] == '.' || data[i] == '_' ||
+                (data[i] >= 'A' && data[i] <= 'Z') ||
+                (data[i] >= 'a' && data[i] <= 'z') ||
+                (data[i] >= '0' && data[i] <= '9'))
+            {
+                ostr << data[i];
+            } else {
+                ostr << "%" << hexTable[uint8_t(data[i]) >> 4] << hexTable[uint8_t(data[i]) & 0xf];
+            }
+
+        }
+
+        return ostr.str();
+    }
+
+    inline std::string readQuotedString(const std::string &in, size_t &ptr)
+    {
+        // Skip '"'.
+        if(ptr < in.size() && in[ptr] == '"') {
+            ptr++;
+        }
+
+        size_t innerStart = ptr;
+
+        bool escaped = false;
+
+        while(ptr < in.size()) {
+            if(in[ptr] == '\\') {
+                escaped = !escaped;
+            } else {
+                if(in[ptr] == '"' && !escaped) {
+                    break;
+                }
+                escaped = false;
+            }
+            ptr++;
+        }
+
+        std::string ret = in.substr(innerStart, ptr - innerStart);
+
+        return ExPop::stringUnescape(ret);
     }
 }
 

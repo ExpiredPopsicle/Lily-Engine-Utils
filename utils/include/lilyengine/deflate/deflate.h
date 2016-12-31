@@ -1040,7 +1040,7 @@ namespace ExPop
         // ----------------------------------------------------------------------
         // External-facing functions.
 
-        int32_t readNextValue(DecompressState &state)
+        inline int32_t readNextValue(DecompressState &state)
         {
             while(1) {
 

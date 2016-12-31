@@ -131,6 +131,8 @@ namespace ExPop
         int underflow() override;
         int overflow(int c = EOF) override;
 
+        std::string getPeerAddress() const;
+
     private:
 
         // These are both left intentionally undefined. Using the
@@ -246,9 +248,9 @@ namespace ExPop
 
     inline void Socket::disconnect(void)
     {
-        assert(
-            state == SOCKETSTATE_CONNECTED ||
-            state == SOCKETSTATE_LISTENING);
+        // assert(
+        //     state == SOCKETSTATE_CONNECTED ||
+        //     state == SOCKETSTATE_LISTENING);
 
         socketsCloseOSSpecfic(fd);
         constructSocket();
@@ -290,7 +292,7 @@ namespace ExPop
 
     inline ssize_t Socket::sendData(const void *data, size_t length)
     {
-        assert(state == SOCKETSTATE_CONNECTED);
+        // assert(state == SOCKETSTATE_CONNECTED);
 
         ssize_t ret = send(fd, socketsConstDataCast(data), length, 0);
         if(ret == 0 || ret == -1) {
@@ -302,7 +304,7 @@ namespace ExPop
 
     inline ssize_t Socket::recvData(void *data, size_t length)
     {
-        assert(state == SOCKETSTATE_CONNECTED);
+        // assert(state == SOCKETSTATE_CONNECTED);
 
         ssize_t ret = recv(fd, socketsDataCast(data), length, 0);
         if(ret == 0 || ret == -1) {
@@ -398,6 +400,28 @@ namespace ExPop
         ret->state = SOCKETSTATE_CONNECTED;
 
         return ret;
+    }
+
+    inline std::string Socket::getPeerAddress() const
+    {
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        socklen_t addrLen = sizeof(addr);
+        getpeername(fd, (sockaddr*)&addr, &addrLen);
+
+        std::ostringstream addrStr;
+
+        if(addr.sin_family == AF_INET) {
+            addrStr << ((addr.sin_addr.s_addr & 0x000000ff) >> 0 ) << ".";
+            addrStr << ((addr.sin_addr.s_addr & 0x0000ff00) >> 8 ) << ".";
+            addrStr << ((addr.sin_addr.s_addr & 0x00ff0000) >> 16) << ".";
+            addrStr << ((addr.sin_addr.s_addr & 0xff000000) >> 24) << ":";
+            addrStr << htons(addr.sin_port) << std::endl;
+        } else {
+            // TODO: Implement ipv6.
+        }
+
+        return addrStr.str();
     }
 
     inline int Socket::uflow()
