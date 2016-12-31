@@ -126,12 +126,13 @@ namespace ExPop
         /// Disconnect the socket.
         void disconnect(void);
 
+        /// Get the address of the thing we're connected to.
+        std::string getPeerAddress(bool includePort = true) const;
+
         // streambuf overrides.
         int uflow() override;
         int underflow() override;
         int overflow(int c = EOF) override;
-
-        std::string getPeerAddress() const;
 
     private:
 
@@ -317,6 +318,7 @@ namespace ExPop
     inline bool Socket::hasData(void)
     {
         assert(
+            state == SOCKETSTATE_LISTENING ||
             state == SOCKETSTATE_CONNECTED ||
             type == SOCKETTYPE_UDP);
 
@@ -402,7 +404,7 @@ namespace ExPop
         return ret;
     }
 
-    inline std::string Socket::getPeerAddress() const
+    inline std::string Socket::getPeerAddress(bool includePort) const
     {
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
@@ -415,8 +417,11 @@ namespace ExPop
             addrStr << ((addr.sin_addr.s_addr & 0x000000ff) >> 0 ) << ".";
             addrStr << ((addr.sin_addr.s_addr & 0x0000ff00) >> 8 ) << ".";
             addrStr << ((addr.sin_addr.s_addr & 0x00ff0000) >> 16) << ".";
-            addrStr << ((addr.sin_addr.s_addr & 0xff000000) >> 24) << ":";
-            addrStr << htons(addr.sin_port) << std::endl;
+            addrStr << ((addr.sin_addr.s_addr & 0xff000000) >> 24);
+            if(includePort) {
+                addrStr << ":";
+                addrStr << htons(addr.sin_port);
+            }
         } else {
             // TODO: Implement ipv6.
         }
