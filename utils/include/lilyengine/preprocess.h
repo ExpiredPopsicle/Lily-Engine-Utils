@@ -49,8 +49,8 @@
 #include <string>
 #include <map>
 
-#include <lilyengine/malstring.h>
-#include <lilyengine/filesystem.h>
+#include "malstring.h"
+#include "filesystem.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation

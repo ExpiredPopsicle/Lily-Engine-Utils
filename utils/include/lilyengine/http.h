@@ -41,9 +41,9 @@
 #include <sstream>
 #include <unordered_map>
 
-#include <lilyengine/config.h>
-#include <lilyengine/expopsockets.h>
-#include <lilyengine/malstring.h>
+#include "config.h"
+#include "expopsockets.h"
+#include "malstring.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation

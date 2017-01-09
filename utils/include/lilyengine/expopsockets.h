@@ -38,7 +38,7 @@
 
 #pragma once
 
-#include <lilyengine/config.h>
+#include "config.h"
 
 #if EXPOP_ENABLE_SOCKETS
 
