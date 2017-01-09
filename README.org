@@ -29,13 +29,14 @@ anyway.
 If #including individual headers isn't your style, you can simply
 #include <lilyengine/utils.h> and get everything.
 
-config.bsh, run from the root directory of the project, will take
---libs and --cxxflags parameters, and spit back compiler flags needed
-to add the library to a project. This will generate absolute paths for
-header search flags, pointing them to the current Lily-Engine-Utils
-directory. See the output of config.bsh --help for more information on
-available options. Some flags are required for sockets and threading
-related parts, which are disabled by default.
+"lilyutils-config", run from the root directory of the project, will
+take --libs and --cxxflags parameters, and spit back compiler flags
+needed to add the library to a project. This will generate absolute
+paths for header search flags, pointing them to the current
+Lily-Engine-Utils directory. See the output of "lilyutils-config
+--help" for more information on available options. Some flags are
+required for sockets and threading related parts, which are disabled
+by default.
 
 *** Tools
 
@@ -46,11 +47,11 @@ issue tracking, and some image processing.
 ** Dependencies
 
 The best way to use the utils library is to just feed the output of
-config.bsh into your compiler and linker if you're using Clang, GCC,
-or anything else that takes the same set of command line parameters.
-If you do not use one of those compilers, or do not wish to use the
-config.bsh method for command line parameters, keep reading this
-section.
+"lilyutils-config" into your compiler and linker if you're using
+Clang, GCC, or anything else that takes the same set of command line
+parameters. If you do not use one of those compilers, or do not wish
+to use the "lilyutils-config" method for command line parameters, keep
+reading this section.
 
 The library has optional dependencies on the Windows sockets library
 (ws2_32.lib, or libws2_32.a) when compiling on Windows, pthreads on
