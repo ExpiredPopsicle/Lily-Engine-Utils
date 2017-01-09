@@ -62,6 +62,8 @@
 #include "archive.h"
 #include "assetmanager.h"
 
+#include "graphicalconsole/graphicalconsole.h"
+
 // TODO: Move these to a math module or something.
 namespace ExPop
 {
