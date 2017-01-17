@@ -64,6 +64,11 @@
 
 #include "graphicalconsole/graphicalconsole.h"
 
+#include "pixelimage/pixelimage.h"
+#include "pixelimage/pixelimage_legacy.h"
+#include "pixelimage/pixelimage_scale.h"
+#include "pixelimage/pixelimage_tga.h"
+
 // TODO: Move these to a math module or something.
 namespace ExPop
 {
