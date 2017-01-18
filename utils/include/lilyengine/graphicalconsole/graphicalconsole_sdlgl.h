@@ -142,7 +142,7 @@ namespace ExPop
                         0,
                         GL_RGBA,
                         GL_UNSIGNED_BYTE,
-                        console->getBackbuffer()->getPixel(0));
+                        &console->getBackbuffer()->getData(0, 0, 0));
                     state.lastSeenBackBufferUpdate = console->getBackbufferUpdateCount();
                 }
 

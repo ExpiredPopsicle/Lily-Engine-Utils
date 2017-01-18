@@ -146,7 +146,7 @@ namespace ExPop
         backBufferIsDirty = true;
     }
 
-    inline const ExPop::Gfx::Image *GraphicalConsole::getBackbuffer() const
+    inline const PixelImage<uint8_t> *GraphicalConsole::getBackbuffer() const
     {
         return backBuffer;
     }

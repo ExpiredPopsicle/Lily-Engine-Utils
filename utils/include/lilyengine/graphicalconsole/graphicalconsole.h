@@ -136,6 +136,8 @@
 #include <mutex>
 #include <thread>
 
+#include "../pixelimage/pixelimage.h"
+#include "../pixelimage/pixelimage_tga.h"
 #include "../image.h"
 #include "graphicalconsole_fontimage.h"
 
@@ -155,7 +157,7 @@ namespace ExPop
         void addLine(const std::string &text);
         void setBackbufferSize(size_t width, size_t height);
         bool needsUpdate() const;
-        const ExPop::Gfx::Image *getBackbuffer() const;
+        const PixelImage<uint8_t> *getBackbuffer() const;
 
         /// Use this to determine if your render layer has seen the most
         /// recent snapshot of the backbuffer.
@@ -347,10 +349,10 @@ namespace ExPop
         // ----------------------------------------------------------------------
         // Graphics state.
 
-        ExPop::Gfx::Image *outlinedFontImg;
-        ExPop::Gfx::Image *gradImg;
-        ExPop::Gfx::Image *gradientsByColor[8*3];
-        ExPop::Gfx::Image *backBuffer;
+        PixelImage<uint8_t> *outlinedFontImg;
+        PixelImage<uint8_t> *gradImg;
+        PixelImage<uint8_t> *gradientsByColor[8*3];
+        PixelImage<uint8_t> *backBuffer;
         bool backBufferIsDirty;
         float bgAlpha;
         float visibility;
@@ -472,7 +474,7 @@ namespace ExPop
     inline void GraphicalConsole::setBackbufferSize(size_t width, size_t height)
     {
         if(width != backBuffer->getWidth() || height != backBuffer->getHeight()) {
-            *backBuffer = ExPop::Gfx::Image(width, height);
+            *backBuffer = PixelImage<uint8_t>(width, height, 4);
             backBufferIsDirty = true;
         }
     }
@@ -508,15 +510,15 @@ namespace ExPop
             std::string fontTgaBuffer;
             ExPop::Deflate::decompress_zlib(copiedZlibData, fontTgaBuffer);
 
-            ExPop::Gfx::Image *fontImg = ExPop::Gfx::loadTGA(
-                &fontTgaBuffer[0], fontTgaBuffer.size(), false);
+            PixelImage<uint8_t> *fontImg = pixelImageLoadTGA(
+                &fontTgaBuffer[0], fontTgaBuffer.size());
 
             // If we hit this, then we messed up the font image encoding
             // somehow.
             assert(fontImg);
 
-            makeBlackTransparent(*fontImg);
-            outlinedFontImg = generateOutlinedFontMask(fontImg);
+            Gfx::makeBlackTransparent(*fontImg);
+            outlinedFontImg = Gfx::generateOutlinedFontMask(fontImg);
             delete fontImg;
         }
 
@@ -572,7 +574,7 @@ namespace ExPop
 
         // Make some default-sized back buffer. This can be modified
         // later.
-        backBuffer = new ExPop::Gfx::Image(320, 480); // FIXME: Artificially small for wrapping tests.
+        backBuffer = new PixelImage<uint8_t>(320, 480, 4); // FIXME: Artificially small for wrapping tests.
 
         // Built-in commands.
         setCommand(

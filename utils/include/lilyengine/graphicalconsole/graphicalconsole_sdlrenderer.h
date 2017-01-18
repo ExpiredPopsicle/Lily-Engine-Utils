@@ -108,13 +108,14 @@ namespace ExPop
     }
 
     inline SDL_Surface *makeSDLSurfaceForImage(
-        const ExPop::Gfx::Image &img,
+        const PixelImage<uint8_t> &img,
         bool alpha = false)
     {
         return SDL_CreateRGBSurfaceFrom(
-            (void*)img.getPixel(0),
+            (void*)&img.getData(0, 0, 0),
             img.getWidth(), img.getHeight(),
-            32, img.getWidth() * 4,
+            img.getChannelCount() * 8,
+            img.getWidth() * img.getChannelCount(),
 
             0x000000ff,
             0x0000ff00,
@@ -194,7 +195,7 @@ namespace ExPop
             SDL_GetRendererOutputSize(renderer, &winWidth, &winHeight);
             winHeight /= 2;
 
-            const ExPop::Gfx::Image *backBuffer = console->getBackbuffer();
+            const PixelImage<uint8_t> *backBuffer = console->getBackbuffer();
 
             // Resize backbuffer if needed.
             if(int(backBuffer->getWidth()) != winWidth || int(backBuffer->getHeight()) != winHeight ||
@@ -234,8 +235,11 @@ namespace ExPop
                     pitch == console->getBackbuffer()->getWidth() * sizeof(ExPop::Gfx::Pixel));
 
                 memcpy(px,
-                    console->getBackbuffer()->getPixelFast(0),
-                    console->getBackbuffer()->getWidth() * console->getBackbuffer()->getHeight() * sizeof(ExPop::Gfx::Pixel));
+                    &console->getBackbuffer()->getData(0, 0, 0),
+                    console->getBackbuffer()->getWidth() *
+                    console->getBackbuffer()->getHeight() *
+                    console->getBackbuffer()->getChannelCount() *
+                    sizeof(uint8_t));
 
                 SDL_UnlockTexture(tex);
 

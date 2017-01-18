@@ -37,13 +37,14 @@
 
 #pragma once
 
+#include "../pixelimage/pixelimage.h"
 #include "textrendering.h"
 
 namespace ExPop
 {
 
     // FIXME: Rename this.
-    inline ExPop::Gfx::Image *makeGradientImage(
+    inline PixelImage<uint8_t> *makeGradientImage(
         int blankSize,
         const ExPop::FVec3 &colorTop,
         const ExPop::FVec3 &colorMiddle,
@@ -54,16 +55,14 @@ namespace ExPop
         // characters to ignore for gradient alpha calculation.
         int gradientSquish = 2;
 
-        ExPop::Gfx::Image *gradImg =
-            new ExPop::Gfx::Image(blankSize, blankSize);
-
-        gradImg->clear();
+        ExPop::PixelImage<uint8_t> *gradImg =
+            new ExPop::PixelImage<uint8_t>(blankSize, blankSize, 4);
 
         for(int y = 0; y < blankSize; y++) {
 
             for(int x = 0; x < blankSize; x++) {
 
-                ExPop::Gfx::Pixel *p = gradImg->getPixel(x, y);
+                PixelValue<uint8_t> *p = &gradImg->getData(x, y, 0);
 
                 // Calculate alpha.
                 int grad_y = y - gradientSquish;
@@ -83,7 +82,7 @@ namespace ExPop
                         (colorBottom * a);
                 }
 
-                p->rgba.a = 255;
+                p[3] = 1.0f;
 
                 // Clamp to sane range.
                 for(int k = 0; k < 3; k++) {
@@ -91,9 +90,9 @@ namespace ExPop
                     if(color[k] < 0.0f) color[k] = 0.0f;
                 }
 
-                p->rgba.r = 255 * color[0];
-                p->rgba.g = 255 * color[1];
-                p->rgba.b = 255 * color[2];
+                p[0] = color[0];
+                p[1] = color[1];
+                p[2] = color[2];
             }
         }
 
@@ -255,22 +254,32 @@ namespace ExPop
         lineRingBufferMutex.lock();
 
         // Make a transparent checkered backround.
-        ExPop::Gfx::Pixel bgcolor;
-        bgcolor.value = 0;
-        bgcolor.rgba.b = 0x20;
-        bgcolor.rgba.a = bgAlpha * 255;
+        uint8_t bgcolor[4] = {0};
+        bgcolor[2] = 0x20;
+        bgcolor[3] = bgAlpha * 255;
 
-        ExPop::Gfx::Pixel bgcolor2;
-        // bgcolor2.value = 0x08080808;
-        bgcolor2.value = 0;
-        bgcolor2.rgba.b = 0x40;
-        bgcolor2.rgba.a = bgAlpha * 255;
+        uint8_t bgcolor2[4] = {0};
+        bgcolor2[2] = 0x40;
+        bgcolor2[3] = bgAlpha * 255;
 
         const size_t checkerSpacing = 16;
         for(size_t y = 0; y < backBuffer->getHeight(); y++) {
             for(size_t x = 0; x < backBuffer->getWidth(); x++) {
+
                 bool b = ((y / checkerSpacing) + (x / checkerSpacing)) % 2;
-                *backBuffer->getPixelFast(x, y) = b ? bgcolor : bgcolor2;
+                PixelValue<uint8_t> *val = &backBuffer->getData(x, y, 0);
+
+                if(b) {
+                    val[0].value = bgcolor[0];
+                    val[1].value = bgcolor[1];
+                    val[2].value = bgcolor[2];
+                    val[3].value = bgcolor[3];
+                } else {
+                    val[0].value = bgcolor2[0];
+                    val[1].value = bgcolor2[1];
+                    val[2].value = bgcolor2[2];
+                    val[3].value = bgcolor2[3];
+                }
             }
         }
 
@@ -357,7 +366,7 @@ namespace ExPop
                     foregroundColor -= 8;
                 }
 
-                drawText(
+                Gfx::drawText(
                     outlinedFontImg,
                     backBuffer,
                     !!(k->first & GRAPHICALCONSOLE_VT100_BIT_DEFAULT) ? gradImg : gradientsByColor[foregroundColor],
@@ -396,7 +405,7 @@ namespace ExPop
         int inputAreaYOffset = backBuffer->getHeight() - rowSquish - padding - rowSize;
 
         // Draw the text input area.
-        drawText(
+        Gfx::drawText(
             outlinedFontImg,
             backBuffer,
             // gradImg,
@@ -415,7 +424,7 @@ namespace ExPop
         memset(&spacesWithCursor[0], ' ', numSpaces);
         spacesWithCursor[numSpaces] = 219; // Extended ASCII full block.
 
-        drawText(
+        Gfx::drawText(
             outlinedFontImg,
             backBuffer,
             gradientsByColor[7+16], // Bright white
@@ -432,7 +441,7 @@ namespace ExPop
             spacesWithCursor[numSpaces] =
                 editLineBuffer[editLineCursorLocation];
 
-            drawText(
+            Gfx::drawText(
                 outlinedFontImg,
                 backBuffer,
                 gradientsByColor[0], // Black

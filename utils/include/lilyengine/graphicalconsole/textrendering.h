@@ -30,7 +30,7 @@
 // -------------------------- END HEADER -------------------------------------
 
 // Simple text rendering (ASCII only, fixed-width only) that renders
-// to an ExPop::Gfx::Image.
+// to an PixelImage<uint8_t>.
 
 // ----------------------------------------------------------------------
 // Needed headers
@@ -39,7 +39,6 @@
 #pragma once
 
 #include "../matrix.h"
-#include "../image.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation
@@ -61,9 +60,9 @@ namespace ExPop
         /// is the same size or larger than the character size in the
         /// font.
         void drawText(
-            Image *font,
-            Image *dst,
-            Image *baseTex,
+            PixelImage<uint8_t> *font,
+            PixelImage<uint8_t> *dst,
+            PixelImage<uint8_t> *baseTex,
             int x, int y,
             const std::string &str,
             int lineSpacing = 0,
@@ -72,13 +71,13 @@ namespace ExPop
         /// Make all the black areas of an image transparent. This is
         /// basically just cheap color keying.
         void makeBlackTransparent(
-            Image &img);
+            PixelImage<uint8_t> &img);
 
         /// Generate an outlined font for better reading on complex
         /// backgrounds. This will generate a bigger image to make
         /// room for the one-pixel outline.
-        Image *generateOutlinedFontMask(
-            Image *font);
+        PixelImage<uint8_t> *generateOutlinedFontMask(
+            PixelImage<uint8_t> *font);
     }
 }
 
@@ -91,13 +90,13 @@ namespace ExPop
     namespace Gfx
     {
         inline void makeBlackTransparent(
-            ExPop::Gfx::Image &img)
+            PixelImage<uint8_t> &img)
         {
             for(size_t y = 0; y < img.getHeight(); y++) {
                 for(size_t x = 0; x < img.getWidth(); x++) {
-                    ExPop::Gfx::Pixel *outp = img.getPixelFast(x, y);
-                    if(outp->rgba.r == 0) {
-                        outp->rgba.a = 0;
+                    PixelValue<uint8_t> *outp = &img.getData(x, y, 0);
+                    if(outp[0].value == 0) {
+                        outp[3].value = 0;
                     }
                 }
             }
@@ -115,12 +114,12 @@ namespace ExPop
         // TODO: Maybe "expose" the blitting interface outside of the
         // font system.
         inline void imgBlit(
-            const ExPop::Gfx::Image &src,
-            const ExPop::Gfx::Rectangle &srcRect,
-            ExPop::Gfx::Image &dst,
-            const ExPop::Gfx::Rectangle &dstRect)
+            const PixelImage<uint8_t> &src,
+            const Gfx::Rectangle &srcRect,
+            PixelImage<uint8_t> &dst,
+            const Gfx::Rectangle &dstRect)
         {
-            ExPop::Gfx::Rectangle realBounds = dstRect;
+            Gfx::Rectangle realBounds = dstRect;
 
             // Check if output is before the buffer on either axis.
             if(realBounds.x + realBounds.w <= 0) {
@@ -162,23 +161,26 @@ namespace ExPop
                 for(int x = xStartOffset; x < realBounds.w; x++) {
 
                     // Okay due to our bounds checking.
-                    ExPop::Gfx::Pixel *pd = dst.getPixelFast(x + dstRect.x, y + dstRect.y);
+                    PixelValue<uint8_t> *pd = &dst.getData(x + dstRect.x, y + dstRect.y, 0);
 
                     // Okay only if we're sure about our backing texture image.
-                    const ExPop::Gfx::Pixel *ps = src.getPixelFast(x + srcRect.x, y + srcRect.y);
+                    const PixelValue<uint8_t> *ps = &src.getData(x + srcRect.x, y + srcRect.y, 0);
 
-                    *pd = *ps;
+                    pd[0] = ps[0];
+                    pd[1] = ps[1];
+                    pd[2] = ps[2];
+                    pd[3] = ps[3];
                 }
             }
         }
 
         inline void imgBlitForText(
-            const ExPop::Gfx::Image &src,
-            const ExPop::Gfx::Rectangle &srcRect,
-            ExPop::Gfx::Image &dst,
-            const ExPop::Gfx::Rectangle &dstRect,
-            const ExPop::Gfx::Image *mask,
-            const ExPop::Gfx::Rectangle *maskRect)
+            const PixelImage<uint8_t> &src,
+            const Gfx::Rectangle &srcRect,
+            PixelImage<uint8_t> &dst,
+            const Gfx::Rectangle &dstRect,
+            const PixelImage<uint8_t> *mask,
+            const Gfx::Rectangle *maskRect)
         {
             ExPop::Gfx::Rectangle realBounds = dstRect;
 
@@ -221,33 +223,39 @@ namespace ExPop
                 for(int x = xStartOffset; x < realBounds.w; x++) {
 
                     // Okay due to our bounds checking.
-                    ExPop::Gfx::Pixel *pd =
-                        dst.getPixelFast(x + dstRect.x, y + dstRect.y);
+                    PixelValue<uint8_t> *pd =
+                        &dst.getData(x + dstRect.x, y + dstRect.y, 0);
 
                     // Okay only if we're sure about our backing
                     // texture image.
-                    const ExPop::Gfx::Pixel *ps =
-                        src.getPixelFast(x + srcRect.x, y + srcRect.y);
+                    const PixelValue<uint8_t> *ps =
+                        &src.getData(x + srcRect.x, y + srcRect.y, 0);
 
                     // Okay only if we're sure about our font.
-                    const ExPop::Gfx::Pixel *pm =
-                        mask ? mask->getPixelFast(x + maskRect->x, y + maskRect->y) : nullptr;
+                    const PixelValue<uint8_t> *pm =
+                        mask ? &mask->getData(x + maskRect->x, y + maskRect->y, 0) : nullptr;
 
-                    if(pm->rgba.a > 0)
+                    if(pm[3].value > 0)
                     {
                         // *pd = *pm;
 
-                        if(pm->rgba.r) {
+                        if(pm[0].value) {
 
                             // Use the color from the source
                             // background.
-                            *pd = *ps;
+                            pd[0].value = ps[0].value;
+                            pd[1].value = ps[1].value;
+                            pd[2].value = ps[2].value;
+                            pd[3].value = ps[3].value;
 
-                        } else if(pd->rgba.a != 255) {
+                        } else if(pd[3].value != 255) {
 
                             // Use the black color straight from the
                             // mask.
-                            *pd = *pm;
+                            pd[0].value = pm[0].value;
+                            pd[1].value = pm[1].value;
+                            pd[2].value = pm[2].value;
+                            pd[3].value = pm[3].value;
 
                         }
                     }
@@ -255,8 +263,8 @@ namespace ExPop
             }
         }
 
-        inline ExPop::Gfx::Image *generateOutlinedFontMask(
-            ExPop::Gfx::Image *font)
+        inline PixelImage<uint8_t> *generateOutlinedFontMask(
+            PixelImage<uint8_t> *font)
         {
             int characterWidth = font->getWidth() / 16;
             int characterHeight = font->getHeight() / 16;
@@ -265,10 +273,11 @@ namespace ExPop
             // character with an extra pixel on each side.
             int outputCharacterWidth = characterWidth + 2;
             int outputCharacterHeight = characterHeight + 2;
-            Image *output = new Image(
+
+            PixelImage<uint8_t> *output = new PixelImage<uint8_t>(
                 outputCharacterWidth * 16,
-                outputCharacterHeight * 16);
-            output->clear();
+                outputCharacterHeight * 16,
+                4);
 
             // Copy characters over.
             for(size_t y = 0; y < 16; y++) {
@@ -297,8 +306,8 @@ namespace ExPop
             for(int y = 0; y < int(output->getHeight()); y++) {
                 for(int x = 0; x < int(output->getWidth()); x++) {
 
-                    Pixel *outp = output->getPixelFast(x, y);
-                    if(outp->rgba.r == 255 && outp->rgba.a) {
+                    PixelValue<uint8_t> *outp = &output->getData(x, y, 0);
+                    if(outp[0].value == 255 && outp[3]) {
 
                         // Iterate through all adjacent pixels and set
                         // them black if there's nothing in them
@@ -307,13 +316,13 @@ namespace ExPop
                             int pos[2] = { x, y };
                             pos[i&1] += -1 + (i&2);
 
-                            Pixel *outp2 =
-                                output->getPixel(
-                                    pos[0], pos[1]);
+                            PixelValue<uint8_t> *outp2 =
+                                &output->getData(
+                                    pos[0], pos[1], 0);
 
-                            if(outp2 && outp2->rgba.a == 0) {
-                                outp2->rgba.r = 0;
-                                outp2->rgba.a = 255;
+                            if(outp2 && outp2[3].value == 0) {
+                                outp2[0].value = 0;
+                                outp2[3].value = 255;
                             }
 
                         }
@@ -326,9 +335,9 @@ namespace ExPop
         }
 
         inline void drawText(
-            Image *font,
-            Image *dst,
-            Image *baseTex,
+            PixelImage<uint8_t> *font,
+            PixelImage<uint8_t> *dst,
+            PixelImage<uint8_t> *baseTex,
             int x, int y,
             const std::string &str,
             int lineSpacing,
