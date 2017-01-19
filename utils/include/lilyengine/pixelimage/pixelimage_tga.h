@@ -367,11 +367,30 @@ namespace ExPop
 
                 // TGA stores stuff in BGRA.
 
-                *p = img.getData(x, y, 2).value; p++;
-                *p = img.getData(x, y, 1).value; p++;
-                *p = img.getData(x, y, 0).value; p++;
-                *p = img.getData(x, y, 3).value; p++;
+                if(img.getChannelCount() == 1) {
 
+                    // Greyscale, no alpha.
+                    *p = img.getData(x, y, 0).value; p++;
+                    *p = img.getData(x, y, 0).value; p++;
+                    *p = img.getData(x, y, 0).value; p++;
+                    *p = 255; p++;
+
+                } else if (img.getChannelCount() == 3) {
+
+                    // RGB, no alpha.
+                    *p = img.getData(x, y, 2).value; p++;
+                    *p = img.getData(x, y, 1).value; p++;
+                    *p = img.getData(x, y, 0).value; p++;
+                    *p = 255; p++;
+
+                } else {
+
+                    // Assume RGBA.
+                    *p = img.getData(x, y, 2).value; p++;
+                    *p = img.getData(x, y, 1).value; p++;
+                    *p = img.getData(x, y, 0).value; p++;
+                    *p = img.getData(x, y, 3).value; p++;
+                }
             }
         }
 

@@ -271,7 +271,7 @@ namespace ExPop
             for(size_t x = 0; x < width && x < inWidth; x++) {
                 for(size_t c = 0; c < numChannels && c < inNumChannels; c++) {
                     newData[c + x * inNumChannels + y * (inWidth * inNumChannels)].value =
-                        data[c + x * numChannels + y * (width * numChannels)];
+                        data[c + x * numChannels + y * (width * numChannels)].value;
                 }
             }
         }
