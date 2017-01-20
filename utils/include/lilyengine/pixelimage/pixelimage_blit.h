@@ -29,7 +29,7 @@
 //
 // -------------------------- END HEADER -------------------------------------
 
-// Conversions to/from old ExPop::Gfx::Image stuff.
+// Blitting functions for PixelImage.
 
 // ----------------------------------------------------------------------
 // Needed headers
@@ -45,6 +45,12 @@
 
 namespace ExPop
 {
+    /// Blit from source to destination. Set alphaChannelIndex to -1
+    /// to ignore alpha. wrapDst controls whether to wrap coordinates
+    /// in the destination image (true) or just clip to the image
+    /// edge. overrideAlpha comes into play only when
+    /// alphaChannelIndex is -1, as the alpha value to use instead of
+    /// the image's own alpha channel.
     void pixelImageBlit(
         const PixelImageBase &src,
         PixelImage_Coordinate src_left,
