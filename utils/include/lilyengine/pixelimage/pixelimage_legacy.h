@@ -41,8 +41,7 @@
 #include "pixelimagebase.h"
 #include "pixelimage.h"
 
-// FIXME: Correct path when integrating to main utils.
-#include <lilyengine/image.h>
+#include "../image.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation

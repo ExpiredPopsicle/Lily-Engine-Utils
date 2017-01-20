@@ -78,6 +78,9 @@ namespace ExPop
         /// room for the one-pixel outline.
         PixelImage<uint8_t> *generateOutlinedFontMask(
             PixelImage<uint8_t> *font);
+
+        /// Load up a new instance of the built-in font.
+        PixelImage<uint8_t> *loadBuiltinFont();
     }
 }
 
@@ -441,6 +444,29 @@ namespace ExPop
         }
 
     }
+
+    inline PixelImage<uint8_t> *loadBuiltinFont()
+    {
+        size_t tgaFileLengthZlib = 0;
+        uint8_t *tgaFileDataZlib = ExPop::Gfx::graphicalConsoleGetFontFileBuffer(&tgaFileLengthZlib);
+        std::string copiedZlibData;
+        copiedZlibData.resize(tgaFileLengthZlib);
+        memcpy(&copiedZlibData[0], tgaFileDataZlib, tgaFileLengthZlib);
+        std::string fontTgaBuffer;
+        ExPop::Deflate::decompress_zlib(copiedZlibData, fontTgaBuffer);
+
+        PixelImage<uint8_t> *fontImg = pixelImageLoadTGA(
+            &fontTgaBuffer[0], fontTgaBuffer.size());
+
+        // If we hit this, then we messed up the font image encoding
+        // somehow.
+        assert(fontImg);
+
+        Gfx::makeBlackTransparent(*fontImg);
+
+        return fontImg;
+    }
+
 }
 
 

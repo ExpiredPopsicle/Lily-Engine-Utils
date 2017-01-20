@@ -502,20 +502,7 @@ namespace ExPop
         // need to pull it out, copy it, decompress it, and then load
         // it up as a TGA.
         {
-            size_t tgaFileLengthZlib = 0;
-            uint8_t *tgaFileDataZlib = ExPop::Gfx::graphicalConsoleGetFontFileBuffer(&tgaFileLengthZlib);
-            std::string copiedZlibData;
-            copiedZlibData.resize(tgaFileLengthZlib);
-            memcpy(&copiedZlibData[0], tgaFileDataZlib, tgaFileLengthZlib);
-            std::string fontTgaBuffer;
-            ExPop::Deflate::decompress_zlib(copiedZlibData, fontTgaBuffer);
-
-            PixelImage<uint8_t> *fontImg = pixelImageLoadTGA(
-                &fontTgaBuffer[0], fontTgaBuffer.size());
-
-            // If we hit this, then we messed up the font image encoding
-            // somehow.
-            assert(fontImg);
+            PixelImage<uint8_t> *fontImg = loadBuiltinFont();
 
             Gfx::makeBlackTransparent(*fontImg);
             outlinedFontImg = Gfx::generateOutlinedFontMask(fontImg);

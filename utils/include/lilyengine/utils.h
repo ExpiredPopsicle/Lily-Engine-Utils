@@ -68,6 +68,7 @@
 #include "pixelimage/pixelimage_legacy.h"
 #include "pixelimage/pixelimage_scale.h"
 #include "pixelimage/pixelimage_tga.h"
+#include "pixelimage/pixelimage_blit.h"
 
 // TODO: Move these to a math module or something.
 namespace ExPop
