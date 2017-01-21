@@ -235,7 +235,11 @@ namespace ExPop
         } else if(inVal <= getLowestScaled<ScaledType>()) {
             value = std::numeric_limits<ValueType>::lowest();
         } else {
-            value = ValueType(inVal * getValueAtOne());
+            if(std::is_integral<ValueType>::value && !std::is_integral<ScaledType>::value) {
+                value = ValueType(std::round(inVal * getValueAtOne()));
+            } else {
+                value = ValueType(inVal * getValueAtOne());
+            }
         }
     }
 
