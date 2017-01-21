@@ -48,6 +48,10 @@ namespace ExPop
     PixelImage<uint8_t> *pixelImageLoadSTBFromFile(const std::string &filename);
 
   #endif
+
+  #ifdef INCLUDE_STB_IMAGE_WRITE_H
+
+  #endif
 }
 
 // ----------------------------------------------------------------------

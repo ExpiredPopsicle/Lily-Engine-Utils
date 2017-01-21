@@ -215,6 +215,18 @@ namespace ExPop
     /// last '"'. Modifies ptr to point to the end of the quoted
     /// section.
     inline std::string readQuotedString(const std::string &in, size_t &ptr);
+
+    /// Replace anything that isn't part of the displayable ASCII
+    /// character set (0x20 through 0x7e) with some value. Use this to
+    /// make big globs of binary data that we want to dump to the
+    /// console safe to actually dump to the console.
+    inline std::string replaceNonDisplayableASCII(
+        const std::string &in, char replacementCharacter = '.');
+
+    /// Like replaceNonDisplayableASCII(), but just skips
+    /// non-displayables entirely.
+    inline std::string stripNonDisplayableASCII(
+        const std::string &in);
 }
 
 // ----------------------------------------------------------------------
@@ -1417,5 +1429,33 @@ namespace ExPop
 
         return ExPop::stringUnescape(ret);
     }
+
+    inline std::string replaceNonDisplayableASCII(
+        const std::string &in, char replacementCharacter)
+    {
+        std::string ret;
+        ret.resize(in.size());
+        for(size_t i = 0; i < in.size(); i++) {
+            if(in[i] >= 0x20 && in[i] <= 0x7e) {
+                ret[i] = in[i];
+            } else {
+                ret[i] = replacementCharacter;
+            }
+        }
+        return ret;
+    }
+
+    inline std::string stripNonDisplayableASCII(
+        const std::string &in)
+    {
+        std::string ret;
+        for(size_t i = 0; i < in.size(); i++) {
+            if(in[i] >= 0x20 && in[i] <= 0x7e) {
+                ret.append(1, in[i]);
+            }
+        }
+        return ret;
+    }
+
 }
 
