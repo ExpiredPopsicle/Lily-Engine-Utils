@@ -77,7 +77,7 @@ namespace ExPop
         /// backgrounds. This will generate a bigger image to make
         /// room for the one-pixel outline.
         PixelImage<uint8_t> *generateOutlinedFontMask(
-            PixelImage<uint8_t> *font);
+            const PixelImage<uint8_t> &font);
 
         /// Load up a new instance of the built-in font.
         PixelImage<uint8_t> *loadBuiltinFont();
@@ -267,10 +267,10 @@ namespace ExPop
         }
 
         inline PixelImage<uint8_t> *generateOutlinedFontMask(
-            PixelImage<uint8_t> *font)
+            const PixelImage<uint8_t> &font)
         {
-            int characterWidth = font->getWidth() / 16;
-            int characterHeight = font->getHeight() / 16;
+            int characterWidth = font.getWidth() / 16;
+            int characterHeight = font.getHeight() / 16;
 
             // Create a new image with the space to represent each
             // character with an extra pixel on each side.
@@ -298,7 +298,7 @@ namespace ExPop
                     dstRect.w = outputCharacterWidth - 2;
                     dstRect.h = outputCharacterHeight - 2;
 
-                    imgBlit(*font, srcRect, *output, dstRect);
+                    imgBlit(font, srcRect, *output, dstRect);
                 }
             }
 

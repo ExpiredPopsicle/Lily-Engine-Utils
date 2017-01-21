@@ -505,7 +505,7 @@ namespace ExPop
             PixelImage<uint8_t> *fontImg = loadBuiltinFont();
 
             Gfx::makeBlackTransparent(*fontImg);
-            outlinedFontImg = Gfx::generateOutlinedFontMask(fontImg);
+            outlinedFontImg = Gfx::generateOutlinedFontMask(*fontImg);
             delete fontImg;
         }
 

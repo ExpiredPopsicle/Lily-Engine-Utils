@@ -152,9 +152,6 @@ namespace ExPop
         // ----------------------------------------------------------------------
         // Format conversion and serialization.
 
-        // TODO: Load/save TGA. (Static factory thing? Load will want
-        //   8-bit RGB[A], not format-agnostic.)
-
         // TODO: Load/save PNG? (libpng? stb_image?)
 
         // TODO: Load/save stb_image in a generic way?
@@ -367,6 +364,7 @@ namespace ExPop
 
         return ret;
     }
+
 }
 
 
