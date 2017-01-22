@@ -473,7 +473,7 @@ namespace ExPop
 
     inline void GraphicalConsole::setBackbufferSize(size_t width, size_t height)
     {
-        if(width != backBuffer->getWidth() || height != backBuffer->getHeight()) {
+        if(width != size_t(backBuffer->getWidth()) || height != size_t(backBuffer->getHeight())) {
             *backBuffer = PixelImage<uint8_t>(width, height, 4);
             backBufferIsDirty = true;
         }

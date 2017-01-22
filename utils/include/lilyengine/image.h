@@ -517,7 +517,7 @@ namespace ExPop
         // ----------------------------------------------------------------------
 
         // Move forward in the input stream.
-      #define EXPOP_LOADTGA_INCPTR(x) if(p - (unsigned char*)tgaData + x > length) { if(img) delete img; return NULL; } p += x
+      #define EXPOP_LOADTGA_INCPTR(x) if(size_t(p - (unsigned char*)tgaData + x) > size_t(length)) { if(img) delete img; return NULL; } p += x
 
         inline void loadTGAHeaderGetSize(void *tgaData, int *width, int *height)
         {

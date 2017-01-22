@@ -101,11 +101,11 @@ namespace ExPop
                 end++;
             }
 
-            // See if we ended up on a space.
-            bool onSpace = false;
-            if(end < str.size() && ExPop::isWhiteSpace(str[end])) {
-                onSpace = true;
-            }
+            // // See if we ended up on a space.
+            // bool onSpace = false;
+            // if(end < str.size() && ExPop::isWhiteSpace(str[end])) {
+            //     onSpace = true;
+            // }
 
             ret = str.substr(start, end - start);
         }

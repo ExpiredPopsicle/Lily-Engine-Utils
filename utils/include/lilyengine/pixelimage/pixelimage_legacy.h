@@ -71,10 +71,10 @@ namespace ExPop
         PixelImage<uint8_t> *newImage = new PixelImage<uint8_t>(
             img.getWidth(), img.getHeight(), 4);
 
-        for(size_t y = 0; y < newImage->getHeight(); y++) {
-            for(size_t x = 0; x < newImage->getWidth(); x++) {
+        for(PixelImage_Coordinate y = 0; y < newImage->getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < newImage->getWidth(); x++) {
                 ExPop::Gfx::Pixel *p = img.getPixel(x, y);
-                for(size_t c = 0; c < newImage->getChannelCount(); c++) {
+                for(PixelImage_Coordinate c = 0; c < newImage->getChannelCount(); c++) {
                     newImage->getData(x, y, c).value = p->colorsAsArray[c];
                 }
             }
@@ -93,8 +93,8 @@ namespace ExPop
             newImage.setNumChannels(4);
 
             // Fill in alpha to 1.
-            for(size_t y = 0; y < newImage.getHeight(); y++) {
-                for(size_t x = 0; x < newImage.getWidth(); x++) {
+            for(PixelImage_Coordinate y = 0; y < newImage.getHeight(); y++) {
+                for(PixelImage_Coordinate x = 0; x < newImage.getWidth(); x++) {
                     newImage.getData(x, y, 3).value = 0xff;
                 }
             }
@@ -103,10 +103,10 @@ namespace ExPop
         ExPop::Gfx::Image *ret = new ExPop::Gfx::Image(
             newImage.getWidth(), newImage.getHeight());
 
-        for(size_t y = 0; y < newImage.getHeight(); y++) {
-            for(size_t x = 0; x < newImage.getWidth(); x++) {
+        for(PixelImage_Coordinate y = 0; y < newImage.getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < newImage.getWidth(); x++) {
                 ExPop::Gfx::Pixel *p = ret->getPixel(x, y);
-                for(size_t c = 0; c < 4; c++) {
+                for(PixelImage_Coordinate c = 0; c < 4; c++) {
                     p->colorsAsArray[c] = newImage.getData(x, y, c).value;
                 }
             }

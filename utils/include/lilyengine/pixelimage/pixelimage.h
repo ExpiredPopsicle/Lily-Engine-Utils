@@ -189,9 +189,9 @@ namespace ExPop
         data = new PixelValueType[width * height * numChannels];
 
         // Copy data over, rescaling as needed.
-        for(size_t y = 0; y < height; y++) {
-            for(size_t x = 0; x < width; x++) {
-                for(size_t c = 0; c < numChannels; c++) {
+        for(PixelImage_Coordinate y = 0; y < height; y++) {
+            for(PixelImage_Coordinate x = 0; x < width; x++) {
+                for(PixelImage_Coordinate c = 0; c < numChannels; c++) {
                     setDouble(x, y, c, other.getDouble(x, y, c));
                 }
             }
@@ -207,6 +207,10 @@ namespace ExPop
         PixelImage_Dimension inHeight,
         PixelImage_Dimension inNumChannels)
     {
+        if(inWidth < 1) inWidth = 1;
+        if(inHeight < 1) inHeight = 1;
+        if(inNumChannels < 1) inNumChannels = 1;
+
         width = inWidth;
         height = inHeight;
         numChannels = inNumChannels;
@@ -267,9 +271,9 @@ namespace ExPop
         memset(newData, 0, sizeof(PixelValueType) * inWidth * inHeight * inNumChannels);
 
         // Copy old image over.
-        for(size_t y = 0; y < height && y < inHeight; y++) {
-            for(size_t x = 0; x < width && x < inWidth; x++) {
-                for(size_t c = 0; c < numChannels && c < inNumChannels; c++) {
+        for(PixelImage_Coordinate y = 0; y < height && y < inHeight; y++) {
+            for(PixelImage_Coordinate x = 0; x < width && x < inWidth; x++) {
+                for(PixelImage_Coordinate c = 0; c < numChannels && c < inNumChannels; c++) {
                     newData[c + x * inNumChannels + y * (inWidth * inNumChannels)].value =
                         data[c + x * numChannels + y * (width * numChannels)].value;
                 }

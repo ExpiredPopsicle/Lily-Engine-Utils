@@ -73,9 +73,9 @@ namespace ExPop
         float dstPixelSize_x = 1.0f / float(width);
         float dstPixelSize_y = 1.0f / float(height);
 
-        for(size_t y = 0; y < height; y++) {
-            for(size_t x = 0; x < width; x++) {
-                for(size_t c = 0; c < inputImage.getChannelCount(); c++) {
+        for(PixelImage_Coordinate y = 0; y < height; y++) {
+            for(PixelImage_Coordinate x = 0; x < width; x++) {
+                for(PixelImage_Coordinate c = 0; c < inputImage.getChannelCount(); c++) {
 
                     // Create normalized coordinates.
                     float nx = float(x) * dstPixelSize_x + dstPixelSize_x * 0.5f;

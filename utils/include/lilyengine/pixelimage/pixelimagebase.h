@@ -58,7 +58,7 @@ namespace ExPop
     // TODO: Min/Mag filters?
 
     typedef int32_t PixelImage_Coordinate;
-    typedef uint32_t PixelImage_Dimension;
+    typedef int32_t PixelImage_Dimension;
 
     /// Base image type abstract class. Format-agnostic.
     class PixelImageBase
@@ -230,15 +230,16 @@ namespace ExPop
     {
         if(edgeMode == PixelImage_EdgeMode_Clamp) {
 
-            if(x < 0)       x = 0;
-            if(y < 0)       y = 0;
-            if(x >= width)  x = width - 1;
-            if(y >= height) y = height - 1;
+            if(x < 0) x = 0;
+            if(y < 0) y = 0;
+            if(x >= PixelImage_Coordinate(width)) x = width - 1;
+            if(y >= PixelImage_Coordinate(height)) y = height - 1;
 
             // FIXME: Edge mode applied to channel index? That might not
             // make sense.
             if(channel < 0) channel = 0;
-            if(channel >= numChannels) channel = numChannels - 1;
+            if(channel >= PixelImage_Coordinate(numChannels))
+                channel = numChannels - 1;
 
             return
                 channel +
@@ -272,9 +273,9 @@ namespace ExPop
             other.getHeight(),
             other.getChannelCount());
 
-        for(size_t y = 0; y < height; y++) {
-            for(size_t x = 0; x < width; x++) {
-                for(size_t c = 0; c < numChannels; c++) {
+        for(PixelImage_Coordinate y = 0; y < height; y++) {
+            for(PixelImage_Coordinate x = 0; x < width; x++) {
+                for(PixelImage_Coordinate c = 0; c < numChannels; c++) {
                     setDouble(x, y, c, other.getDouble(x, y, c));
                 }
             }

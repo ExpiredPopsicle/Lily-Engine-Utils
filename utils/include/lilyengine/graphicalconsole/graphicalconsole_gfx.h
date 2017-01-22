@@ -263,8 +263,8 @@ namespace ExPop
         bgcolor2[3] = bgAlpha * 255;
 
         const size_t checkerSpacing = 16;
-        for(size_t y = 0; y < backBuffer->getHeight(); y++) {
-            for(size_t x = 0; x < backBuffer->getWidth(); x++) {
+        for(PixelImage_Coordinate y = 0; y < backBuffer->getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < backBuffer->getWidth(); x++) {
 
                 bool b = ((y / checkerSpacing) + (x / checkerSpacing)) % 2;
                 PixelValue<uint8_t> *val = &backBuffer->getData(x, y, 0);

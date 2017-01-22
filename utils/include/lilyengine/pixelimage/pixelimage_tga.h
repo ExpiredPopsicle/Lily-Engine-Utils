@@ -60,7 +60,7 @@ namespace ExPop
 {
 
     // Move forward in the input stream.
-  #define EXPOP_LOADTGA2_INCPTR(x) if(p - (unsigned char*)tgaData + x > length) { if(img) delete img; return nullptr; } p += x
+  #define EXPOP_LOADTGA2_INCPTR(x) if(size_t(p - (unsigned char*)tgaData + x) > length) { if(img) delete img; return nullptr; } p += x
 
     inline PixelImage<uint8_t> *pixelImageLoadTGA(const void *tgaData, size_t length)
     {
@@ -139,7 +139,7 @@ namespace ExPop
 
         // TODO: Add colormap support?
 
-        int colorMapSize;
+        uint32_t colorMapSize;
         if(colorMapEntrySize != 15) {
             colorMapSize = (colorMapLength * colorMapEntrySize) / 8;
         } else {
@@ -362,8 +362,8 @@ namespace ExPop
         *p = 1 << 5; p++;
 
         // Write out the pixels.
-        for(size_t y = 0; y < img.getHeight(); y++) {
-            for(size_t x = 0; x < img.getWidth(); x++) {
+        for(PixelImage_Coordinate y = 0; y < img.getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < img.getWidth(); x++) {
 
                 // TGA stores stuff in BGRA.
 

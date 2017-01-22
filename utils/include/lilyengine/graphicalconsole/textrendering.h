@@ -95,8 +95,8 @@ namespace ExPop
         inline void makeBlackTransparent(
             PixelImage<uint8_t> &img)
         {
-            for(size_t y = 0; y < img.getHeight(); y++) {
-                for(size_t x = 0; x < img.getWidth(); x++) {
+            for(PixelImage_Coordinate y = 0; y < img.getHeight(); y++) {
+                for(PixelImage_Coordinate x = 0; x < img.getWidth(); x++) {
                     PixelValue<uint8_t> *outp = &img.getData(x, y, 0);
                     if(outp[0].value == 0) {
                         outp[3].value = 0;

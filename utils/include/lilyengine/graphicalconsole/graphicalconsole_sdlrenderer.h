@@ -232,7 +232,8 @@ namespace ExPop
                 SDL_LockTexture(tex, nullptr, &px, &pitch);
 
                 assert(
-                    pitch == console->getBackbuffer()->getWidth() * sizeof(ExPop::Gfx::Pixel));
+                    size_t(pitch) == console->getBackbuffer()->getWidth() *
+                    sizeof(ExPop::Gfx::Pixel));
 
                 memcpy(px,
                     &console->getBackbuffer()->getData(0, 0, 0),
