@@ -1450,7 +1450,7 @@ namespace ExPop
     {
         std::string ret;
         for(size_t i = 0; i < in.size(); i++) {
-            if(in[i] >= 0x20 && in[i] <= 0x7e) {
+            if((in[i] >= 0x20 && in[i] <= 0x7e) || isWhiteSpace(in[i])) {
                 ret.append(1, in[i]);
             }
         }
