@@ -39,6 +39,9 @@
 // gets a little weird. We don't have arrays the same way JSON does,
 // so it fakes it with some specially named nodes, for instance.
 
+// TODO: Some sort of long-path specification might help here, so we
+// can access deeply nested fields a little easier.
+
 // ----------------------------------------------------------------------
 // Needed headers
 // ----------------------------------------------------------------------
