@@ -155,7 +155,8 @@ namespace ExPop
     /// understand why I made this atrocity.
     inline std::basic_string<uint32_t> stringCodepage437ToUTF32(
         const std::string &str,
-        bool ignoreControlCharacters = true);
+        bool dontConvertLowAscii = true,
+        bool dontConvertEsc = true);
 
     /// Return a string with all the trailing and leading whitespace
     /// removed.
@@ -1109,16 +1110,21 @@ namespace ExPop
         return conversionTable;
     }
 
-    inline uint32_t codepage437ToUTF32(uint8_t c, bool ignoreControlCharacters)
+    inline uint32_t codepage437ToUTF32(uint8_t c, bool dontConvertLowAscii, bool dontConvertEsc)
     {
         uint32_t *conversionTable = getCodepage437Table();
 
         if(c <= 0x7e) {
 
+            // Make sure escape characters get passed right through.
+            if(c == 0x1b && dontConvertEsc) {
+                return c;
+            }
+
             // Control characters are a special case because we
             // usually want them to be not-converted, unless we really
             // want those smiley faces or something.
-            if(c < 0x20 && !ignoreControlCharacters) {
+            if(c < 0x20 && !dontConvertLowAscii) {
                 return conversionTable[c];
             }
 
@@ -1126,7 +1132,7 @@ namespace ExPop
             return c;
         }
 
-        // Convert it.
+        // Character is extended ASCII. Convert it.
         return conversionTable[c];
     }
 
@@ -1170,13 +1176,14 @@ namespace ExPop
     // Crappy 437->UTF32 converter.
     inline std::basic_string<uint32_t> stringCodepage437ToUTF32(
         const std::string &str,
-        bool ignoreControlCharacters)
+        bool dontConvertLowAscii,
+        bool dontConvertEsc)
     {
         std::basic_string<uint32_t> ret;
         ret.resize(str.size());
 
         for(size_t i = 0; i < ret.size(); i++) {
-            ret[i] = codepage437ToUTF32(str[i], ignoreControlCharacters);
+            ret[i] = codepage437ToUTF32(str[i], dontConvertLowAscii, dontConvertEsc);
         }
 
         return ret;
