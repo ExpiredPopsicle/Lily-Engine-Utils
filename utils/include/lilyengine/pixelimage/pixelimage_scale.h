@@ -346,6 +346,7 @@ namespace ExPop
         return ret;
     }
 
+    // Lanczos filter stuff starts here.
 
     inline float pixelImage_lanczosSinc(float x)
     {
@@ -459,7 +460,6 @@ namespace ExPop
         return ret;
     }
 
-    // DONOTCHECKIN - img should be ref, not ptr
     template<typename ValueType, ScalingType scalingType>
     inline PixelImage<ValueType, scalingType> *pixelImageGaussianBlur(
         PixelImageBase &img,
@@ -467,8 +467,6 @@ namespace ExPop
         float radius_y,
         PixelImage_EdgeMode edgeMode = PixelImage_EdgeMode_Clamp)
     {
-        // radius = radius * (float(img.getWidth()) + float(img.getHeight())) / 2.0f;
-
         size_t intRadius_x = size_t(radius_x) + 1;
         size_t intRadius_y = size_t(radius_y) + 1;
 
@@ -481,13 +479,10 @@ namespace ExPop
         size_t diameter_x = intRadius_x * 2;
         size_t diameter_y = intRadius_y * 2;
 
-        float *gaussianKernel = new float[diameter_y * diameter_x]; // diameter squared.
-
-        const float thing = 1.0f;
-
-        // TODO: Remap radius to normalized image space.
+        const float sigma = 1.0f;
 
         // Construct an appropriately-sized kernel.
+        float *gaussianKernel = new float[diameter_y * diameter_x];
         float gaussianTotal = 0.0f;
         for(size_t y = 0; y < diameter_y; y++) {
             float ydelta = ((float(y) - float(intRadius_y)) / radius_y) * 2.0f;
@@ -498,68 +493,42 @@ namespace ExPop
                 float xsqr = xdelta * xdelta;
 
                 gaussianKernel[x + y * diameter_x] =
-                    (1.0f / (2.0f * 3.14159 * thing * thing)) *
-                    powf(2.718281828459f, -(xsqr + ysqr) / (2.0f * thing * thing));
-
-                // std::cout << gaussianKernel[x + y * diameter] << "  ";
+                    (1.0f / (2.0f * 3.14159 * sigma * sigma)) *
+                    powf(2.718281828459f, -(xsqr + ysqr) / (2.0f * sigma * sigma));
 
                 gaussianTotal += gaussianKernel[x + y * diameter_x];
             }
-            // std::cout << std::endl;
         }
 
-        // std::cout << "Total: " << gaussianTotal << std::endl;
-
+        // Go through and normalize the whole kernel.
         for(size_t y = 0; y < diameter_y; y++) {
             for(size_t x = 0; x < diameter_x; x++) {
-                // float *px = out->getPixel(x, y);
-                // *px = (gaussianKernel[x + y * diameter]) * 1.0f;
                 gaussianKernel[x + y * diameter_x] /= gaussianTotal;
             }
         }
 
         for(PixelImage_Coordinate y = 0; y < img.getHeight(); y++) {
-
             for(PixelImage_Coordinate x = 0; x < img.getWidth(); x++) {
-
                 for(PixelImage_Coordinate c = 0; c < img.getChannelCount(); c++) {
 
-                    const float origPx = img.getDouble(x, y, c, edgeMode);
                     float dstPx = 0.0f;
 
-                    float ktotal = 0.0f;
-
                     for(int ky = 0; ky < int(diameter_y); ky++) {
-
                         for(int kx = 0; kx < int(diameter_x); kx++) {
 
-                            const float srcPx = img.getDouble(
-                                x + (kx - intRadius_x),
-                                y + (ky - intRadius_y),
-                                c,
-                                edgeMode);
+                            const float srcPx =
+                                img.getDouble(
+                                    x + (kx - intRadius_x),
+                                    y + (ky - intRadius_y),
+                                    c,
+                                    edgeMode);
 
-                            float differenceAmount = 0.0f;
-
-                            float diff = fabs(srcPx - origPx);
-                            differenceAmount += diff * diff;
-
-                            const float &kernelPt = gaussianKernel[kx + ky * diameter_x];
-                            // if(differenceAmount <= similarityThreshold * similarityThreshold) {
+                            const float &kernelPt =
+                                gaussianKernel[kx + ky * diameter_x];
 
                             dstPx += srcPx * kernelPt;
-                            ktotal += kernelPt;
-
-                            // } else {
-                            //     correctionAmount += kernelPt;
-                            // }
                         }
                     }
-
-                    // // std::cout << "ktotal: " << ktotal << std::endl;
-                    // if(correctionAmount) {
-                    //     dstPx *= 1.0f / (1.0f - correctionAmount);
-                    // }
 
                     out->setDouble(x, y, c, dstPx);
                 }
