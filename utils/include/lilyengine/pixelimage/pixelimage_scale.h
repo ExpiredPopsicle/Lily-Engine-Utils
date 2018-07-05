@@ -577,7 +577,7 @@ namespace ExPop
         // until we're within 2x of the goal size.
         while(tmp->getWidth() > hrWidth) {
             PixelImage<double> *tmp2 = nullptr;
-            tmp2 = pixelImageHalfRes<double, ScalingType_OneIsOne>(*tmp, false);
+            tmp2 = pixelImageHalfRes<double, pixelValueGetDefaultScalingType<double>()>(*tmp, false);
             delete tmp;
             tmp = tmp2;
         }
@@ -587,7 +587,7 @@ namespace ExPop
         // until we're within 2x of the goal size.
         while(tmp->getHeight() > hrHeight) {
             PixelImage<double> *tmp2 = nullptr;
-            tmp2 = pixelImageHalfRes<double, ScalingType_OneIsOne>(*tmp, true);
+            tmp2 = pixelImageHalfRes<double, pixelValueGetDefaultScalingType<double>()>(*tmp, true);
             delete tmp;
             tmp = tmp2;
         }
