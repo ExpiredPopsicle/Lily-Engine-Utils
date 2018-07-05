@@ -347,68 +347,8 @@ namespace ExPop
     }
 
 
-
-
-    // const int pixelImage_sinTableSize = 65536;
-    // const float pixelImage_2pi = 3.14159f * 2.0f;
-
-    // inline float pixelImage_sinTableIndexToValue(int x)
-    // {
-    //     return
-    //         pixelImage_2pi *
-    //         float(x - pixelImage_sinTableSize / 2) /
-    //         float(pixelImage_sinTableSize / 2);
-    // }
-
-    // inline float *pixelImage_genSinTable()
-    // {
-    //     static float ret[pixelImage_sinTableSize];
-    //     for(size_t i = 0; i < pixelImage_sinTableSize; i++) {
-    //         ret[i] = sin(pixelImage_sinTableIndexToValue(i));
-    //     }
-    //     return ret;
-    // }
-
-    // inline float pixelImage_sinTable(int x)
-    // {
-    //     static float *table =
-    //         pixelImage_genSinTable();
-    //     return table[x];
-    // }
-
-    // inline int pixelImage_sinTableValueToIndex(float x)
-    // {
-    //     // return (pixelImage_sinTableSize / 2) +
-    //     //     int(float(pixelImage_sinTableSize / 2) *
-    //     //         fmod(x, pixelImage_2pi) /
-    //     //         pixelImage_2pi);
-
-    //     // int n = (pixelImage_sinTableSize / 2) +
-    //     //     int(float(pixelImage_sinTableSize / 2) *
-    //     //         fmod(x, pixelImage_2pi) /
-    //     //         pixelImage_2pi);
-
-    //     int n =
-    //         (pixelImage_sinTableSize / 2) +
-    //         int(float(pixelImage_sinTableSize / 2) *
-    //             x /
-    //             pixelImage_2pi) % (pixelImage_sinTableSize / 2);
-
-    //     // assert(n >= 0 && n <= pixelImage_sinTableSize);
-    //     // std::cout << n << " " << j << std::endl;
-
-    //     return n;
-    // }
-
-    // inline float pixelImage_sinTableLookup(float x)
-    // {
-    //     int m = pixelImage_sinTableValueToIndex(x);
-    //     return pixelImage_sinTable(m);
-    // }
-
     inline float pixelImage_lanczosSinc(float x)
     {
-        // return pixelImage_sinTableLookup(x) / x;
         return sin(x) / x;
     }
 
@@ -434,20 +374,18 @@ namespace ExPop
             return nullptr;
         }
 
-        // DONOTCHECKIN TODO - fix naming.
-        PixelImage<ValueType, scalingType> *testThing =
+        PixelImage<ValueType, scalingType> *out =
             new PixelImage<ValueType, scalingType>(
                 width, height, inputImage.getChannelCount());
 
         const float a = 3.0f;
 
-        for(PixelImage_Coordinate y = 0; y < testThing->getHeight(); y++) {
-            for(PixelImage_Coordinate x = 0; x < testThing->getWidth(); x++) {
-                for(PixelImage_Coordinate c = 0; c < testThing->getChannelCount(); c++) {
+        for(PixelImage_Coordinate y = 0; y < out->getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < out->getWidth(); x++) {
+                for(PixelImage_Coordinate c = 0; c < out->getChannelCount(); c++) {
 
-                    float sx = (float(x) / float(testThing->getWidth())) * float(inputImage.getWidth());
-                    float sy = (float(y) / float(testThing->getHeight())) * float(inputImage.getHeight());
-                    // testThing->getData(x, y, c).setScaledValue(inputImage.getDouble(sx, sy, c));
+                    float sx = (float(x) / float(out->getWidth())) * float(inputImage.getWidth());
+                    float sy = (float(y) / float(out->getHeight())) * float(inputImage.getHeight());
 
                     float sourceStartX = floor(sx) - a + 1;
                     float sourceEndX = floor(sx) + a;
@@ -459,65 +397,53 @@ namespace ExPop
                     for(float sourceY = sourceStartY; sourceY <= sourceEndY; sourceY++) {
                         for(float sourceX = sourceStartX; sourceX <= sourceEndX; sourceX++) {
 
-                            // // TODO: Remove this.
-                            // float xval = pixelImage_lanczosFilter(sx - sourceX, a);
-                            // float yval = pixelImage_lanczosFilter(sy - sourceY, a);
-
                             float lval =
                                 pixelImage_lanczosFilter(sx - sourceX, a) *
                                 pixelImage_lanczosFilter(sy - sourceY, a);
-
-                            // if(y == 91) {
-                            //     std::cout << "  lval: " << lval << "=" << xval << "*" << yval << std::endl;
-                            //     std::cout << "  x: " << sx - sourceX << std::endl;
-                            //     std::cout << "  y: " << sy - sourceY << std::endl;
-                            // }
 
                             maxVal += lval;
                             currentVal += inputImage.getDouble(sourceX, sourceY, c) * lval;
                         }
                     }
-                    // std::cout << y << " " << maxVal << std::endl;
-                    testThing->getData(x, y, c).setScaledValue(currentVal / maxVal);
+                    out->getData(x, y, c).setScaledValue(currentVal / maxVal);
                 }
             }
         }
 
-        return testThing;
+        return out;
     }
 
-
-    template<typename ValueType, ExPop::ScalingType scalingType>
-    inline ExPop::PixelImage<ValueType, scalingType> *pixelImageHalfRes(
-        ExPop::PixelImageBase &inputImage,
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageHalfRes(
+        PixelImageBase &inputImage,
         bool axis)
     {
-        ExPop::PixelImage_Dimension dims[2] = {
+        PixelImage_Dimension dims[2] = {
             inputImage.getWidth(),
             inputImage.getHeight()
         };
 
-        ExPop::PixelImage_Dimension newDims[2] = {
+        PixelImage_Dimension newDims[2] = {
             axis == false ? (dims[0] / 2) : dims[0],
             axis == true  ? (dims[1] / 2) : dims[1]
         };
 
-        ExPop::PixelImage<ValueType, scalingType> *ret = new ExPop::PixelImage<ValueType, scalingType>(
+        PixelImage<ValueType, scalingType> *ret = new PixelImage<ValueType, scalingType>(
             newDims[0], newDims[1], inputImage.getChannelCount());
 
-        for(ExPop::PixelImage_Coordinate c = 0; c < inputImage.getChannelCount(); c++) {
-            for(ExPop::PixelImage_Coordinate keepAxis = 0; keepAxis < newDims[!axis]; keepAxis++) {
-                for(ExPop::PixelImage_Coordinate changeAxis = 0; changeAxis < newDims[axis]; changeAxis++) {
+        for(PixelImage_Coordinate c = 0; c < inputImage.getChannelCount(); c++) {
+            for(PixelImage_Coordinate keepAxis = 0; keepAxis < newDims[!axis]; keepAxis++) {
+                for(PixelImage_Coordinate changeAxis = 0; changeAxis < newDims[axis]; changeAxis++) {
 
-                    ExPop::PixelImage_Coordinate pos[2] = {
+                    PixelImage_Coordinate pos[2] = {
                         axis == false ? changeAxis : keepAxis,
                         axis == true  ? changeAxis : keepAxis
                     };
-                    ExPop::PixelImage_Coordinate srcPos1[2] = {
+                    PixelImage_Coordinate srcPos1[2] = {
                         axis == false ? changeAxis * 2 : keepAxis,
                         axis == true  ? changeAxis * 2: keepAxis
                     };
-                    ExPop::PixelImage_Coordinate srcPos2[2] = {
+                    PixelImage_Coordinate srcPos2[2] = {
                         axis == false ? changeAxis * 2 + 1: keepAxis,
                         axis == true  ? changeAxis * 2 + 1: keepAxis
                     };
@@ -533,19 +459,141 @@ namespace ExPop
         return ret;
     }
 
+    // DONOTCHECKIN - img should be ref, not ptr
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageGaussianBlur(
+        PixelImageBase &img,
+        float radius_x,
+        float radius_y,
+        PixelImage_EdgeMode edgeMode = PixelImage_EdgeMode_Clamp)
+    {
+        // radius = radius * (float(img.getWidth()) + float(img.getHeight())) / 2.0f;
+
+        size_t intRadius_x = size_t(radius_x) + 1;
+        size_t intRadius_y = size_t(radius_y) + 1;
+
+        PixelImage<ValueType, scalingType> *out =
+            new PixelImage<ValueType, scalingType>(
+                img.getWidth(),
+                img.getHeight(),
+                img.getChannelCount());
+
+        size_t diameter_x = intRadius_x * 2;
+        size_t diameter_y = intRadius_y * 2;
+
+        float *gaussianKernel = new float[diameter_y * diameter_x]; // diameter squared.
+
+        const float thing = 1.0f;
+
+        // TODO: Remap radius to normalized image space.
+
+        // Construct an appropriately-sized kernel.
+        float gaussianTotal = 0.0f;
+        for(size_t y = 0; y < diameter_y; y++) {
+            float ydelta = ((float(y) - float(intRadius_y)) / radius_y) * 2.0f;
+            float ysqr = ydelta * ydelta;
+
+            for(size_t x = 0; x < diameter_x; x++) {
+                float xdelta = ((float(x) - float(intRadius_x)) / radius_x) * 2.0f;
+                float xsqr = xdelta * xdelta;
+
+                gaussianKernel[x + y * diameter_x] =
+                    (1.0f / (2.0f * 3.14159 * thing * thing)) *
+                    powf(2.718281828459f, -(xsqr + ysqr) / (2.0f * thing * thing));
+
+                // std::cout << gaussianKernel[x + y * diameter] << "  ";
+
+                gaussianTotal += gaussianKernel[x + y * diameter_x];
+            }
+            // std::cout << std::endl;
+        }
+
+        // std::cout << "Total: " << gaussianTotal << std::endl;
+
+        for(size_t y = 0; y < diameter_y; y++) {
+            for(size_t x = 0; x < diameter_x; x++) {
+                // float *px = out->getPixel(x, y);
+                // *px = (gaussianKernel[x + y * diameter]) * 1.0f;
+                gaussianKernel[x + y * diameter_x] /= gaussianTotal;
+            }
+        }
+
+        for(PixelImage_Coordinate y = 0; y < img.getHeight(); y++) {
+
+            for(PixelImage_Coordinate x = 0; x < img.getWidth(); x++) {
+
+                for(PixelImage_Coordinate c = 0; c < img.getChannelCount(); c++) {
+
+                    const float origPx = img.getDouble(x, y, c, edgeMode);
+                    float dstPx = 0.0f;
+
+                    float ktotal = 0.0f;
+
+                    for(int ky = 0; ky < int(diameter_y); ky++) {
+
+                        for(int kx = 0; kx < int(diameter_x); kx++) {
+
+                            const float srcPx = img.getDouble(
+                                x + (kx - intRadius_x),
+                                y + (ky - intRadius_y),
+                                c,
+                                edgeMode);
+
+                            float differenceAmount = 0.0f;
+
+                            float diff = fabs(srcPx - origPx);
+                            differenceAmount += diff * diff;
+
+                            const float &kernelPt = gaussianKernel[kx + ky * diameter_x];
+                            // if(differenceAmount <= similarityThreshold * similarityThreshold) {
+
+                            dstPx += srcPx * kernelPt;
+                            ktotal += kernelPt;
+
+                            // } else {
+                            //     correctionAmount += kernelPt;
+                            // }
+                        }
+                    }
+
+                    // // std::cout << "ktotal: " << ktotal << std::endl;
+                    // if(correctionAmount) {
+                    //     dstPx *= 1.0f / (1.0f - correctionAmount);
+                    // }
+
+                    out->setDouble(x, y, c, dstPx);
+                }
+            }
+        }
+
+        return out;
+    }
+
     template<typename ValueType, ScalingType scalingType>
     inline PixelImage<ValueType, scalingType> *pixelImageScale(
         PixelImageBase &inputImage,
         PixelImage_Dimension width,
         PixelImage_Dimension height)
     {
-        ExPop::PixelImage_Dimension hrWidth = inputImage.getWidth();
-        ExPop::PixelImage_Dimension hrHeight = inputImage.getHeight();
+        PixelImageBase *img = &inputImage;
+        PixelImage<ValueType, scalingType> *blurredImg = nullptr;
 
-        std::cout << "sdaf1" << std::endl;
+        // Apply a gaussian blur with a radius dependent on the ratio
+        // between the original and desired sizes.
+        if(width < img->getWidth() || height < img->getHeight()) {
+            blurredImg =
+                pixelImageGaussianBlur<ValueType, scalingType>(
+                    *img,
+                    width  < img->getWidth()  ? (0.5f * float(img->getWidth())  / float(width))  : 1,
+                    height < img->getHeight() ? (0.5f * float(img->getHeight()) / float(height)) : 1);
+            img = blurredImg;
+        }
+
+        PixelImage_Dimension hrWidth = img->getWidth();
+        PixelImage_Dimension hrHeight = img->getHeight();
 
         // Determine how far we can go by half-rezzing.
-        if(width < inputImage.getWidth()) {
+        if(width < img->getWidth()) {
             while((hrWidth >> 1) >= width) {
                 hrWidth >>= 1;
             }
@@ -554,48 +602,34 @@ namespace ExPop
             }
         }
 
-        std::cout << "sdaf2" << std::endl;
+        PixelImage<double> *tmp = new PixelImage<double>(*img);;
 
-        ExPop::PixelImage<double> *tmp = new ExPop::PixelImage<double>(inputImage);;
+        // Half-rez on the x axis by averaging every pair of pixels,
+        // until we're within 2x of the goal size.
         while(tmp->getWidth() > hrWidth) {
-            ExPop::PixelImage<double> *tmp2 = nullptr;
-            // if(tmp->getWidth() & 1) {
-            //     // std::cout << "Lanc1" << std::endl;
-            //     tmp2 = pixelImageScale_lanczos<double, ExPop::ScalingType_OneIsOne>(
-            //         *tmp, tmp->getWidth() / 2, tmp->getHeight());
-            // } else {
-                tmp2 = pixelImageHalfRes<double, ExPop::ScalingType_OneIsOne>(*tmp, false);
-            // }
+            PixelImage<double> *tmp2 = nullptr;
+            tmp2 = pixelImageHalfRes<double, ScalingType_OneIsOne>(*tmp, false);
             delete tmp;
             tmp = tmp2;
         }
         assert(tmp->getWidth() == hrWidth);
 
-        std::cout << "sdaf3" << std::endl;
-
+        // Half-rez on the y axis by averaging every pair of pixels,
+        // until we're within 2x of the goal size.
         while(tmp->getHeight() > hrHeight) {
-            ExPop::PixelImage<double> *tmp2 = nullptr;
-            // // if(tmp->getHeight() & 1) {
-            //     std::cout << "Lanc2" << std::endl;
-                // tmp2 = pixelImageScale_lanczos<double, ExPop::ScalingType_OneIsOne>(
-                //     *tmp, tmp->getWidth(), tmp->getHeight() / 2);
-            // } else {
-                tmp2 = pixelImageHalfRes<double, ExPop::ScalingType_OneIsOne>(*tmp, true);
-            // }
+            PixelImage<double> *tmp2 = nullptr;
+            tmp2 = pixelImageHalfRes<double, ScalingType_OneIsOne>(*tmp, true);
             delete tmp;
             tmp = tmp2;
         }
         assert(tmp->getHeight() == hrHeight);
 
-        std::cout << "sdaf4" << std::endl;
-
-        ExPop::PixelImage<uint8_t> *scaled3 =
-            ExPop::pixelImageScale_lanczos<ValueType, scalingType>(*tmp, width, height);
-            // new ExPop::PixelImage<uint8_t>(*tmp);
-
-        std::cout << "sdaf5" << std::endl;
+        // Do the final scaling with Lanczos filtering.
+        PixelImage<uint8_t> *scaled3 =
+            pixelImageScale_lanczos<ValueType, scalingType>(*tmp, width, height);
 
         delete tmp;
+        delete blurredImg;
 
         return scaled3;
     }
