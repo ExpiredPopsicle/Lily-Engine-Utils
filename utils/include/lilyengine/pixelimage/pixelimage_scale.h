@@ -286,7 +286,7 @@ namespace ExPop
     }
 
     template<typename ValueType, ScalingType scalingType>
-    inline PixelImage<ValueType, scalingType> *pixelImageScale(
+    inline PixelImage<ValueType, scalingType> *pixelImageScale_old(
         PixelImageBase &inputImage,
         PixelImage_Dimension width,
         PixelImage_Dimension height)
@@ -345,5 +345,260 @@ namespace ExPop
 
         return ret;
     }
+
+
+
+
+    // const int pixelImage_sinTableSize = 65536;
+    // const float pixelImage_2pi = 3.14159f * 2.0f;
+
+    // inline float pixelImage_sinTableIndexToValue(int x)
+    // {
+    //     return
+    //         pixelImage_2pi *
+    //         float(x - pixelImage_sinTableSize / 2) /
+    //         float(pixelImage_sinTableSize / 2);
+    // }
+
+    // inline float *pixelImage_genSinTable()
+    // {
+    //     static float ret[pixelImage_sinTableSize];
+    //     for(size_t i = 0; i < pixelImage_sinTableSize; i++) {
+    //         ret[i] = sin(pixelImage_sinTableIndexToValue(i));
+    //     }
+    //     return ret;
+    // }
+
+    // inline float pixelImage_sinTable(int x)
+    // {
+    //     static float *table =
+    //         pixelImage_genSinTable();
+    //     return table[x];
+    // }
+
+    // inline int pixelImage_sinTableValueToIndex(float x)
+    // {
+    //     // return (pixelImage_sinTableSize / 2) +
+    //     //     int(float(pixelImage_sinTableSize / 2) *
+    //     //         fmod(x, pixelImage_2pi) /
+    //     //         pixelImage_2pi);
+
+    //     // int n = (pixelImage_sinTableSize / 2) +
+    //     //     int(float(pixelImage_sinTableSize / 2) *
+    //     //         fmod(x, pixelImage_2pi) /
+    //     //         pixelImage_2pi);
+
+    //     int n =
+    //         (pixelImage_sinTableSize / 2) +
+    //         int(float(pixelImage_sinTableSize / 2) *
+    //             x /
+    //             pixelImage_2pi) % (pixelImage_sinTableSize / 2);
+
+    //     // assert(n >= 0 && n <= pixelImage_sinTableSize);
+    //     // std::cout << n << " " << j << std::endl;
+
+    //     return n;
+    // }
+
+    // inline float pixelImage_sinTableLookup(float x)
+    // {
+    //     int m = pixelImage_sinTableValueToIndex(x);
+    //     return pixelImage_sinTable(m);
+    // }
+
+    inline float pixelImage_lanczosSinc(float x)
+    {
+        // return pixelImage_sinTableLookup(x) / x;
+        return sin(x) / x;
+    }
+
+    inline float pixelImage_lanczosFilter(float x, float a)
+    {
+        if(x == 0.0f) {
+            return 1.0f;
+        } else if(x >= -a && x <= a) {
+            return
+                pixelImage_lanczosSinc(3.14159f * x) *
+                pixelImage_lanczosSinc(3.14159f * x/a);
+        }
+        return 0.0f;
+    }
+
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageScale_lanczos(
+        PixelImageBase &inputImage,
+        PixelImage_Dimension width,
+        PixelImage_Dimension height)
+    {
+        if(width <= 1 || height <= 1) {
+            return nullptr;
+        }
+
+        // DONOTCHECKIN TODO - fix naming.
+        PixelImage<ValueType, scalingType> *testThing =
+            new PixelImage<ValueType, scalingType>(
+                width, height, inputImage.getChannelCount());
+
+        const float a = 3.0f;
+
+        for(PixelImage_Coordinate y = 0; y < testThing->getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < testThing->getWidth(); x++) {
+                for(PixelImage_Coordinate c = 0; c < testThing->getChannelCount(); c++) {
+
+                    float sx = (float(x) / float(testThing->getWidth())) * float(inputImage.getWidth());
+                    float sy = (float(y) / float(testThing->getHeight())) * float(inputImage.getHeight());
+                    // testThing->getData(x, y, c).setScaledValue(inputImage.getDouble(sx, sy, c));
+
+                    float sourceStartX = floor(sx) - a + 1;
+                    float sourceEndX = floor(sx) + a;
+                    float sourceStartY = floor(sy) - a + 1;
+                    float sourceEndY = floor(sy) + a;
+                    float currentVal = 0.0f;
+                    float maxVal = 0.0f;
+
+                    for(float sourceY = sourceStartY; sourceY <= sourceEndY; sourceY++) {
+                        for(float sourceX = sourceStartX; sourceX <= sourceEndX; sourceX++) {
+
+                            // // TODO: Remove this.
+                            // float xval = pixelImage_lanczosFilter(sx - sourceX, a);
+                            // float yval = pixelImage_lanczosFilter(sy - sourceY, a);
+
+                            float lval =
+                                pixelImage_lanczosFilter(sx - sourceX, a) *
+                                pixelImage_lanczosFilter(sy - sourceY, a);
+
+                            // if(y == 91) {
+                            //     std::cout << "  lval: " << lval << "=" << xval << "*" << yval << std::endl;
+                            //     std::cout << "  x: " << sx - sourceX << std::endl;
+                            //     std::cout << "  y: " << sy - sourceY << std::endl;
+                            // }
+
+                            maxVal += lval;
+                            currentVal += inputImage.getDouble(sourceX, sourceY, c) * lval;
+                        }
+                    }
+                    // std::cout << y << " " << maxVal << std::endl;
+                    testThing->getData(x, y, c).setScaledValue(currentVal / maxVal);
+                }
+            }
+        }
+
+        return testThing;
+    }
+
+
+    template<typename ValueType, ExPop::ScalingType scalingType>
+    inline ExPop::PixelImage<ValueType, scalingType> *pixelImageHalfRes(
+        ExPop::PixelImageBase &inputImage,
+        bool axis)
+    {
+        ExPop::PixelImage_Dimension dims[2] = {
+            inputImage.getWidth(),
+            inputImage.getHeight()
+        };
+
+        ExPop::PixelImage_Dimension newDims[2] = {
+            axis == false ? (dims[0] / 2) : dims[0],
+            axis == true  ? (dims[1] / 2) : dims[1]
+        };
+
+        ExPop::PixelImage<ValueType, scalingType> *ret = new ExPop::PixelImage<ValueType, scalingType>(
+            newDims[0], newDims[1], inputImage.getChannelCount());
+
+        for(ExPop::PixelImage_Coordinate c = 0; c < inputImage.getChannelCount(); c++) {
+            for(ExPop::PixelImage_Coordinate keepAxis = 0; keepAxis < newDims[!axis]; keepAxis++) {
+                for(ExPop::PixelImage_Coordinate changeAxis = 0; changeAxis < newDims[axis]; changeAxis++) {
+
+                    ExPop::PixelImage_Coordinate pos[2] = {
+                        axis == false ? changeAxis : keepAxis,
+                        axis == true  ? changeAxis : keepAxis
+                    };
+                    ExPop::PixelImage_Coordinate srcPos1[2] = {
+                        axis == false ? changeAxis * 2 : keepAxis,
+                        axis == true  ? changeAxis * 2: keepAxis
+                    };
+                    ExPop::PixelImage_Coordinate srcPos2[2] = {
+                        axis == false ? changeAxis * 2 + 1: keepAxis,
+                        axis == true  ? changeAxis * 2 + 1: keepAxis
+                    };
+
+                    double avg =
+                        (inputImage.getDouble(srcPos1[0], srcPos1[1], c) +
+                            inputImage.getDouble(srcPos1[0], srcPos2[1], c)) / 2.0f;
+                    ret->setDouble(pos[0], pos[1], c, avg);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageScale(
+        PixelImageBase &inputImage,
+        PixelImage_Dimension width,
+        PixelImage_Dimension height)
+    {
+        ExPop::PixelImage_Dimension hrWidth = inputImage.getWidth();
+        ExPop::PixelImage_Dimension hrHeight = inputImage.getHeight();
+
+        std::cout << "sdaf1" << std::endl;
+
+        // Determine how far we can go by half-rezzing.
+        if(width < inputImage.getWidth()) {
+            while((hrWidth >> 1) >= width) {
+                hrWidth >>= 1;
+            }
+            while((hrHeight >> 1) >= height) {
+                hrHeight >>= 1;
+            }
+        }
+
+        std::cout << "sdaf2" << std::endl;
+
+        ExPop::PixelImage<double> *tmp = new ExPop::PixelImage<double>(inputImage);;
+        while(tmp->getWidth() > hrWidth) {
+            ExPop::PixelImage<double> *tmp2 = nullptr;
+            // if(tmp->getWidth() & 1) {
+            //     // std::cout << "Lanc1" << std::endl;
+            //     tmp2 = pixelImageScale_lanczos<double, ExPop::ScalingType_OneIsOne>(
+            //         *tmp, tmp->getWidth() / 2, tmp->getHeight());
+            // } else {
+                tmp2 = pixelImageHalfRes<double, ExPop::ScalingType_OneIsOne>(*tmp, false);
+            // }
+            delete tmp;
+            tmp = tmp2;
+        }
+        assert(tmp->getWidth() == hrWidth);
+
+        std::cout << "sdaf3" << std::endl;
+
+        while(tmp->getHeight() > hrHeight) {
+            ExPop::PixelImage<double> *tmp2 = nullptr;
+            // // if(tmp->getHeight() & 1) {
+            //     std::cout << "Lanc2" << std::endl;
+                // tmp2 = pixelImageScale_lanczos<double, ExPop::ScalingType_OneIsOne>(
+                //     *tmp, tmp->getWidth(), tmp->getHeight() / 2);
+            // } else {
+                tmp2 = pixelImageHalfRes<double, ExPop::ScalingType_OneIsOne>(*tmp, true);
+            // }
+            delete tmp;
+            tmp = tmp2;
+        }
+        assert(tmp->getHeight() == hrHeight);
+
+        std::cout << "sdaf4" << std::endl;
+
+        ExPop::PixelImage<uint8_t> *scaled3 =
+            ExPop::pixelImageScale_lanczos<ValueType, scalingType>(*tmp, width, height);
+            // new ExPop::PixelImage<uint8_t>(*tmp);
+
+        std::cout << "sdaf5" << std::endl;
+
+        delete tmp;
+
+        return scaled3;
+    }
+
 }
 
