@@ -535,6 +535,8 @@ namespace ExPop
             }
         }
 
+        delete[] gaussianKernel;
+
         return out;
     }
 
