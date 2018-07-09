@@ -43,6 +43,8 @@
 #include "pixelvalue.h"
 #include "pixelimagebase.h"
 
+#include <cstring>
+
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------

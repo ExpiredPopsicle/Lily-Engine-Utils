@@ -43,6 +43,10 @@
 
 #pragma once
 
+#include <iostream>
+#include <limits>
+#include <cmath>
+
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------

@@ -344,6 +344,7 @@ namespace ExPop
             std::string valueName;
         };
         std::map<std::string, ParameterDoc> parameterDocumentation;
+        std::vector<std::string> parameterDocumentationOrder;
         std::string documentationHeader;
         std::string documentationFooter;
 
@@ -783,7 +784,10 @@ namespace ExPop
 
             out << "Options:" << std::endl << std::endl;
 
-            for(auto i = handlerWrappers.begin(); i != handlerWrappers.end(); i++) {
+            // for(auto i = handlerWrappers.begin(); i != handlerWrappers.end(); i++) {
+            for(size_t n = 0; n < parameterDocumentationOrder.size(); n++) {
+
+                auto i = handlerWrappers.find(parameterDocumentationOrder[n]);
 
                 if(i->first.size()) {
 
@@ -846,6 +850,8 @@ namespace ExPop
         // a value, or NOT adding a value name for something that
         // does.
         assert(handlerWrappers[paramName][0]->isZeroParam() == !valueName.size());
+
+        parameterDocumentationOrder.push_back(paramName);
     }
 
     inline void CommandlineParser::setDoc(

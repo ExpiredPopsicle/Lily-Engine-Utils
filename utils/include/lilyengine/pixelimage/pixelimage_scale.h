@@ -286,7 +286,7 @@ namespace ExPop
     }
 
     template<typename ValueType, ScalingType scalingType>
-    inline PixelImage<ValueType, scalingType> *pixelImageScale(
+    inline PixelImage<ValueType, scalingType> *pixelImageScale_old(
         PixelImageBase &inputImage,
         PixelImage_Dimension width,
         PixelImage_Dimension height)
@@ -345,5 +345,265 @@ namespace ExPop
 
         return ret;
     }
+
+    // Lanczos filter stuff starts here.
+
+    inline float pixelImage_lanczosSinc(float x)
+    {
+        return sin(x) / x;
+    }
+
+    inline float pixelImage_lanczosFilter(float x, float a)
+    {
+        if(x == 0.0f) {
+            return 1.0f;
+        } else if(x >= -a && x <= a) {
+            return
+                pixelImage_lanczosSinc(3.14159f * x) *
+                pixelImage_lanczosSinc(3.14159f * x/a);
+        }
+        return 0.0f;
+    }
+
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageScale_lanczos(
+        PixelImageBase &inputImage,
+        PixelImage_Dimension width,
+        PixelImage_Dimension height)
+    {
+        if(width <= 1 || height <= 1) {
+            return nullptr;
+        }
+
+        PixelImage<ValueType, scalingType> *out =
+            new PixelImage<ValueType, scalingType>(
+                width, height, inputImage.getChannelCount());
+
+        const float a = 3.0f;
+
+        for(PixelImage_Coordinate y = 0; y < out->getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < out->getWidth(); x++) {
+                for(PixelImage_Coordinate c = 0; c < out->getChannelCount(); c++) {
+
+                    float sx = (float(x) / float(out->getWidth())) * float(inputImage.getWidth());
+                    float sy = (float(y) / float(out->getHeight())) * float(inputImage.getHeight());
+
+                    float sourceStartX = floor(sx) - a + 1;
+                    float sourceEndX = floor(sx) + a;
+                    float sourceStartY = floor(sy) - a + 1;
+                    float sourceEndY = floor(sy) + a;
+                    float currentVal = 0.0f;
+                    float maxVal = 0.0f;
+
+                    for(float sourceY = sourceStartY; sourceY <= sourceEndY; sourceY++) {
+                        for(float sourceX = sourceStartX; sourceX <= sourceEndX; sourceX++) {
+
+                            float lval =
+                                pixelImage_lanczosFilter(sx - sourceX, a) *
+                                pixelImage_lanczosFilter(sy - sourceY, a);
+
+                            maxVal += lval;
+                            currentVal += inputImage.getDouble(sourceX, sourceY, c) * lval;
+                        }
+                    }
+                    out->getData(x, y, c).setScaledValue(currentVal / maxVal);
+                }
+            }
+        }
+
+        return out;
+    }
+
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageHalfRes(
+        PixelImageBase &inputImage,
+        bool axis)
+    {
+        PixelImage_Dimension dims[2] = {
+            inputImage.getWidth(),
+            inputImage.getHeight()
+        };
+
+        PixelImage_Dimension newDims[2] = {
+            axis == false ? (dims[0] / 2) : dims[0],
+            axis == true  ? (dims[1] / 2) : dims[1]
+        };
+
+        PixelImage<ValueType, scalingType> *ret = new PixelImage<ValueType, scalingType>(
+            newDims[0], newDims[1], inputImage.getChannelCount());
+
+        for(PixelImage_Coordinate c = 0; c < inputImage.getChannelCount(); c++) {
+            for(PixelImage_Coordinate keepAxis = 0; keepAxis < newDims[!axis]; keepAxis++) {
+                for(PixelImage_Coordinate changeAxis = 0; changeAxis < newDims[axis]; changeAxis++) {
+
+                    PixelImage_Coordinate pos[2] = {
+                        axis == false ? changeAxis : keepAxis,
+                        axis == true  ? changeAxis : keepAxis
+                    };
+                    PixelImage_Coordinate srcPos1[2] = {
+                        axis == false ? changeAxis * 2 : keepAxis,
+                        axis == true  ? changeAxis * 2: keepAxis
+                    };
+                    PixelImage_Coordinate srcPos2[2] = {
+                        axis == false ? changeAxis * 2 + 1: keepAxis,
+                        axis == true  ? changeAxis * 2 + 1: keepAxis
+                    };
+
+                    double avg =
+                        (inputImage.getDouble(srcPos1[0], srcPos1[1], c) +
+                            inputImage.getDouble(srcPos1[0], srcPos2[1], c)) / 2.0f;
+                    ret->setDouble(pos[0], pos[1], c, avg);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageGaussianBlur(
+        PixelImageBase &img,
+        float radius_x,
+        float radius_y,
+        PixelImage_EdgeMode edgeMode = PixelImage_EdgeMode_Clamp)
+    {
+        size_t intRadius_x = size_t(radius_x) + 1;
+        size_t intRadius_y = size_t(radius_y) + 1;
+
+        PixelImage<ValueType, scalingType> *out =
+            new PixelImage<ValueType, scalingType>(
+                img.getWidth(),
+                img.getHeight(),
+                img.getChannelCount());
+
+        size_t diameter_x = intRadius_x * 2;
+        size_t diameter_y = intRadius_y * 2;
+
+        const float sigma = 1.0f;
+
+        // Construct an appropriately-sized kernel.
+        float *gaussianKernel = new float[diameter_y * diameter_x];
+        float gaussianTotal = 0.0f;
+        for(size_t y = 0; y < diameter_y; y++) {
+            float ydelta = ((float(y) - float(intRadius_y)) / radius_y) * 2.0f;
+            float ysqr = ydelta * ydelta;
+
+            for(size_t x = 0; x < diameter_x; x++) {
+                float xdelta = ((float(x) - float(intRadius_x)) / radius_x) * 2.0f;
+                float xsqr = xdelta * xdelta;
+
+                gaussianKernel[x + y * diameter_x] =
+                    (1.0f / (2.0f * 3.14159 * sigma * sigma)) *
+                    powf(2.718281828459f, -(xsqr + ysqr) / (2.0f * sigma * sigma));
+
+                gaussianTotal += gaussianKernel[x + y * diameter_x];
+            }
+        }
+
+        // Go through and normalize the whole kernel.
+        for(size_t y = 0; y < diameter_y; y++) {
+            for(size_t x = 0; x < diameter_x; x++) {
+                gaussianKernel[x + y * diameter_x] /= gaussianTotal;
+            }
+        }
+
+        for(PixelImage_Coordinate y = 0; y < img.getHeight(); y++) {
+            for(PixelImage_Coordinate x = 0; x < img.getWidth(); x++) {
+                for(PixelImage_Coordinate c = 0; c < img.getChannelCount(); c++) {
+
+                    float dstPx = 0.0f;
+
+                    for(int ky = 0; ky < int(diameter_y); ky++) {
+                        for(int kx = 0; kx < int(diameter_x); kx++) {
+
+                            const float srcPx =
+                                img.getDouble(
+                                    x + (kx - intRadius_x),
+                                    y + (ky - intRadius_y),
+                                    c,
+                                    edgeMode);
+
+                            const float &kernelPt =
+                                gaussianKernel[kx + ky * diameter_x];
+
+                            dstPx += srcPx * kernelPt;
+                        }
+                    }
+
+                    out->setDouble(x, y, c, dstPx);
+                }
+            }
+        }
+
+        delete[] gaussianKernel;
+
+        return out;
+    }
+
+    template<typename ValueType, ScalingType scalingType>
+    inline PixelImage<ValueType, scalingType> *pixelImageScale(
+        PixelImageBase &inputImage,
+        PixelImage_Dimension width,
+        PixelImage_Dimension height)
+    {
+        PixelImageBase *img = &inputImage;
+        PixelImage<ValueType, scalingType> *blurredImg = nullptr;
+
+        // Apply a gaussian blur with a radius dependent on the ratio
+        // between the original and desired sizes.
+        if(width < img->getWidth() || height < img->getHeight()) {
+            blurredImg =
+                pixelImageGaussianBlur<ValueType, scalingType>(
+                    *img,
+                    width  < img->getWidth()  ? (0.5f * float(img->getWidth())  / float(width))  : 1,
+                    height < img->getHeight() ? (0.5f * float(img->getHeight()) / float(height)) : 1);
+            img = blurredImg;
+        }
+
+        PixelImage_Dimension hrWidth = img->getWidth();
+        PixelImage_Dimension hrHeight = img->getHeight();
+
+        // Determine how far we can go by half-rezzing.
+        if(width < img->getWidth()) {
+            while((hrWidth >> 1) >= width) {
+                hrWidth >>= 1;
+            }
+            while((hrHeight >> 1) >= height) {
+                hrHeight >>= 1;
+            }
+        }
+
+        PixelImage<double> *tmp = new PixelImage<double>(*img);;
+
+        // Half-rez on the x axis by averaging every pair of pixels,
+        // until we're within 2x of the goal size.
+        while(tmp->getWidth() > hrWidth) {
+            PixelImage<double> *tmp2 = nullptr;
+            tmp2 = pixelImageHalfRes<double, pixelValueGetDefaultScalingType<double>()>(*tmp, false);
+            delete tmp;
+            tmp = tmp2;
+        }
+        assert(tmp->getWidth() == hrWidth);
+
+        // Half-rez on the y axis by averaging every pair of pixels,
+        // until we're within 2x of the goal size.
+        while(tmp->getHeight() > hrHeight) {
+            PixelImage<double> *tmp2 = nullptr;
+            tmp2 = pixelImageHalfRes<double, pixelValueGetDefaultScalingType<double>()>(*tmp, true);
+            delete tmp;
+            tmp = tmp2;
+        }
+        assert(tmp->getHeight() == hrHeight);
+
+        // Do the final scaling with Lanczos filtering.
+        PixelImage<uint8_t> *scaled3 =
+            pixelImageScale_lanczos<ValueType, scalingType>(*tmp, width, height);
+
+        delete tmp;
+        delete blurredImg;
+
+        return scaled3;
+    }
+
 }
 
