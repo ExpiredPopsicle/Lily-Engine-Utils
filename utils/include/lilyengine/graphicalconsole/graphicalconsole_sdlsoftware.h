@@ -73,27 +73,27 @@ namespace ExPop
 
 namespace ExPop
 {
-    GraphicalConsole_SDLSoftwareWrapper::GraphicalConsole_SDLSoftwareWrapper()
+    inline GraphicalConsole_SDLSoftwareWrapper::GraphicalConsole_SDLSoftwareWrapper()
     {
         console = getMainConsole();
         textBackSurf = nullptr;
     }
 
-    GraphicalConsole_SDLSoftwareWrapper::GraphicalConsole_SDLSoftwareWrapper(
+    inline GraphicalConsole_SDLSoftwareWrapper::GraphicalConsole_SDLSoftwareWrapper(
         GraphicalConsole *inConsole)
     {
         console = inConsole;
         textBackSurf = nullptr;
     }
 
-    GraphicalConsole_SDLSoftwareWrapper::~GraphicalConsole_SDLSoftwareWrapper()
+    inline GraphicalConsole_SDLSoftwareWrapper::~GraphicalConsole_SDLSoftwareWrapper()
     {
         if(textBackSurf) {
             SDL_FreeSurface(textBackSurf);
         }
     }
 
-    void GraphicalConsole_SDLSoftwareWrapper::render(SDL_Window *window)
+    inline void GraphicalConsole_SDLSoftwareWrapper::render(SDL_Window *window)
     {
         if(console->getActive()) {
 

@@ -149,13 +149,13 @@ namespace ExPop
         getMainSDLConsoleInputWrapper().setTextInputState(false);
     }
 
-    GraphicalConsole_SDLInputWrapper::GraphicalConsole_SDLInputWrapper()
+    inline GraphicalConsole_SDLInputWrapper::GraphicalConsole_SDLInputWrapper()
     {
         console = getMainConsole();
         shadowTextInputState = SDL_IsTextInputActive();
     }
 
-    GraphicalConsole_SDLInputWrapper::GraphicalConsole_SDLInputWrapper(
+    inline GraphicalConsole_SDLInputWrapper::GraphicalConsole_SDLInputWrapper(
         GraphicalConsole *inConsole)
     {
         console = inConsole;
@@ -170,22 +170,22 @@ namespace ExPop
         }
     }
 
-    GraphicalConsole_SDLInputWrapper::~GraphicalConsole_SDLInputWrapper()
+    inline GraphicalConsole_SDLInputWrapper::~GraphicalConsole_SDLInputWrapper()
     {
     }
 
-    void GraphicalConsole_SDLInputWrapper::setTextInputState(bool active)
+    inline void GraphicalConsole_SDLInputWrapper::setTextInputState(bool active)
     {
         shadowTextInputState = active;
         makeTextInputStateConsistent();
     }
 
-    bool GraphicalConsole_SDLInputWrapper::getTextInputState() const
+    inline bool GraphicalConsole_SDLInputWrapper::getTextInputState() const
     {
         return shadowTextInputState;
     }
 
-    void GraphicalConsole_SDLInputWrapper::makeTextInputStateConsistent()
+    inline void GraphicalConsole_SDLInputWrapper::makeTextInputStateConsistent()
     {
         if(console->getActive()) {
 
@@ -208,7 +208,7 @@ namespace ExPop
         }
     }
 
-    bool GraphicalConsole_SDLInputWrapper::handleEvent(SDL_Event &event)
+    inline bool GraphicalConsole_SDLInputWrapper::handleEvent(SDL_Event &event)
     {
         // Always possible regardless of activeness: Backquote keydown,
         // which will make it active.

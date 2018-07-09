@@ -83,18 +83,18 @@ namespace ExPop
 
 namespace ExPop
 {
-    GraphicalConsole_SDLGLWrapper::GraphicalConsole_SDLGLWrapper()
+    inline GraphicalConsole_SDLGLWrapper::GraphicalConsole_SDLGLWrapper()
     {
         console = getMainConsole();
     }
 
-    GraphicalConsole_SDLGLWrapper::GraphicalConsole_SDLGLWrapper(
+    inline GraphicalConsole_SDLGLWrapper::GraphicalConsole_SDLGLWrapper(
             GraphicalConsole *inConsole)
     {
         console = inConsole;
     }
 
-    GraphicalConsole_SDLGLWrapper::~GraphicalConsole_SDLGLWrapper()
+    inline GraphicalConsole_SDLGLWrapper::~GraphicalConsole_SDLGLWrapper()
     {
         if(statesPerWindow.size()) {
             ExPop::out()
@@ -104,7 +104,7 @@ namespace ExPop
         }
     }
 
-    void GraphicalConsole_SDLGLWrapper::render(SDL_Window *window)
+    inline void GraphicalConsole_SDLGLWrapper::render(SDL_Window *window)
     {
         if(console->getActive()) {
 
@@ -168,7 +168,7 @@ namespace ExPop
         }
     }
 
-    void GraphicalConsole_SDLGLWrapper::initWindow(SDL_Window *window)
+    inline void GraphicalConsole_SDLGLWrapper::initWindow(SDL_Window *window)
     {
         if(statesPerWindow.find(window) == statesPerWindow.end()) {
 
@@ -223,7 +223,7 @@ namespace ExPop
         }
     }
 
-    void GraphicalConsole_SDLGLWrapper::shutdownWindow(SDL_Window *window)
+    inline void GraphicalConsole_SDLGLWrapper::shutdownWindow(SDL_Window *window)
     {
         auto it = statesPerWindow.find(window);
         if(it != statesPerWindow.end()) {
