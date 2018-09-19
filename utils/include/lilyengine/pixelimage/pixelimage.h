@@ -218,7 +218,7 @@ namespace ExPop
         numChannels = inNumChannels;
         data = new PixelValueType[width * height * numChannels];
 
-        memset(data, 0, sizeof(PixelValueType) * width * height * numChannels);
+        memset((void*)data, 0, sizeof(PixelValueType) * width * height * numChannels);
     }
 
     // Destructor
@@ -270,7 +270,7 @@ namespace ExPop
     {
         // Make a new image buffer and clear it.
         PixelValueType *newData = new PixelValueType[inWidth * inHeight * inNumChannels];
-        memset(newData, 0, sizeof(PixelValueType) * inWidth * inHeight * inNumChannels);
+        memset((void*)newData, 0, sizeof(PixelValueType) * inWidth * inHeight * inNumChannels);
 
         // Copy old image over.
         for(PixelImage_Coordinate y = 0; y < height && y < inHeight; y++) {

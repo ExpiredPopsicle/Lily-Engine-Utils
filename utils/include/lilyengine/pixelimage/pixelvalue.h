@@ -89,7 +89,7 @@ namespace ExPop
     template<
         typename ValueType,
         ScalingType scalingType = pixelValueGetDefaultScalingType<ValueType>()>
-    class PixelValue
+    struct PixelValue
     {
     public:
 
