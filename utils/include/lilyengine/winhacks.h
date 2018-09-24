@@ -2,7 +2,7 @@
 //
 //   Lily Engine Utils
 //
-//   Copyright (c) 2012-2016 Clifford Jolly
+//   Copyright (c) 2012-2018 Kiri Jolly
 //     http://expiredpopsicle.com
 //     expiredpopsicle@gmail.com
 //
@@ -28,3 +28,4 @@
 //      distribution.
 //
 // -------------------------- END HEADER -------------------------------------
+
