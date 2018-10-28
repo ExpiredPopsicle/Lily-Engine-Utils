@@ -1,5 +1,5 @@
 build:
-  stage: bui+ld
+  stage: build
   script:
     - make -f Makefile.tools
   artifacts:
