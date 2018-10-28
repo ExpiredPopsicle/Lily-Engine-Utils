@@ -1,0 +1,18 @@
+build:
+  stage: bui+ld
+  script:
+    - make -f Makefile.tools
+  artifacts:
+    paths:
+      ./lilylibtests
+
+test:
+  stage: test
+  dependencies:
+    - build
+  script:
+    - ./lilylibtests
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+

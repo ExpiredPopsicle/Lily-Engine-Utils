@@ -166,7 +166,7 @@ spritefucker$(TARGET_EXT) : \
 		$(TARGET_LDFLAGS) \
 		-o $@
 
-CLEANLIST := $(CLEANLIST) imgbuffer$(TARGET_EXT)
+CLEANLIST := $(CLEANLIST) spritefucker$(TARGET_EXT)
 
 # ----------------------------------------------------------------------
 # todoscan
