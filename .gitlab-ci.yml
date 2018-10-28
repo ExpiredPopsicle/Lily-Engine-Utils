@@ -4,7 +4,7 @@ build:
     - make -f Makefile.tools
   artifacts:
     paths:
-      ./lilylibtests
+      - ./lilylibtests
 
 test:
   stage: test
