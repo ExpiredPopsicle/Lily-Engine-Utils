@@ -85,6 +85,8 @@
 
 namespace ExPop
 {
+    class ZipFile;
+
     namespace FileSystem
     {
         /// Get all the files and subdirectories in a directory.
@@ -220,6 +222,13 @@ namespace ExPop
 
         /// Open a file for reading. May search inside archives.
         std::shared_ptr<std::istream> openReadFile(const std::string &fileName);
+
+        /// Add the contents of a zip file as an overlay to the
+        /// existing filesystem (real files override zip contents).
+        void mountZipFile(std::shared_ptr<ExPop::ZipFile> zf, const std::string &location);
+
+        /// Overlay a zip file by its filename.
+        std::shared_ptr<ExPop::ZipFile> mountZipFile(const std::string &filename);
     }
 }
 
@@ -742,7 +751,9 @@ namespace ExPop
                 ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
                 if(node) {
                     // This assumes no empty directories inside
-                    // archives.
+                    // archives. So having no children = file, and
+                    // having children = directory. We must be aware
+                    // of this when mounting the zip file.
                     return !!node->children.size();
                 }
 
@@ -1047,6 +1058,36 @@ namespace ExPop
             return std::string(dirBuf);
         }
 
+        inline void mountZipFile(std::shared_ptr<ExPop::ZipFile> zf, const std::string &location)
+        {
+            std::vector<std::string> fileList = zf->getFileList();
+            std::string locationPrefix = location.size() ? (location + "/") : "";
+
+            for(size_t i = 0; i < fileList.size(); i++) {
+
+                std::string overlayPathName =
+                    ExPop::FileSystem::fixFileName(locationPrefix + fileList[i]);
+
+                ExPop::FileSystem::ArchiveTreeNode *node =
+                    ExPop::FileSystem::getRootArchiveTreeNode()->resolvePath(overlayPathName, true);
+
+                node->filenameInZipFile = fileList[i];
+                node->zipFile = zf;
+            }
+        }
+
+        inline std::shared_ptr<ExPop::ZipFile> mountZipFile(const std::string &filename)
+        {
+            std::string directoryName = ExPop::FileSystem::getParentName(filename);
+            std::shared_ptr<ExPop::ZipFile> zf(new ExPop::ZipFile(filename));
+            mountZipFile(zf, directoryName);
+            return zf;
+        }
+
+        // FIXME: Implement unmountZipFile. Assume that zip files are
+        //   either wholly separate trees or that we're unmounting
+        //   everything at once. Don't worry about restoring old
+        //   hierarchy to the archive tree!
     }
 }
 
