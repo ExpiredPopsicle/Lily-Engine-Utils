@@ -536,17 +536,16 @@ namespace ExPop
 
         inline std::string makeRelativePath(const std::string &path)
         {
-            if(!isFullPath(path)) {
-                return fixFileName(path);
-            }
-
+            // Get full paths.
+            std::string fullPath = makeFullPath(path);
             std::string cwd = getCwd();
 
+            // Tokenize.
             std::vector<std::string> cwdParts;
             stringTokenize(cwd, "/", cwdParts);
 
             std::vector<std::string> pathParts;
-            stringTokenize(path, "/", pathParts);
+            stringTokenize(fullPath, "/", pathParts);
 
             // Strip off common elements from the front.
             while(cwdParts.size() && pathParts.size() && cwdParts[0] == pathParts[0]) {
@@ -904,14 +903,13 @@ namespace ExPop
 
         inline char *loadFile(const std::string &fileName, int64_t *length)
         {
-            // Get the file size from file system or archive.
-            *length = getFileSize(fileName);
-
-            if(*length <= 0) {
-
-                // It exists in neither!
+            // Fail to load a file if it doesn't exist.
+            if(!fileExists(fileName)) {
                 return NULL;
             }
+
+            // Get the file size from file system or archive.
+            *length = getFileSize(fileName);
 
             char *data = new char[*length];
 

@@ -84,9 +84,14 @@ namespace ExPop
         // TODO: Maybe something to limit the include file options? Like a
         // whitelist of includable files.
 
+        // FIXME: Add a userdata thing to the file loader.
+
         /// File loader callback type and variable. Defaults to
-        /// ExPop::FileSystem::loadFileString().
-        typedef std::string(*LoadFileCallback)(const std::string &filename);
+        /// a simple file loader.
+        typedef bool (*LoadFileCallback)(
+            const std::string &filename,
+            std::string &filedata);
+
         LoadFileCallback loadFileCallback;
 
         // ----------------------------------------------------------------------
@@ -134,12 +139,26 @@ namespace ExPop
     const size_t RECURSION_LIMIT = 64;
     const size_t MAX_SYMBOL_LOOKUPS_FOR_IF = 64;
 
+    inline bool preprocessorState_defaultLoadFileCallback(
+        const std::string &filename,
+        std::string &filedata)
+    {
+        int64_t fileLength = 0;
+        char *rawFileData = FileSystem::loadFile(filename, &fileLength);
+
+        if(rawFileData) {
+            filedata = std::string(rawFileData, fileLength);
+            return true;
+        }
+        return false;
+    }
+
     inline PreprocessorState::PreprocessorState(void)
     {
         recursionCount = 0;
         hadError = false;
         annotateIncludes = false;
-        loadFileCallback = ExPop::FileSystem::loadFileString;
+        loadFileCallback = preprocessorState_defaultLoadFileCallback;
     }
 
     inline std::string convertQuotedPath(const std::string &in)
@@ -308,22 +327,22 @@ namespace ExPop
 
                             // First try loading from the same directory.
                             fullName = FileSystem::fixFileName(currentFilePath + "/" + name);
-                            buf = inState.loadFileCallback(fullName);
+                            bool readSuccess = inState.loadFileCallback(fullName, buf);
 
-                            if(!buf.size()) {
+                            if(!readSuccess) {
 
                                 // Failed to load from current directory.
                                 // Try include paths.
-                                for(unsigned int i = 0; i < inState.includePaths.size(); i++) {
+                                for(size_t i = 0; i < inState.includePaths.size(); i++) {
                                     fullName = FileSystem::fixFileName(inState.includePaths[i] + "/" + name);
-                                    buf = inState.loadFileCallback(fullName);
-                                    if(buf.size()) break;
+                                    readSuccess = inState.loadFileCallback(fullName, buf);
+                                    if(readSuccess) break;
                                 }
                             }
 
-                            // TODO: Get the name in there somewhere after
-                            // I change this from just being asserts.
-                            EXPOP_PP_CHECK_OR_ERROR(buf.size(), "Could not open include file");
+                            EXPOP_PP_CHECK_OR_ERROR(
+                                readSuccess,
+                                "Could not open include file: " + fullName);
 
                             inState.recursionCount++;
                             std::string includedBuf = preprocess(fullName, buf, inState);
@@ -481,5 +500,8 @@ namespace ExPop
     }
 }
 
-
+// FIXME:
+//   Doesn't support userdata in callbacks.
+//   Lots of bare members on the PreprocessorState class.
+//   Why is "preprocess" a separate function? Just put it in the class.
 
