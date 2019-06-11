@@ -41,6 +41,8 @@
 
 // TODO: Symlink detection on Windows?
 
+// TODO: Finish zipfile mounting support!
+
 // ----------------------------------------------------------------------
 // Needed headers
 // ----------------------------------------------------------------------

@@ -40,6 +40,8 @@
 #include "pixelvalue.h"
 #include "pixelimage.h"
 
+#include "../filesystem.h"
+
 // ----------------------------------------------------------------------
 // Declarations and documentation
 // ----------------------------------------------------------------------
@@ -122,7 +124,7 @@ namespace ExPop
         }
 
         // Skip image descriptor.
-        EXPOP_LOADTGA_INCPTR(idLength);
+        EXPOP_LOADTGA2_INCPTR(idLength);
 
         // This loader only works with true-color images and greyscale
         // right now. RLE and non-RLE are okay, though.

@@ -135,11 +135,14 @@
 #include <list>
 #include <mutex>
 #include <thread>
+#include <functional>
 
 #include "../pixelimage/pixelimage.h"
 #include "../pixelimage/pixelimage_tga.h"
 #include "../image.h"
 #include "graphicalconsole_fontimage.h"
+
+#include "../filesystem.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation

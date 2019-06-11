@@ -39,6 +39,7 @@
 #pragma once
 
 #include "../matrix.h"
+#include "../deflate/deflate_zlib.h"
 
 // ----------------------------------------------------------------------
 // Declarations and documentation

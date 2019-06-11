@@ -148,6 +148,7 @@ namespace ExPop
 
         if(rawFileData) {
             filedata = std::string(rawFileData, fileLength);
+            delete[] rawFileData;
             return true;
         }
         return false;
