@@ -64,6 +64,7 @@
 #include <vector>
 #include <cstring>
 #include <string>
+#include <cstdlib>
 
 #if !_WIN32
 #include <sys/types.h>
@@ -1088,6 +1089,50 @@ namespace ExPop
         //   either wholly separate trees or that we're unmounting
         //   everything at once. Don't worry about restoring old
         //   hierarchy to the archive tree!
+
+        inline std::string getExecutablePath(const char *argv0)
+        {
+          #if defined _WIN32
+            char pathSeparator[2] = ";";
+          #else
+            char pathSeparator[2] = ":";
+          #endif
+
+            // Full path from the root directory.
+            if(isFullPath(argv0)) {
+                return fixFileName(argv0);
+            }
+
+            // Path in the form of "./foo" or "foo/bar".
+            if(getBaseName(argv0) != argv0) {
+                return makeFullPath(argv0);
+            }
+
+            // Now search system path...
+            const char *systemPath = getenv("PATH");
+            if(systemPath) {
+
+                std::vector<std::string> splitPath;
+                stringTokenize(systemPath, pathSeparator, splitPath, false);
+
+              #ifdef _WIN32
+                // Windows allows running stuff just from the current
+                // directory.
+                splitPath.push_back(".");
+              #endif
+
+                for(size_t i = 0; i < splitPath.size(); i++) {
+                    std::string maybePath = fixFileName(splitPath[i] + "/" + argv0);
+                    if(fileExists(maybePath)) {
+                        // TODO: Check to see if it's actually executable!
+                        return maybePath;
+                    }
+                }
+            }
+
+            return "";
+        }
+
     }
 }
 

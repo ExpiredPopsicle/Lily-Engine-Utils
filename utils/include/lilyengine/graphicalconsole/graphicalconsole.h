@@ -339,8 +339,12 @@ namespace ExPop
             GraphicalConsoleStreambuf(GraphicalConsole *inParent);
             int overflow(int c) override;
         private:
-            std::mutex buffersMutex;
-            std::map<std::thread::id, std::string> buffersByThread;
+          #if EXPOP_ENABLE_THREADS
+            Threads::Mutex buffersMutex;
+            std::map<Threads::ThreadId, std::string> buffersByThread;
+          #else
+            std::string singleThreadedBuffer;
+          #endif
             GraphicalConsole *parent;
         };
         GraphicalConsoleStreambuf streamBufOut;
@@ -367,7 +371,9 @@ namespace ExPop
         static const size_t lineRingBufferSize = 1024; // Must be a power of two.
         std::string lineRingBuffer[lineRingBufferSize];
         size_t lineRingBufferIndex; // Must be unsigned - relies on integer underflow.
-        std::mutex lineRingBufferMutex;
+      #if EXPOP_ENABLE_THREADS
+        Threads::Mutex lineRingBufferMutex;
+      #endif
 
         std::basic_string<uint32_t> editLineBuffer;
         int editLineCursorLocation;
@@ -602,7 +608,9 @@ namespace ExPop
 
     inline void GraphicalConsole::addLine(const std::string &text)
     {
+      #if EXPOP_ENABLE_THREADS
         lineRingBufferMutex.lock();
+      #endif
 
         lineRingBuffer[lineRingBufferIndex] =
             stringUTF32ToCodepage437(stringUTF8ToUTF32(text));
@@ -615,7 +623,9 @@ namespace ExPop
 
         backBufferIsDirty = true;
 
+      #if EXPOP_ENABLE_THREADS
         lineRingBufferMutex.unlock();
+      #endif
     }
 
 

@@ -408,6 +408,11 @@ namespace ExPop
     {
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
+
+      #ifdef _WIN32
+        typedef int socklen_t;
+      #endif
+
         socklen_t addrLen = sizeof(addr);
         getpeername(fd, (sockaddr*)&addr, &addrLen);
 

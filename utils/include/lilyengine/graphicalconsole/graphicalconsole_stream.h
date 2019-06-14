@@ -61,18 +61,24 @@ namespace ExPop
 
     inline int GraphicalConsole::GraphicalConsoleStreambuf::overflow(int c)
     {
+      #if EXPOP_ENABLE_THREADS
         buffersMutex.lock();
-
-        std::thread::id thisId = std::this_thread::get_id();
+        Threads::ThreadId thisId = Threads::getMyId();
+        std::string &threadBuffer = buffersByThread[thisId];
+      #else
+        std::string &threadBuffer = singleThreadedBuffer;
+      #endif
 
         if(c != '\n') {
-            buffersByThread[thisId].append(1, c);
+            threadBuffer.append(1, c);
         } else {
-            parent->addLine(buffersByThread[thisId]);
-            buffersByThread[thisId].clear();
+            parent->addLine(threadBuffer);
+            threadBuffer.clear();
         }
 
+      #if EXPOP_ENABLE_THREADS
         buffersMutex.unlock();
+      #endif
 
         return c;
     }

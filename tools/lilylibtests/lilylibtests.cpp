@@ -399,6 +399,11 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
     delete node;
 }
 
+inline void doFilesystemTests(const char *argv0, size_t &passCounter, size_t &failCounter)
+{
+    EXPOP_TEST_VALUE(system(("\"" + FileSystem::getExecutablePath(argv0) + "\" --quit").c_str()), 0);
+}
+
 // ----------------------------------------------------------------------
 
 class TimerBlock
@@ -447,10 +452,14 @@ int main(int argc, char *argv[])
 {
     std::vector<std::string> paramNames = { };
     std::vector<ParsedParameter> params;
+
     parseCommandLine(argc, argv, paramNames, params);
 
     for(size_t i = 0; i < params.size(); i++) {
-        if(params[i].name == "help") {
+
+        if(params[i].name == "quit") {
+            return 0;
+        } else if(params[i].name == "help") {
             showHelp(argv[0], false);
             return 0;
         } else {
@@ -498,6 +507,9 @@ int main(int argc, char *argv[])
 
     showSectionHeader("Parser");
     doParserTests(passCounter, failCounter);
+
+    showSectionHeader("Filesystem");
+    doFilesystemTests(argv[0], passCounter, failCounter);
 
     showSectionHeader("Results");
     std::cout << "Passed: " << passCounter << std::endl;

@@ -251,7 +251,9 @@ namespace ExPop
             return;
         }
 
+      #if EXPOP_ENABLE_THREADS
         lineRingBufferMutex.lock();
+      #endif
 
         // Make a transparent checkered backround.
         uint8_t bgcolor[4] = {0};
@@ -455,7 +457,9 @@ namespace ExPop
 
         backbufferUpdateCount++;
 
+      #if EXPOP_ENABLE_THREADS
         lineRingBufferMutex.unlock();
+      #endif
     }
 
 }

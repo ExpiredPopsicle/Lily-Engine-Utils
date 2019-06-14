@@ -8,5 +8,6 @@ install it. That would be silly.
 Options:
 
   --help            You're sitting in it.
+  --quit            Exit immediately without doing anything.
 
 Report bugs to expiredpopsicle@gmail.com
