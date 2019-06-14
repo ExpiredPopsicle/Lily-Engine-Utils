@@ -230,6 +230,11 @@ namespace ExPop
 
         /// Overlay a zip file by its filename.
         std::shared_ptr<ExPop::ZipFile> mountZipFile(const std::string &filename);
+
+        /// Get a path to the executable itself. FIXME: Do NOT use if
+        /// the current directory has changed sine the program
+        /// started.
+        inline std::string getExecutablePath(const char *argv0);
     }
 }
 
@@ -1103,7 +1108,9 @@ namespace ExPop
                 return fixFileName(argv0);
             }
 
-            // Path in the form of "./foo" or "foo/bar".
+            // Path in the form of "./foo" or "foo/bar". Note that
+            // this will break if the directory has changed since
+            // starting the program!
             if(getBaseName(argv0) != argv0) {
                 return makeFullPath(argv0);
             }
