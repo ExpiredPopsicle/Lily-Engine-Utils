@@ -2,9 +2,11 @@ AC_INIT(Butts, 1.0)
 AC_PROG_CXX
 AM_INIT_AUTOMAKE(foreign)
 
-AC_PREFIX_DEFAULT(/opt/whatever)
-
-m4_include(Lily-Engine-Utils/lilyutils.m4)
+dnl ----------------------------------------------------------------------
+dnl Include the Lily-Engine-Utils m4 file straight from the
+dnl Lily-Engine-Utils directory.
+m4_include(../../lilyutils.m4)
+dnl ----------------------------------------------------------------------
 
 AC_OUTPUT([Makefile src/Makefile])
 
