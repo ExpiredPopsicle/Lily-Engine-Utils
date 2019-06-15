@@ -64,6 +64,8 @@ namespace ExPop
 // Implementation
 // ----------------------------------------------------------------------
 
+#ifndef EXPOP_DOXYGEN_IGNORE
+
 namespace ExPop
 {
     enum XmlTokenType
@@ -553,5 +555,6 @@ namespace ExPop
 
 }
 
+#endif // EXPOP_DOXYGEN_IGNORE
 
 

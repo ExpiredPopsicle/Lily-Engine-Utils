@@ -115,6 +115,8 @@
 // Needed headers
 // ----------------------------------------------------------------------
 
+#ifndef EXPOP_DOXYGEN_IGNORE
+
 #pragma once
 
 #ifndef EXPOP_ENABLE_SDL2
@@ -143,6 +145,8 @@
 #include "graphicalconsole_fontimage.h"
 
 #include "../filesystem.h"
+
+#endif // EXPOP_DOXYGEN_IGNORE
 
 // ----------------------------------------------------------------------
 // Declarations and documentation
@@ -440,6 +444,8 @@ namespace ExPop
 // Implementation
 // ----------------------------------------------------------------------
 
+#ifndef EXPOP_DOXYGEN_IGNORE
+
 #include "graphicalconsole_common.h"
 #include "graphicalconsole_builtincommands.h"
 #include "graphicalconsole_gfx.h"
@@ -709,4 +715,6 @@ namespace ExPop
     }
 
 }
+
+#endif // EXPOP_DOXYGEN_IGNORE
 
