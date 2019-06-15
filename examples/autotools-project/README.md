@@ -1,21 +1,33 @@
 Lily-Engine-Utils Examples
---------------------------
+==========================
 
-This project is going to serve as some example code (both for build
-systems *and* for C++ code). Right now it's just an autotools example
-project.
+This project serves as some example code (both for build systems *and*
+for C++ code) for how to use Lily-Engine-Utils with the autotools
+build system.
 
-Future intent is to add it to the Lily-Engine-Utils main repository.
-Right now it lives outside of that, and requires a copy of
-Lily-Engine-Utils to be checked out inside of it. Git submodules are
-annoying, so just run this to fetch it:
+Usage
+-----
+
+Generate autotools build files.
 
 ```bash
-git clone https://git.intoxicoding.com/Intoxicoding/Lily-Engine-Utils.git
+./autogen.sh
 ```
 
-Alternatively, run this if you have ssh access to Lily-Engine-Utils:
+Run the configure script.
 
 ```bash
-git clone ssh://git@git.intoxicoding.com:8002/Intoxicoding/Lily-Engine-Utils.git
+./configure
+```
+
+Build the program.
+
+```bash
+make
+```
+
+Test the program.
+
+```bash
+src/test
 ```
