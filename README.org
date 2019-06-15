@@ -1,3 +1,4 @@
+#+OPTIONS: ^:nil
 * Lily Engine Utils
 
 This is a library I've built up over years as I've worked on various
@@ -28,6 +29,36 @@ anyway.
 
 If #including individual headers isn't your style, you can simply
 #include <lilyengine/utils.h> and get everything.
+
+**** Autotools usage
+
+To add Lily-Engine-Utils to an autotools-based project, just
+m4_include() the lilyutils.m4 file directly from the Lily-Engine-Utils
+source directory, and use the LILY_CXXFLAGS and LILY_LIBS variables
+from your Makefile.am.
+
+configure.ac:
+
+#+BEGIN_SRC bash
+...
+m4_include(your_Lily-Engine-Utils_directory/lilyutils.m4)
+...
+#+END_SRC
+
+Makefile.am:
+
+#+BEGIN_SRC bash
+...
+projectname_CXXFLAGS=$(LILY_CXXFLAGS)
+projectname_LDADD=$(LILY_LIBS)
+...
+#+END_SRC
+
+Cross-compile settings will be detected from the $CXX variable in your
+configure.ac, so "--host=whatever" arguments to your ./configure
+script will affect the compilation flags.
+
+**** Generic build system usage
 
 "lilyutils-config", run from the root directory of the project, will
 take --libs and --cxxflags parameters, and spit back compiler flags
