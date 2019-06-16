@@ -228,8 +228,27 @@ namespace ExPop
         /// existing filesystem (real files override zip contents).
         void mountZipFile(std::shared_ptr<ExPop::ZipFile> zf, const std::string &location);
 
-        /// Overlay a zip file by its filename.
+        /// Overlay a zip file by its filename, in the directory it
+        /// exists in.
         std::shared_ptr<ExPop::ZipFile> mountZipFile(const std::string &filename);
+
+        /// Unmount all overlays.
+        ///
+        /// Note: We don't support granular un-mounting because
+        /// information is lost when multiple archives are mounted as
+        /// overlays to each other.
+        ///
+        /// FIXME: At least keep a list of mounted overlay files and
+        /// where they're mounted.
+        void unmountAll(void);
+
+        // TODO: Function to mount a directory as an overlay onto
+        // another directory.
+        //
+        // Note: If we just add all the files in the tree that exists
+        // at the time we call the mount command, we will not be able
+        // to respond to changes in the overlay filesystem. This may
+        // require making a whole new system for directory overlays.
 
         /// Get a path to the executable itself. FIXME: Do NOT use if
         /// the current directory has changed sine the program
@@ -1090,10 +1109,10 @@ namespace ExPop
             return zf;
         }
 
-        // FIXME: Implement unmountZipFile. Assume that zip files are
-        //   either wholly separate trees or that we're unmounting
-        //   everything at once. Don't worry about restoring old
-        //   hierarchy to the archive tree!
+        inline void unmountAll(void)
+        {
+            ExPop::FileSystem::getRootArchiveTreeNode()->children.clear();
+        }
 
         inline std::string getExecutablePath(const char *argv0)
         {

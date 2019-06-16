@@ -402,6 +402,34 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
 inline void doFilesystemTests(const char *argv0, size_t &passCounter, size_t &failCounter)
 {
     EXPOP_TEST_VALUE(system(("\"" + FileSystem::getExecutablePath(argv0) + "\" --quit").c_str()), 0);
+
+    EXPOP_TEST_VALUE(
+        FileSystem::loadFileString("tests/normal_file.txt"),
+        "This file is outside a zip.\n");
+
+    FileSystem::mountZipFile("tests/zip_test.zip");
+
+    EXPOP_TEST_VALUE(
+        FileSystem::fileExists("tests/zip_test.txt"), true);
+
+    EXPOP_TEST_VALUE(
+        FileSystem::getFileSize("tests/zip_test.txt"), 27);
+
+    EXPOP_TEST_VALUE(
+        FileSystem::loadFileString("tests/zip_test.txt"),
+        "This file is inside a zip.\n");
+
+    FileSystem::unmountAll();
+
+    EXPOP_TEST_VALUE(
+        FileSystem::fileExists("tests/zip_test.txt"), false);
+
+    EXPOP_TEST_VALUE(
+        FileSystem::getFileSize("tests/zip_test.txt"), -1);
+
+    EXPOP_TEST_VALUE(
+        FileSystem::loadFileString("tests/zip_test.txt"),
+        "");
 }
 
 // ----------------------------------------------------------------------
