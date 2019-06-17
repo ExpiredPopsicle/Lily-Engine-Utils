@@ -399,6 +399,51 @@ inline void doParserTests(size_t &passCounter, size_t &failCounter)
     delete node;
 }
 
+std::string getIndentation(size_t t)
+{
+    std::string r;
+    for(size_t i = 0; i < t; i++) {
+        r = r + "  ";
+    }
+    return r;
+}
+
+void dumpFileTree(const std::string &path, int recursionLevel = 0)
+{
+    std::vector<std::string> files;
+    FileSystem::getAllFiles(path, files);
+
+    for(size_t i = 0; i < files.size(); i++) {
+
+        std::string fullPath = path + "/" + files[i];
+
+        if(FileSystem::isDir(fullPath)) {
+            std::cout << EXPOP_TEST_COLOR_GOOD;
+            std::cout << "          ";
+        } else {
+            std::cout << std::setw(8) << FileSystem::getFileSize(fullPath) << "  ";
+        }
+
+        if(FileSystem::fileExists(fullPath)) {
+            std::cout << EXPOP_TEST_COLOR_GOOD << "GOOD" << std::endl;
+        } else {
+            std::cout << EXPOP_TEST_COLOR_BAD << "BAD " << std::endl;
+        }
+
+        // std::cout << getIndentation(recursionLevel)
+        //           << files[i];
+        std::cout << fullPath;
+
+        std::cout << EXPOP_TEST_COLOR_RESET;
+
+        std::cout << std::endl;
+
+        if(FileSystem::isDir(fullPath)) {
+            dumpFileTree(fullPath, recursionLevel + 1);
+        }
+    }
+}
+
 inline void doFilesystemTests(const char *argv0, size_t &passCounter, size_t &failCounter)
 {
     EXPOP_TEST_VALUE(system(("\"" + FileSystem::getExecutablePath(argv0) + "\" --quit").c_str()), 0);
@@ -418,6 +463,18 @@ inline void doFilesystemTests(const char *argv0, size_t &passCounter, size_t &fa
     EXPOP_TEST_VALUE(
         FileSystem::loadFileString("tests/zip_test.txt"),
         "This file is inside a zip.\n");
+
+    std::vector<std::string> findResults;
+    ExPop::FileSystem::findOverlayPath("tests/git/ninkasi", findResults);
+    ExPop::FileSystem::getRootArchiveTreeNode()->dump(0);
+
+    std::vector<std::string> overlayTest;
+    ExPop::FileSystem::getAllFiles("tests", overlayTest);
+    for(size_t i = 0; i < overlayTest.size(); i++) {
+        std::cout << "overlayTest: " << overlayTest[i] << std::endl;
+    }
+
+    dumpFileTree(".");
 
     FileSystem::unmountAll();
 

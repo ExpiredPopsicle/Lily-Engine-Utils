@@ -34,14 +34,10 @@
 // TODO: Check this:
 // http://www.reddit.com/r/gamedev/comments/s7y83/saving_configuration_files_savegame_data_etc_on/
 
-// TODO: Get path to binary. windows: GetModuleFileName unix: ???
-
 // TODO: Maybe a thing to get the data directory, as it's been
 // configured.
 
 // TODO: Symlink detection on Windows?
-
-// TODO: Finish zipfile mounting support!
 
 // ----------------------------------------------------------------------
 // Needed headers
@@ -130,6 +126,7 @@ namespace ExPop
         enum {
             FILEFLAG_ARCHIVED    = 1,
             FILEFLAG_NONARCHIVED = 2,
+            FILEFLAG_OVERLAY     = 4,
         };
 
         /// Get flags for a file (archived, non-archived, etc).
@@ -346,16 +343,56 @@ namespace ExPop
             }
         }
 
-
-
-
         inline std::shared_ptr<ArchiveTreeNode> getRootArchiveTreeNode()
         {
             static std::shared_ptr<ArchiveTreeNode> root(new ArchiveTreeNode);
             return root;
         }
 
+        void findOverlayPath(
+            const std::string &path,
+            std::vector<std::string> &foundPaths)
+        {
+            // Add some test stuff.
+            struct OverlayOverride
+            {
+                std::string mountPoint;
+                std::string realPath;
+            };
+            std::vector<OverlayOverride> overlays;
+            overlays.push_back(
+                { "/home/kiri/git/Lily-Engine-Utils/tests",
+                  "/home/kiri/git/ninkasi" });
 
+            std::string fullPath = makeFullPath(path);
+
+            // // See if the file exists directly.
+            // if(fileExists(fullPath, true)) {
+            //     foundPaths.push_back(fullPath);
+            // }
+
+            // Check against all overlays to see if we need to rewrite
+            // this.
+            for(size_t i = 0; i < overlays.size(); i++) {
+                if(stringStartsWith(
+                        overlays[i].mountPoint,
+                        fullPath))
+                {
+                    std::string rewrittenPath =
+                        overlays[i].realPath +
+                        fullPath.substr(overlays[i].mountPoint.size());
+
+                    // std::cout << "REWRITTEN: " << path << " as " << rewrittenPath << std::endl;
+
+                    // Found a file in this overlay.
+                    if(fileExists(rewrittenPath, true)) {
+                        foundPaths.push_back(rewrittenPath);
+                    }
+
+                    findOverlayPath(rewrittenPath, foundPaths);
+                }
+            }
+        }
 
         // ----------------------------------------------------------------------
         // Functions that just juggle data and don't touch the file
@@ -689,6 +726,19 @@ namespace ExPop
                 }
             }
 
+            // Overlays.
+            std::vector<std::string> overlayPaths;
+            findOverlayPath(directory, overlayPaths);
+            for(size_t i = 0; i < overlayPaths.size(); i++) {
+                if(overlayPaths[i] != makeFullPath(directory)) {
+                    std::vector<std::string> namesInOverlay;
+                    getAllFiles(overlayPaths[i], namesInOverlay, showUnixHidden);
+                    for(size_t n = 0; n < namesInOverlay.size(); n++) {
+                        allFiles[namesInOverlay[n]] = true;
+                    }
+                }
+            }
+
             // Finally, convert our map we were using to avoid redundancies
             // into a vector list.
             for(std::map<std::string, bool>::iterator i = allFiles.begin(); i != allFiles.end(); i++) {
@@ -713,6 +763,14 @@ namespace ExPop
                     return true;
                 }
 
+                // Overlays.
+                std::vector<std::string> overlayPaths;
+                findOverlayPath(fileName, overlayPaths);
+                for(size_t i = 0; i < overlayPaths.size(); i++) {
+                    if(fileExists(overlayPaths[i], skipArchives)) {
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -720,11 +778,25 @@ namespace ExPop
 
         inline unsigned int fileChangedTimeStamp(const std::string &fileName)
         {
+            // Real file.
             struct stat fileStat;
-            if(stat(fileName.c_str(), &fileStat) == -1) {
-                return 0;
+            if(stat(fileName.c_str(), &fileStat) != -1) {
+                return fileStat.st_mtime;
             }
-            return fileStat.st_mtime;
+
+            // FIXME: Add zips.
+
+            // Overlays.
+            std::vector<std::string> overlayPaths;
+            findOverlayPath(fileName, overlayPaths);
+            for(size_t i = 0; i < overlayPaths.size(); i++) {
+                unsigned int timeStamp = fileChangedTimeStamp(overlayPaths[i]);
+                if(timeStamp) {
+                    return timeStamp;
+                }
+            }
+
+            return 0;
         }
 
         inline bool isSymLink(const std::string &fileName)
@@ -734,7 +806,6 @@ namespace ExPop
             // links, we should make this check more accurate. Maybe
             // start at the documentation for CreateSymbolicLink on
             // MSDN.
-            return false;
           #else
             struct stat fileStat;
             if(!stat(fileName.c_str(), &fileStat)) {
@@ -742,8 +813,18 @@ namespace ExPop
                     return true;
                 }
             }
-            return false;
           #endif
+
+            // Overlays.
+            std::vector<std::string> overlayPaths;
+            findOverlayPath(fileName, overlayPaths);
+            for(size_t i = 0; i < overlayPaths.size(); i++) {
+                if(isSymLink(overlayPaths[i])) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Windows doesn't seem to have the S_ISDIR macro.
@@ -772,6 +853,20 @@ namespace ExPop
 
             if(!skipArchives) {
 
+                // Overlays.
+                std::vector<std::string> overlayPaths;
+                findOverlayPath(fileName, overlayPaths);
+                for(size_t i = 0; i < overlayPaths.size(); i++) {
+
+                    // std::cout << std::endl << "CHECK OVERLAY: " << i << " " << overlayPaths[i] << std::endl;
+
+                    if(isDir(overlayPaths[i], skipArchives)) {
+                        // std::cout << "is dir" << std::endl;
+                        return true;
+                    }
+                    // std::cout << "is not dir" << std::endl;
+                }
+
                 // Zip archives.
                 ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
                 if(node) {
@@ -781,7 +876,6 @@ namespace ExPop
                     // of this when mounting the zip file.
                     return !!node->children.size();
                 }
-
             }
 
             return false;
@@ -900,6 +994,16 @@ namespace ExPop
 
             } else {
 
+                // Overlays.
+                std::vector<std::string> overlayPaths;
+                findOverlayPath(fileName, overlayPaths);
+                for(size_t i = 0; i < overlayPaths.size(); i++) {
+                    int64_t fileSize = getFileSize(overlayPaths[i]);
+                    if(fileSize != -1) {
+                        return fileSize;
+                    }
+                }
+
                 // Zip archives.
                 ArchiveTreeNode *node = getRootArchiveTreeNode()->resolvePath(fileName);
                 if(node) {
@@ -924,6 +1028,16 @@ namespace ExPop
 
             if(!realFile->fail()) {
                 return realFile;
+            }
+
+            // Overlays.
+            std::vector<std::string> overlayPaths;
+            findOverlayPath(fileName, overlayPaths);
+            for(size_t i = 0; i < overlayPaths.size(); i++) {
+                std::shared_ptr<std::istream> foundFile = openReadFile(overlayPaths[i]);
+                if(foundFile) {
+                    return foundFile;
+                }
             }
 
             // Fallback to zip archives.
@@ -1043,13 +1157,21 @@ namespace ExPop
                 flags |= FILEFLAG_ARCHIVED;
             }
 
+            // Overlays.
+            std::vector<std::string> overlayPaths;
+            findOverlayPath(fileName, overlayPaths);
+            for(size_t i = 0; i < overlayPaths.size(); i++) {
+                if(fileExists(overlayPaths[i])) {
+                    flags |= FILEFLAG_OVERLAY;
+                }
+            }
+
             // Non-archives.
             if(fileExists(fileName, true)) {
                 flags |= FILEFLAG_NONARCHIVED;
             }
 
             return flags;
-
         }
 
         inline std::string getCwd(void)
