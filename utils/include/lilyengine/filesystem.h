@@ -349,27 +349,34 @@ namespace ExPop
             return root;
         }
 
-        void findOverlayPath(
+        struct OverlayOverride
+        {
+            std::string mountPoint;
+            std::string realPath;
+        };
+
+        inline std::vector<OverlayOverride> &getOverlayList(void)
+        {
+            static std::vector<OverlayOverride> overlayList;
+            return overlayList;
+        }
+
+        inline void mountOverlay(
+            const std::string &sourcePath,
+            const std::string &mountPoint)
+        {
+            OverlayOverride overlay;
+            overlay.mountPoint = makeFullPath(mountPoint);
+            overlay.realPath = makeFullPath(sourcePath);
+            getOverlayList().push_back(overlay);
+        }
+
+        inline void findOverlayPath(
             const std::string &path,
             std::vector<std::string> &foundPaths)
         {
-            // Add some test stuff.
-            struct OverlayOverride
-            {
-                std::string mountPoint;
-                std::string realPath;
-            };
-            std::vector<OverlayOverride> overlays;
-            overlays.push_back(
-                { "/home/kiri/git/Lily-Engine-Utils/tests",
-                  "/home/kiri/git/ninkasi" });
-
+            std::vector<OverlayOverride> &overlays = getOverlayList();
             std::string fullPath = makeFullPath(path);
-
-            // // See if the file exists directly.
-            // if(fileExists(fullPath, true)) {
-            //     foundPaths.push_back(fullPath);
-            // }
 
             // Check against all overlays to see if we need to rewrite
             // this.
@@ -381,8 +388,6 @@ namespace ExPop
                     std::string rewrittenPath =
                         overlays[i].realPath +
                         fullPath.substr(overlays[i].mountPoint.size());
-
-                    // std::cout << "REWRITTEN: " << path << " as " << rewrittenPath << std::endl;
 
                     // Found a file in this overlay.
                     if(fileExists(rewrittenPath, true)) {
@@ -857,14 +862,9 @@ namespace ExPop
                 std::vector<std::string> overlayPaths;
                 findOverlayPath(fileName, overlayPaths);
                 for(size_t i = 0; i < overlayPaths.size(); i++) {
-
-                    // std::cout << std::endl << "CHECK OVERLAY: " << i << " " << overlayPaths[i] << std::endl;
-
                     if(isDir(overlayPaths[i], skipArchives)) {
-                        // std::cout << "is dir" << std::endl;
                         return true;
                     }
-                    // std::cout << "is not dir" << std::endl;
                 }
 
                 // Zip archives.
@@ -1233,7 +1233,8 @@ namespace ExPop
 
         inline void unmountAll(void)
         {
-            ExPop::FileSystem::getRootArchiveTreeNode()->children.clear();
+            getRootArchiveTreeNode()->children.clear();
+            getOverlayList().clear();
         }
 
         inline std::string getExecutablePath(const char *argv0)
