@@ -229,6 +229,13 @@ namespace ExPop
         /// exists in.
         std::shared_ptr<ExPop::ZipFile> mountZipFile(const std::string &filename);
 
+        /// Mount a directory as an overlay to another directory.
+        /// Files in the target directory override files in the source
+        /// directory.
+        void mountOverlay(
+            const std::string &sourcePath,
+            const std::string &mountPoint);
+
         /// Unmount all overlays.
         ///
         /// Note: We don't support granular un-mounting because
