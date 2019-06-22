@@ -123,6 +123,12 @@ namespace ExPop
             return nullptr;
         }
 
+        // Reasonable width and height limit so a maliciously
+        // constructed one can't kill our address space.
+        if(width > 2048 || height > 2048) {
+            return nullptr;
+        }
+
         // Skip image descriptor.
         EXPOP_LOADTGA2_INCPTR(idLength);
 

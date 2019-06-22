@@ -448,7 +448,7 @@ namespace ExPop
         uint64_t sizeOfCentralDir;
         uint64_t offsetOfStartOfCentralDirectoryWRTStartingDisk; // What.
 
-        std::string extensibleDataSector;
+        // std::string extensibleDataSector;
 
         void read(std::istream &in)
         {
@@ -466,9 +466,13 @@ namespace ExPop
 
             if(totalSizeOfRecord > 44) {
                 uint64_t remainingSize = totalSizeOfRecord - 44;
-                std::cout << "Remaining size: " << remainingSize << std::endl;
-                extensibleDataSector.resize(remainingSize);
-                in.read(&extensibleDataSector[0], extensibleDataSector.size());
+
+                // We don't really have anything we want to do with
+                // the extensible data sector, so let's skip it.
+                in.ignore(remainingSize);
+
+                // extensibleDataSector.resize(remainingSize);
+                // in.read(&extensibleDataSector[0], extensibleDataSector.size());
             }
         }
 
