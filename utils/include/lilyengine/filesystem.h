@@ -586,18 +586,21 @@ namespace ExPop
 
         inline bool isFullPath(const std::string &path)
         {
-            if(path.size()) {
+            std::string testPath = fixFileName(path);
 
-                if(path[0] == '/') {
+            if(testPath.size()) {
+
+                if(testPath[0] == '/') {
                     // Unix path starting at root.
                     return true;
                 }
 
-                if((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[1] <= 'z')) {
+                if((testPath[0] >= 'A' && testPath[0] <= 'Z') ||
+                    (testPath[0] >= 'a' && testPath[1] <= 'z'))
+                {
+                    if(testPath.size() > 1) {
 
-                    if(path.size() > 1) {
-
-                        if(path[1] == ':') {
+                        if(testPath[1] == ':') {
                             // Windows drive letter.
                             return true;
                         }

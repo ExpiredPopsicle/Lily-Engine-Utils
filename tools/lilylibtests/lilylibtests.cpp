@@ -526,6 +526,28 @@ void runImgTest(
         }
     }
 
+    // ----------------------------------------------------------------------
+    // ZIP mounter
+
+    if(!noMoreRecursion) {
+
+        std::cout << getIndent(indentLevel) << "Zip mount test..." << std::endl;
+
+        FileSystem::mountZipFile(zf, "/fakemountpoint");
+
+        for(size_t i = 0; i < fileList.size(); i++) {
+            // Recurse into all files, except ZIPs.
+            std::cout << getIndent(indentLevel + 1) << replaceNonDisplayableASCII(fileList[i], '_') << std::endl;
+
+            std::string fileData = FileSystem::loadFileString("/fakemountpoint/" + fileList[i]);
+            std::istringstream istr(fileData);
+            runImgTest(istr, true, indentLevel + 2);
+        }
+
+        FileSystem::unmountAll();
+    }
+
+
     delete img;
 }
 

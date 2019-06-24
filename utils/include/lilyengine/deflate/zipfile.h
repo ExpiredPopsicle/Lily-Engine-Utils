@@ -628,6 +628,11 @@ namespace ExPop
                         ZipLocalFileHeader header;
                         header.read(*sourceStream);
 
+                        // Fix up the path to make sure we avoid the
+                        // "zip slip" bug and anything else that might
+                        // come from a maliciously constructed path.
+                        header.filename = FileSystem::fixFileName(header.filename);
+
                         // Tentatively read the sizes and CRC. This
                         // will get replaced by the Zip64 version if
                         // the extra field for it is found.
@@ -653,27 +658,32 @@ namespace ExPop
                         size_t fileStartOffset = sourceStream->tellg();
                         size_t fileEndOffset = fileStartOffset + compressedSize;
 
-                        if(header.filename.size() &&
-                            header.filename[header.filename.size() - 1] == '/' &&
-                            fileStartOffset == fileEndOffset)
-                        {
+                        if(!FileSystem::isFullPath(header.filename)) {
 
-                            // FIXME: I think this is a directory
-                            // name, but I can't tell for sure. It
-                            // ends with a '/' and is 0-bytes. Can't
-                            // find information in APPNOTE.TXT.
-                            directoryEntries[header.filename.substr(0, header.filename.size() - 1)] = true;
+                            if(header.filename.size() &&
+                                header.filename[header.filename.size() - 1] == '/' &&
+                                fileStartOffset == fileEndOffset)
+                            {
 
-                        } else {
+                                // FIXME: I think this is a directory
+                                // name, but I can't tell for sure. It
+                                // ends with a '/' and is 0-bytes.
+                                // Can't find information in
+                                // APPNOTE.TXT.
+                                directoryEntries[
+                                    header.filename.substr(0, header.filename.size() - 1)] = true;
 
-                            // Definitely a normal file entry.
-                            ZipFileEntry entry;
-                            entry.offsetFromStart = fileStartOffset;
-                            entry.length = compressedSize;
-                            entry.uncompressedLength = uncompressedSize;
-                            entry.crc32 = savedCrc;
-                            entry.compressionMethod = header.commonData.compressionMethod;
-                            fileEntries[header.filename] = entry;
+                            } else {
+
+                                // A normal file entry.
+                                ZipFileEntry entry;
+                                entry.offsetFromStart = fileStartOffset;
+                                entry.length = compressedSize;
+                                entry.uncompressedLength = uncompressedSize;
+                                entry.crc32 = savedCrc;
+                                entry.compressionMethod = header.commonData.compressionMethod;
+                                fileEntries[header.filename] = entry;
+                            }
                         }
 
                         // Skip to next header.

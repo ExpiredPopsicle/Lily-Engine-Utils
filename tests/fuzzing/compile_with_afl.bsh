@@ -1,3 +1,7 @@
 #!/bin/bash
 
-CXX=afl-g++ CXXFLAGS="-g -rdynamic -O0" LDFLAGS="-rdynamic -O0" make -f Makefile.tools
+export CXX=afl-g++
+export CXXFLAGS="-g -rdynamic -O0"
+export LDFLAGS="-rdynamic -O0"
+rm lilylibtests
+make -f Makefile.tools lilylibtests
