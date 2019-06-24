@@ -1063,27 +1063,95 @@ namespace ExPop
             return nullptr;
         }
 
+        struct LoadFileTempBuf
+        {
+            struct LoadFileTempBuf *next;
+            char data[1024];
+        };
+
         inline char *loadFile(const std::string &fileName, int64_t *length)
         {
+            // Needlessly complicated file loading system
+            // explanation...
+            //
+            // We can't just allocate one big buffer based on the
+            // return value from getFileSize, because maliciously
+            // constructed archive files (which we support reading
+            // directly from) can have directory entries indicating
+            // 2^64 or whatever sized files that'll make us hit an
+            // allocation error pretty darn quick.
+            //
+            // I also decided not to just read in data while doubling
+            // the size of a single buffer because, for larger files,
+            // that turns into a *lot* of copying.
+            //
+            // So this approach just does a ton of smaller allocations
+            // and then copies them one more time into a single buffer
+            // at the end.
+            //
+            // Thanks, AFL, for discovering that little problem.
+
             // Fail to load a file if it doesn't exist.
             if(!fileExists(fileName)) {
                 return NULL;
             }
 
-            // Get the file size from file system or archive.
-            *length = getFileSize(fileName);
+            int64_t realLength = 0;
 
-            char *data = new char[*length];
-
-            // Read it. openReadFile() handles archives too now.
             std::shared_ptr<std::istream> in = openReadFile(fileName);
+
+            LoadFileTempBuf *startBuf = new LoadFileTempBuf;
+            LoadFileTempBuf *currentBuf = startBuf;
+
             if(in) {
-                in->read(data, *length);
-                return data;
+
+                while(in->good()) {
+
+                    // Load data into the current buffer.
+                    in->read(currentBuf->data, sizeof(currentBuf->data));
+                    realLength += in->gcount();
+
+                    // Make another allocation for the next buffer.
+                    LoadFileTempBuf *nextBuf = new LoadFileTempBuf;
+                    currentBuf->next = nextBuf;
+                    currentBuf = nextBuf;
+                    nextBuf->next = nullptr;
+                }
+
+                // Finally, move everything into one contiguous
+                // buffer.
+                char *finalData = new char[realLength];
+                size_t lengthLeft = (size_t)realLength;
+                size_t writePosition = 0;
+                currentBuf = startBuf;
+
+                while(lengthLeft) {
+
+                    int64_t bytesToCopy =
+                        lengthLeft > sizeof(LoadFileTempBuf::data) ?
+                        sizeof(LoadFileTempBuf::data) : lengthLeft;
+
+                    memcpy(&finalData[writePosition], currentBuf->data, bytesToCopy);
+
+                    writePosition += bytesToCopy;
+                    lengthLeft -= bytesToCopy;
+
+                    currentBuf = currentBuf->next;
+                }
+
+                // Cleanup.
+                currentBuf = startBuf;
+                while(currentBuf) {
+                    LoadFileTempBuf *oldCurrentBuf = currentBuf;
+                    currentBuf = currentBuf->next;
+                    delete oldCurrentBuf;
+                }
+
+                *length = realLength;
+                return finalData;
             }
 
             // Read failed.
-            delete[] data;
             return nullptr;
         }
 
