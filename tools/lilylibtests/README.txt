@@ -9,5 +9,6 @@ Options:
 
   --help            You're sitting in it.
   --quit            Exit immediately without doing anything.
+  --imgloader       Attempt to load an image from standard input.
 
 Report bugs to expiredpopsicle@gmail.com

@@ -299,7 +299,7 @@ namespace ExPop
             std::streampos sp,
             std::ios_base::openmode which)
         {
-            // Can't seek to anywhere before the start of teh stream.
+            // Can't seek to anywhere before the start of the stream.
             if(sp < 0) {
                 return -1;
             }

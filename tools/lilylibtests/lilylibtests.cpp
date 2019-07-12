@@ -458,6 +458,154 @@ private:
 #define TIME_SECTION(name) TimerBlock timerBlock(name)
 
 // ----------------------------------------------------------------------
+// Image loader test
+// ----------------------------------------------------------------------
+
+std::string getIndent(int level)
+{
+    std::string st;
+    for(int i = 0; i < level; i++) {
+        st = st + "  ";
+    }
+    return st;
+}
+
+void runImgTest(
+    std::istream &inStream,
+    bool noMoreRecursion = false,
+    int indentLevel = 0)
+{
+    std::string inData;
+    while(inStream.good()) {
+        char c;
+        inStream.read(&c, 1);
+        inData.append(1, c);
+    }
+
+    // ----------------------------------------------------------------------
+    // TGA loader
+
+    std::cout << getIndent(indentLevel) << "Tga test..." << std::endl;
+    PixelImage<uint8_t> *img = pixelImageLoadTGA(&inData[0], inData.size());
+    if(img) {
+        std::cout << getIndent(indentLevel + 1)
+                  << "Image loaded: "
+                  << img->getWidth()
+                  << "x"
+                  << img->getHeight()
+                  << ", "
+                  << img->getChannelCount()
+                  << std::endl;
+    } else {
+        std::cout << getIndent(indentLevel + 1)
+                  << "Image failed to load."
+                  << std::endl;
+    }
+
+    // ----------------------------------------------------------------------
+    // PNG loader (STB)
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // PNG loader (libpng)
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // JPEG loader (STB)
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // JPEG loader (libjpeg)
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // ZIP loader
+
+    std::cout << getIndent(indentLevel) << "Zip test..." << std::endl;
+    std::shared_ptr<istringstream> istr = std::shared_ptr<istringstream>(new istringstream(inData));
+    std::shared_ptr<ZipFile> zf = std::shared_ptr<ZipFile>(new ZipFile(istr));
+    std::vector<std::string> fileList;
+    zf->fillFileList(fileList);
+    std::cout << getIndent(indentLevel + 1) << "Files..." << std::endl;
+    for(size_t i = 0; i < fileList.size(); i++) {
+        // Recurse into all files, except ZIPs.
+        std::cout << getIndent(indentLevel + 2) << replaceNonDisplayableASCII(fileList[i], '_') << std::endl;
+        std::shared_ptr<istream> fileInZip = zf->openFile(fileList[i]);
+        if(fileInZip) {
+            if(!noMoreRecursion) {
+                runImgTest(*fileInZip, true, indentLevel + 3);
+            }
+        } else {
+            std::cout << getIndent(indentLevel + 3)
+                      << "Can't open file in zip."
+                      << std::endl;
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // ZIP mounter
+
+    if(!noMoreRecursion) {
+
+        std::cout << getIndent(indentLevel) << "Zip mount test..." << std::endl;
+
+        FileSystem::mountZipFile(zf, "/fakemountpoint");
+
+        for(size_t i = 0; i < fileList.size(); i++) {
+            // Recurse into all files, except ZIPs.
+            std::cout << getIndent(indentLevel + 1) << replaceNonDisplayableASCII(fileList[i], '_') << std::endl;
+
+            std::string fileData = FileSystem::loadFileString("/fakemountpoint/" + fileList[i]);
+            std::istringstream istr(fileData);
+            runImgTest(istr, true, indentLevel + 2);
+        }
+
+        FileSystem::unmountAll();
+    }
+
+    // ----------------------------------------------------------------------
+    // XML parser
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // Custom parser
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // JSON parser
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // Base64 parser
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // UTF-8 decoder (and re-encoding)
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // RLE decoder
+
+    // TODO
+
+    // ----------------------------------------------------------------------
+    // Preprocessor
+
+    // TODO
+
+    delete img;
+}
+
+// ----------------------------------------------------------------------
 // Testing 'framework'
 // ----------------------------------------------------------------------
 
@@ -483,6 +631,8 @@ int main(int argc, char *argv[])
 
     parseCommandLine(argc, argv, paramNames, params);
 
+    bool ranSpecificTest = false;
+
     for(size_t i = 0; i < params.size(); i++) {
 
         if(params[i].name == "quit") {
@@ -490,10 +640,18 @@ int main(int argc, char *argv[])
         } else if(params[i].name == "help") {
             showHelp(argv[0], false);
             return 0;
+        } else if(params[i].name == "imgloader") {
+            runImgTest(cin);
+            ranSpecificTest = true;
+            return 0;
         } else {
             cerr << "Unrecognized parameter: " << params[i].name << endl;
             return 1;
         }
+    }
+
+    if(ranSpecificTest) {
+        return 0;
     }
 
     size_t passCounter = 0;

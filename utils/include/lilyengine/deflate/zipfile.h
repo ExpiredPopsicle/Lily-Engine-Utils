@@ -448,7 +448,7 @@ namespace ExPop
         uint64_t sizeOfCentralDir;
         uint64_t offsetOfStartOfCentralDirectoryWRTStartingDisk; // What.
 
-        std::string extensibleDataSector;
+        // std::string extensibleDataSector;
 
         void read(std::istream &in)
         {
@@ -466,9 +466,13 @@ namespace ExPop
 
             if(totalSizeOfRecord > 44) {
                 uint64_t remainingSize = totalSizeOfRecord - 44;
-                std::cout << "Remaining size: " << remainingSize << std::endl;
-                extensibleDataSector.resize(remainingSize);
-                in.read(&extensibleDataSector[0], extensibleDataSector.size());
+
+                // We don't really have anything we want to do with
+                // the extensible data sector, so let's skip it.
+                in.ignore(remainingSize);
+
+                // extensibleDataSector.resize(remainingSize);
+                // in.read(&extensibleDataSector[0], extensibleDataSector.size());
             }
         }
 
@@ -624,6 +628,11 @@ namespace ExPop
                         ZipLocalFileHeader header;
                         header.read(*sourceStream);
 
+                        // Fix up the path to make sure we avoid the
+                        // "zip slip" bug and anything else that might
+                        // come from a maliciously constructed path.
+                        header.filename = FileSystem::fixFileName(header.filename);
+
                         // Tentatively read the sizes and CRC. This
                         // will get replaced by the Zip64 version if
                         // the extra field for it is found.
@@ -649,27 +658,32 @@ namespace ExPop
                         size_t fileStartOffset = sourceStream->tellg();
                         size_t fileEndOffset = fileStartOffset + compressedSize;
 
-                        if(header.filename.size() &&
-                            header.filename[header.filename.size() - 1] == '/' &&
-                            fileStartOffset == fileEndOffset)
-                        {
+                        if(!FileSystem::isFullPath(header.filename)) {
 
-                            // FIXME: I think this is a directory
-                            // name, but I can't tell for sure. It
-                            // ends with a '/' and is 0-bytes. Can't
-                            // find information in APPNOTE.TXT.
-                            directoryEntries[header.filename.substr(0, header.filename.size() - 1)] = true;
+                            if(header.filename.size() &&
+                                header.filename[header.filename.size() - 1] == '/' &&
+                                fileStartOffset == fileEndOffset)
+                            {
 
-                        } else {
+                                // FIXME: I think this is a directory
+                                // name, but I can't tell for sure. It
+                                // ends with a '/' and is 0-bytes.
+                                // Can't find information in
+                                // APPNOTE.TXT.
+                                directoryEntries[
+                                    header.filename.substr(0, header.filename.size() - 1)] = true;
 
-                            // Definitely a normal file entry.
-                            ZipFileEntry entry;
-                            entry.offsetFromStart = fileStartOffset;
-                            entry.length = compressedSize;
-                            entry.uncompressedLength = uncompressedSize;
-                            entry.crc32 = savedCrc;
-                            entry.compressionMethod = header.commonData.compressionMethod;
-                            fileEntries[header.filename] = entry;
+                            } else {
+
+                                // A normal file entry.
+                                ZipFileEntry entry;
+                                entry.offsetFromStart = fileStartOffset;
+                                entry.length = compressedSize;
+                                entry.uncompressedLength = uncompressedSize;
+                                entry.crc32 = savedCrc;
+                                entry.compressionMethod = header.commonData.compressionMethod;
+                                fileEntries[header.filename] = entry;
+                            }
                         }
 
                         // Skip to next header.
