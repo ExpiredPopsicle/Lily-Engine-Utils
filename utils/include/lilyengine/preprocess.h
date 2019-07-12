@@ -84,7 +84,8 @@ namespace ExPop
         // TODO: Maybe something to limit the include file options? Like a
         // whitelist of includable files.
 
-        // FIXME: Add a userdata thing to the file loader.
+        // FIXME: Add a userdata thing to the file loader. Or switch
+        // to std::function so we can just std::bind the userdata.
 
         /// File loader callback type and variable. Defaults to
         /// a simple file loader.
@@ -193,6 +194,22 @@ namespace ExPop
         }                                                               \
     }
 
+    inline void preprocessor_annotate(
+        const std::string &fileName,
+        size_t lineNumber,
+        PreprocessorState &inState,
+        std::ostringstream &ostr)
+    {
+        if(inState.annotateIncludes) {
+
+            // Make sure we're on an empty line.
+            ostr << std::endl;
+
+            ostr << "#file \"" << ExPop::stringEscape(fileName) << "\"" << std::endl;
+            ostr << "#line " << lineNumber << std::endl;
+        }
+    }
+
     /// This function is explicitly NOT safe to run untrusted code
     /// because there are no limits to the paths used on #include
     /// directives.
@@ -209,6 +226,7 @@ namespace ExPop
         inState.fileList[fixedName] = true;
 
         std::ostringstream ostr;
+        preprocessor_annotate(fileName, 0, inState, ostr);
 
         std::vector<std::string> inLines;
         stringTokenize(inStr, "\n", inLines, true);
@@ -227,7 +245,7 @@ namespace ExPop
         // GLSL.
         bool ppEnabled = true;
 
-        for(unsigned int i = 0; i < inLines.size(); i++) {
+        for(size_t i = 0; i < inLines.size(); i++) {
 
             // Try to quickly find out if this line starts with a #.
             bool startsWithHash = false;
@@ -258,9 +276,7 @@ namespace ExPop
 
                         if(pragmaType == "once") {
                             if(wasAlreadyInList) {
-                                if(inState.annotateIncludes) {
-                                    return "// --- Skipping " + fixedName + " due to #pragma once.\n";
-                                }
+                                // Skip it.
                                 return "";
                             }
                         }
@@ -353,17 +369,9 @@ namespace ExPop
                                 !inState.hadError,
                                 "Error in included file: " + fullName);
 
-                            // TODO: Error handling for recursive call.
+                            ostr << includedBuf;
 
-                            if(inState.annotateIncludes) {
-                                ostr << "// --- Begin include: " << fullName << std::endl;
-                            }
-
-                            ostr << includedBuf; // << std::endl;
-
-                            if(inState.annotateIncludes) {
-                                ostr << "// --- End include: " << fullName << std::endl;
-                            }
+                            preprocessor_annotate(fileName, i, inState, ostr);
 
                         }
 
@@ -462,6 +470,10 @@ namespace ExPop
                             nestedFailedIfs--;
                         } else {
                             nestedPassedIfs--;
+                        }
+
+                        if(!nestedPassedIfs) {
+                            preprocessor_annotate(fileName, i, inState, ostr);
                         }
 
                     } else if(tokens[0] == "#ppenable") {
