@@ -205,8 +205,7 @@ namespace ExPop
             // Make sure we're on an empty line.
             ostr << std::endl;
 
-            ostr << "#file \"" << ExPop::stringEscape(fileName) << "\"" << std::endl;
-            ostr << "#line " << lineNumber << std::endl;
+            ostr << "#line " << lineNumber << " \"" << ExPop::stringEscape(fileName) << "\"" << std::endl;
         }
     }
 
